@@ -68,7 +68,7 @@ export default function HomePage() {
         <img
           src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600"
           alt=""
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.12 }}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.25 }}
         />
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '60px 20px' }}>
           <div style={{ display: 'inline-block', background: 'rgba(192,132,252,0.2)', border: '1px solid ' + VL, color: VL, fontSize: 11, fontWeight: 700, letterSpacing: 2, padding: '5px 14px', borderRadius: 20, marginBottom: 20, textTransform: 'uppercase' }}>
