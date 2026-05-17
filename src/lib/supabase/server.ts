@@ -1,3 +1,6 @@
+Encore un petit bug de typage ! Allez sur GitHub → `src` → `lib` → `supabase` → `server.ts` → crayon ✏️ → **Ctrl+A** → remplacez tout par ceci :
+
+```ts
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -9,7 +12,7 @@ export function createClient() {
     {
       cookies: {
         getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -28,3 +31,6 @@ export function createAdminClient() {
     { cookies: { getAll: () => [], setAll: () => {} } }
   )
 }
+```
+
+Puis **Commit changes** !
