@@ -1,49 +1,56 @@
 'use client'
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import React, { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import styles from './page.module.css'
+import { useSearchParams, useRouter } from 'next/navigation'
+
+type Salon = {
+  id: number
+  nom: string
+  adresse: string
+  image: string
+  type_salon: string
+  telephone: string
+  description: string
+  ville: string
+  moy_note: string | null
+  nb_avis: number
+}
 
 const CATEGORIES = ['Coiffure', 'Beaute des ongles', 'Massage et bien-etre', 'Barbier', 'Hammam & Spa', 'Chirurgie esthetique']
 
-const SLIDES = [
-  {
-    cat: 'Coiffure',
-    title: "L'art de la coupe",
-    desc: "Envie d'un changement radical ou d'un simple rafraichissement ? Nos coiffeurs partenaires maitrisent toutes les techniques : balayage, ombre hair, lissage bresilien...",
-    img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800',
-    link: '/search?q=Coiffure',
-  },
-  {
-    cat: 'Beaute des ongles',
-    title: 'Des mains parfaites',
-    desc: "Pose de vernis, gel, nail art ou beaute des pieds. Trouvez la specialiste ideale pour des ongles impeccables.",
-    img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800',
-    link: '/search?q=Beaute des ongles',
-  },
-  {
-    cat: 'Hammam & Spa',
-    title: 'Detente absolue',
-    desc: "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthese de bien-etre dans les meilleurs hammams et spas.",
-    img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
-    link: '/search?q=Hammam & Spa',
-  },
-  {
-    cat: 'Chirurgie esthetique',
-    title: 'Des professionnels de confiance',
-    desc: "Consultations et interventions esthetiques realisees par des medecins qualifies. Trouvez la clinique qu'il vous faut.",
-    img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
-    link: '/search?q=Chirurgie esthetique',
-  },
-]
-
-export default function HomePage() {
+function SearchContent() {
+  const searchParams = useSearchParams()
   const router = useRouter()
-  const [slide, setSlide] = useState(0)
-  const [query, setQuery] = useState('')
-  const [loc, setLoc] = useState('')
+  const [salons, setSalons] = useState<Salon[]>([])
+  const [loading, setLoading] = useState(true)
+  const [query, setQuery] = useState(searchParams.get('q') || '')
+  const [loc, setLoc] = useState(searchParams.get('loc') || '')
 
-  const handleSearch = (e: React.FormEvent) => {
+  useEffect(() => {
+    const q = searchParams.get('q') || ''
+    const l = searchParams.get('loc') || ''
+    setQuery(q)
+    setLoc(l)
+    fetchSalons(q, l)
+  }, [searchParams])
+
+  async function fetchSalons(q: string, l: string) {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (q) params.set('q', q)
+      if (l) params.set('loc', l)
+      const res = await fetch('/api/salons?' + params.toString())
+      const data = await res.json()
+      setSalons(data.salons || [])
+    } catch {
+      setSalons([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     const params = new URLSearchParams()
     if (query) params.set('q', query)
@@ -51,104 +58,91 @@ export default function HomePage() {
     router.push('/search?' + params.toString())
   }
 
-  const prev = () => setSlide(s => (s === 0 ? SLIDES.length - 1 : s - 1))
-  const next = () => setSlide(s => (s === SLIDES.length - 1 ? 0 : s + 1))
-  const current = SLIDES[slide]
-
   return (
-    <div>
-      <header className={styles.header}>
-        <div className={'container ' + styles.navFlex}>
-          <Link href="/" className={styles.logo}>Bookme<span>.dz</span></Link>
-          <nav className={styles.catNav}>
-            {CATEGORIES.map(c => (
-              <Link key={c} href={'/search?q=' + c} className={styles.catLink}>{c}</Link>
-            ))}
-          </nav>
-          <div className={styles.navRight}>
-            <Link href="/login" className={styles.linkSimple}>Connexion</Link>
-            <Link href="/register" className={styles.btnClient}>Inscription</Link>
-            <Link href="/pro" className={styles.btnPro}>Espace Pro</Link>
+    <div style={{ background: '#f9f9f9', minHeight: '100vh' }}>
+      <header style={{ background: 'white', borderBottom: '1px solid #eee', padding: '15px 0', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', gap: 20 }}>
+          <Link href="/" style={{ fontSize: 22, fontWeight: 900, color: '#000', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+            Bookme<span style={{ color: '#4DA6FF' }}>.dz</span>
+          </Link>
+          <form onSubmit={handleSearch} style={{ flex: 1, display: 'flex', gap: 10 }}>
+            <select value={query} onChange={e => setQuery(e.target.value)} style={{ flex: 1, padding: '10px 15px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif' }}>
+              <option value="">Toutes les prestations</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <input value={loc} onChange={e => setLoc(e.target.value)} placeholder="Ville (Alger, Oran...)" style={{ flex: 1, padding: '10px 15px', border: '1px solid #ddd', borderRadius: 6, fontSize: 14, fontFamily: 'Inter, sans-serif' }} />
+            <button type="submit" style={{ background: '#111', color: 'white', border: 'none', padding: '10px 25px', borderRadius: 6, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>Rechercher</button>
+          </form>
+          <div style={{ display: 'flex', gap: 10, whiteSpace: 'nowrap' }}>
+            <Link href="/login" style={{ color: '#555', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>Connexion</Link>
+            <Link href="/register" style={{ background: '#111', color: 'white', padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Inscription</Link>
           </div>
         </div>
       </header>
 
-      <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>Reservez votre beaute</h1>
-        <p className={styles.heroSub}>Les meilleurs etablissements a portee de clic</p>
-        <form onSubmit={handleSearch} className={styles.searchBox}>
-          <div className={styles.searchGroup}>
-            <span className={styles.searchLabel}>QUOI ?</span>
-            <select className={styles.searchInput} value={query} onChange={e => setQuery(e.target.value)}>
-              <option value="">Coiffure, massage, ongles...</option>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className={styles.searchDivider} />
-          <div className={styles.searchGroup}>
-            <span className={styles.searchLabel}>OU ?</span>
-            <input className={styles.searchInput} value={loc} onChange={e => setLoc(e.target.value)} placeholder="Ville (Alger, Oran...)" />
-          </div>
-          <button type="submit" className={styles.btnSearch}>RECHERCHER</button>
-        </form>
-      </section>
-
-      <section className={styles.discoverSection}>
-        <div className="container">
-          <div className={styles.mainTitle}>Decouvrez nos Professionnels</div>
-          <div className={styles.slideItem}>
-            <div className={styles.slideImageBox}>
-              <img src={current.img} alt={current.cat} className={styles.slideImg} />
-            </div>
-            <div className={styles.slideContentBox}>
-              <span className={styles.catIndicator}>{current.cat}</span>
-              <h3 className={styles.slideTitle}>{current.title}</h3>
-              <p className={styles.slideDesc}>{current.desc}</p>
-              <Link href={current.link} className={styles.btnSlideLink}>Voir les salons →</Link>
-              <div className={styles.controls}>
-                <button onClick={prev} className={styles.controlBtn}>‹</button>
-                <button onClick={next} className={styles.controlBtn}>›</button>
-              </div>
-            </div>
-          </div>
+      <div style={{ background: 'white', borderBottom: '1px solid #eee', padding: '12px 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', gap: 10, overflowX: 'auto' }}>
+          <button onClick={() => router.push('/search')} style={{ padding: '7px 18px', borderRadius: 20, border: '1px solid #ddd', background: !query ? '#111' : 'white', color: !query ? 'white' : '#555', fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>Tous</button>
+          {CATEGORIES.map(cat => (
+            <button key={cat} onClick={() => router.push('/search?q=' + cat)} style={{ padding: '7px 18px', borderRadius: 20, border: '1px solid #ddd', background: query === cat ? '#111' : 'white', color: query === cat ? 'white' : '#555', fontWeight: 600, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{cat}</button>
+          ))}
         </div>
-      </section>
+      </div>
 
-      <section className={styles.featuresSection}>
-        <div className="container">
-          <div className={styles.featuresGrid}>
-            <div className={styles.featureItem}>
-              <div className={styles.featIcon}>🕐</div>
-              <div className={styles.featTitle}>24h/24, 7j/7</div>
-              <div className={styles.featDesc}>Reservez a nimporte quel moment, ou que vous soyez.</div>
-            </div>
-            <div className={styles.featureItem}>
-              <div className={styles.featIcon}>✅</div>
-              <div className={styles.featTitle}>Confirmation immediate</div>
-              <div className={styles.featDesc}>Votre creneau est bloque instantanement.</div>
-            </div>
-            <div className={styles.featureItem}>
-              <div className={styles.featIcon}>⭐</div>
-              <div className={styles.featTitle}>Avis verifies</div>
-              <div className={styles.featDesc}>Seuls les clients ayant eu un RDV peuvent noter.</div>
-            </div>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '30px 20px' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 5 }}>{query ? query : 'Tous les etablissements'}{loc ? ' a ' + loc : ''}</h1>
+        <p style={{ color: '#888', fontSize: 14, marginBottom: 25 }}>{loading ? 'Chargement...' : salons.length + ' etablissement(s) trouve(s)'}</p>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 60, color: '#888' }}>Chargement...</div>
+        ) : salons.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 60, border: '1px dashed #ccc', borderRadius: 10 }}>
+            <div style={{ fontSize: 40, marginBottom: 15 }}>🔍</div>
+            <p style={{ color: '#888', marginBottom: 20 }}>Aucun etablissement ne correspond a votre recherche.</p>
+            <Link href="/search" style={{ color: '#111', fontWeight: 700 }}>Voir tous les etablissements</Link>
           </div>
-        </div>
-      </section>
-
-      <section className={styles.proCta}>
-        <div className="container">
-          <h2>Vous etes un professionnel ?</h2>
-          <p>Rejoignez Bookme Pro pour gerer votre agenda en ligne et developper votre clientele.</p>
-          <Link href="/pro" className={styles.proCtaBtn}>Decouvrir notre offre Pro</Link>
-        </div>
-      </section>
-
-      <footer className={styles.footer}>
-        <div className="container">
-          Bookme.dz - La beaute a portee de clic.
-        </div>
-      </footer>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+            {salons.map(salon => (
+              <Link key={salon.id} href={'/salon/' + salon.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div style={{ background: 'white', borderRadius: 10, border: '1px solid #eee', display: 'flex', overflow: 'hidden', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)')}
+                  onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>
+                  <div style={{ width: 220, minHeight: 160, flexShrink: 0, overflow: 'hidden' }}>
+                    <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div style={{ flex: 1, padding: '20px 25px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 5 }}>
+                        <span style={{ fontSize: 18, fontWeight: 800, color: '#111' }}>{salon.nom}</span>
+                        {salon.ville && <span style={{ color: '#888', fontSize: 13 }}>📍 {salon.ville}</span>}
+                        {salon.type_salon && <span style={{ background: '#f0f7ff', color: '#4DA6FF', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>{salon.type_salon}</span>}
+                      </div>
+                      <div style={{ color: '#aaa', fontSize: 12, marginBottom: 8 }}>{salon.adresse}</div>
+                      {salon.description && <p style={{ color: '#555', fontSize: 13, lineHeight: 1.5 }}>{salon.description.length > 120 ? salon.description.substring(0, 120) + '...' : salon.description}</p>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 15 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                        {salon.moy_note ? <span style={{ color: '#f59e0b', fontWeight: 700 }}>★ {salon.moy_note} <span style={{ color: '#888', fontWeight: 400, fontSize: 12 }}>({salon.nb_avis} avis)</span></span> : <span style={{ color: '#888', fontSize: 12 }}>Nouveau</span>}
+                        {salon.telephone && <span style={{ color: '#888', fontSize: 12 }}>📞 {salon.telephone}</span>}
+                      </div>
+                      <span style={{ background: '#111', color: 'white', padding: '8px 20px', borderRadius: 6, fontSize: 13, fontWeight: 700 }}>Reserver →</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
+  )
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Chargement...</div>}>
+      <SearchContent />
+    </Suspense>
   )
 }
