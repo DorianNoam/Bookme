@@ -19,7 +19,7 @@ const SLIDES = [
   {
     cat: 'Coiffure',
     title: "L'art de la coupe",
-    desc: "Envie d'un changement radical ou d'un simple rafraichissement ? Nos coiffeurs partenaires maitrisent toutes les techniques : balayage, ombre hair, lissage bresilien...",
+    desc: "Envie d'un changement ou d'un simple rafraichissement ? Nos coiffeurs maitrisent toutes les techniques : balayage, ombre hair, lissage bresilien...",
     img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800',
     link: '/search?q=Coiffure',
   },
@@ -33,7 +33,7 @@ const SLIDES = [
   {
     cat: 'Hammam & Spa',
     title: 'Detente absolue',
-    desc: "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthese de bien-etre dans les meilleurs hammams et spas.",
+    desc: "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthese de bien-etre dans les meilleurs hammams.",
     img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
     link: '/search?q=Hammam & Spa',
   },
@@ -83,11 +83,12 @@ export default function HomePage() {
       </header>
 
       <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>Reservez votre beaute</h1>
-        <p className={styles.heroSub}>Les meilleurs etablissements a portee de clic</p>
+        <div className={styles.heroBadge}>Plateforme N°1 en Algerie</div>
+        <h1 className={styles.heroTitle}>Reservez votre beaute en ligne</h1>
+        <p className={styles.heroSub}>Les meilleurs salons, instituts et spas a portee de clic, partout en Algerie.</p>
         <form onSubmit={handleSearch} className={styles.searchBox}>
           <div className={styles.searchGroup}>
-            <span className={styles.searchLabel}>QUOI ?</span>
+            <span className={styles.searchLabel}>Prestation</span>
             <select className={styles.searchInput} value={query} onChange={e => setQuery(e.target.value)}>
               <option value="">Coiffure, massage, ongles...</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -95,8 +96,8 @@ export default function HomePage() {
           </div>
           <div className={styles.searchDivider} />
           <div className={styles.searchGroup}>
-            <span className={styles.searchLabel}>OU ?</span>
-            <input className={styles.searchInput} value={loc} onChange={e => setLoc(e.target.value)} placeholder="Ville (Alger, Oran...)" />
+            <span className={styles.searchLabel}>Ville</span>
+            <input className={styles.searchInput} value={loc} onChange={e => setLoc(e.target.value)} placeholder="Alger, Oran, Constantine..." />
           </div>
           <button type="submit" className={styles.btnSearch}>RECHERCHER</button>
         </form>
@@ -129,17 +130,17 @@ export default function HomePage() {
             <div className={styles.featureItem}>
               <div className={styles.featIcon}>🕐</div>
               <div className={styles.featTitle}>24h/24, 7j/7</div>
-              <div className={styles.featDesc}>Reservez a nimporte quel moment, ou que vous soyez.</div>
+              <div className={styles.featDesc}>Reservez a nimporte quel moment, ou que vous soyez en Algerie.</div>
             </div>
             <div className={styles.featureItem}>
               <div className={styles.featIcon}>✅</div>
               <div className={styles.featTitle}>Confirmation immediate</div>
-              <div className={styles.featDesc}>Votre creneau est bloque instantanement.</div>
+              <div className={styles.featDesc}>Votre creneau est bloque instantanement, sans appel.</div>
             </div>
             <div className={styles.featureItem}>
               <div className={styles.featIcon}>⭐</div>
               <div className={styles.featTitle}>Avis verifies</div>
-              <div className={styles.featDesc}>Seuls les clients ayant eu un RDV peuvent noter.</div>
+              <div className={styles.featDesc}>Seuls les clients ayant eu un RDV peuvent noter le salon.</div>
             </div>
           </div>
         </div>
@@ -148,14 +149,14 @@ export default function HomePage() {
       <section className={styles.proCta}>
         <div className="container">
           <h2>Vous etes un professionnel ?</h2>
-          <p>Rejoignez Bookme Pro pour gerer votre agenda en ligne et developper votre clientele.</p>
+          <p>Rejoignez Bookme Pro pour gerer votre agenda en ligne et developper votre clientele partout en Algerie.</p>
           <Link href="/pro" className={styles.proCtaBtn}>Decouvrir notre offre Pro</Link>
         </div>
       </section>
 
       <footer className={styles.footer}>
         <div className="container">
-          Bookme.dz - La beaute a portee de clic.
+          Bookme.dz — La beaute a portee de clic en Algerie
         </div>
       </footer>
     </div>
