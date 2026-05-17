@@ -6,6 +6,15 @@ import styles from './page.module.css'
 
 const CATEGORIES = ['Coiffure', 'Beaute des ongles', 'Massage et bien-etre', 'Barbier', 'Hammam & Spa', 'Chirurgie esthetique']
 
+const NAV_LINKS = [
+  { label: 'Coiffure', val: 'Coiffure' },
+  { label: 'Ongles', val: 'Beaute des ongles' },
+  { label: 'Bien-etre', val: 'Massage et bien-etre' },
+  { label: 'Barbier', val: 'Barbier' },
+  { label: 'Hammam', val: 'Hammam & Spa' },
+  { label: 'Chirurgie', val: 'Chirurgie esthetique' },
+]
+
 const SLIDES = [
   {
     cat: 'Coiffure',
@@ -61,8 +70,8 @@ export default function HomePage() {
         <div className={'container ' + styles.navFlex}>
           <Link href="/" className={styles.logo}>Bookme<span>.dz</span></Link>
           <nav className={styles.catNav}>
-            {CATEGORIES.map(c => (
-              <Link key={c} href={'/search?q=' + c} className={styles.catLink}>{c}</Link>
+            {NAV_LINKS.map(c => (
+              <Link key={c.val} href={'/search?q=' + c.val} className={styles.catLink}>{c.label}</Link>
             ))}
           </nav>
           <div className={styles.navRight}>
@@ -104,7 +113,7 @@ export default function HomePage() {
               <span className={styles.catIndicator}>{current.cat}</span>
               <h3 className={styles.slideTitle}>{current.title}</h3>
               <p className={styles.slideDesc}>{current.desc}</p>
-              <Link href={current.link} className={styles.btnSlideLink}>Voir les salons →</Link>
+              <Link href={current.link} className={styles.btnSlideLink}>Voir les etablissements →</Link>
               <div className={styles.controls}>
                 <button onClick={prev} className={styles.controlBtn}>‹</button>
                 <button onClick={next} className={styles.controlBtn}>›</button>
