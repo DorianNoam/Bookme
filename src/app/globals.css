@@ -28,3 +28,7 @@ a { text-decoration: none; color: inherit; }
   margin: 0 auto;
   padding: 0 20px;
 }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: #fff; color: #1A0533; }
+a { text-decoration: none; color: inherit; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
