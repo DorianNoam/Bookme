@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import styles from './page.module.css'
 
+const CATEGORIES = ['Coiffure', 'Beaute des ongles', 'Massage et bien-etre', 'Barbier', 'Hammam & Spa', 'Chirurgie esthetique']
+
 const SLIDES = [
   {
     cat: 'Coiffure',
@@ -13,25 +15,25 @@ const SLIDES = [
     link: '/search?q=Coiffure',
   },
   {
-    cat: 'Manucure',
+    cat: 'Beaute des ongles',
     title: 'Des mains parfaites',
-    desc: "On raconte que les mains sont le reflet de la facon dont on prend soin de soi. Pose de vernis, gel ou nail art, trouvez la prothesiste ongulaire ideale.",
+    desc: "Pose de vernis, gel, nail art ou beaute des pieds. Trouvez la specialiste ideale pour des ongles impeccables.",
     img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800',
-    link: '/search?q=Manucure',
+    link: '/search?q=Beaute des ongles',
   },
   {
-    cat: 'Institut de Beaute',
-    title: 'Revelez votre eclat',
-    desc: "Soins du visage, maquillage professionnel ou epilation. Confiez votre beaute a des mains expertes pour un resultat impeccable.",
-    img: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
-    link: '/search?q=Institut',
-  },
-  {
-    cat: 'Massage et Bien-etre',
+    cat: 'Hammam & Spa',
     title: 'Detente absolue',
-    desc: "Lachez prise avec nos partenaires Spa et Bien-etre. Massages relaxants, gommages corps ou hammam pour une parenthese hors du temps.",
+    desc: "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthese de bien-etre dans les meilleurs hammams et spas.",
     img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
-    link: '/search?q=Massage',
+    link: '/search?q=Hammam & Spa',
+  },
+  {
+    cat: 'Chirurgie esthetique',
+    title: 'Des professionnels de confiance',
+    desc: "Consultations et interventions esthetiques realisees par des medecins qualifies. Trouvez la clinique qu'il vous faut.",
+    img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
+    link: '/search?q=Chirurgie esthetique',
   },
 ]
 
@@ -59,7 +61,7 @@ export default function HomePage() {
         <div className={'container ' + styles.navFlex}>
           <Link href="/" className={styles.logo}>Bookme<span>.dz</span></Link>
           <nav className={styles.catNav}>
-            {['Coiffure', 'Manucure', 'Institut', 'Massage', 'Barbier'].map(c => (
+            {CATEGORIES.map(c => (
               <Link key={c} href={'/search?q=' + c} className={styles.catLink}>{c}</Link>
             ))}
           </nav>
@@ -73,16 +75,19 @@ export default function HomePage() {
 
       <section className={styles.hero}>
         <h1 className={styles.heroTitle}>Reservez votre beaute</h1>
-        <p className={styles.heroSub}>Les meilleurs salons a portee de clic</p>
+        <p className={styles.heroSub}>Les meilleurs etablissements a portee de clic</p>
         <form onSubmit={handleSearch} className={styles.searchBox}>
           <div className={styles.searchGroup}>
             <span className={styles.searchLabel}>QUOI ?</span>
-            <input className={styles.searchInput} value={query} onChange={e => setQuery(e.target.value)} placeholder="Coiffure, manucure, massage..." />
+            <select className={styles.searchInput} value={query} onChange={e => setQuery(e.target.value)}>
+              <option value="">Coiffure, massage, ongles...</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
           </div>
           <div className={styles.searchDivider} />
           <div className={styles.searchGroup}>
             <span className={styles.searchLabel}>OU ?</span>
-            <input className={styles.searchInput} value={loc} onChange={e => setLoc(e.target.value)} placeholder="Adresse, ville..." />
+            <input className={styles.searchInput} value={loc} onChange={e => setLoc(e.target.value)} placeholder="Ville (Alger, Oran...)" />
           </div>
           <button type="submit" className={styles.btnSearch}>RECHERCHER</button>
         </form>
@@ -99,10 +104,10 @@ export default function HomePage() {
               <span className={styles.catIndicator}>{current.cat}</span>
               <h3 className={styles.slideTitle}>{current.title}</h3>
               <p className={styles.slideDesc}>{current.desc}</p>
-              <Link href={current.link} className={styles.btnSlideLink}>Voir les salons</Link>
+              <Link href={current.link} className={styles.btnSlideLink}>Voir les salons →</Link>
               <div className={styles.controls}>
-                <button onClick={prev} className={styles.controlBtn}>prev</button>
-                <button onClick={next} className={styles.controlBtn}>next</button>
+                <button onClick={prev} className={styles.controlBtn}>‹</button>
+                <button onClick={next} className={styles.controlBtn}>›</button>
               </div>
             </div>
           </div>
@@ -120,7 +125,7 @@ export default function HomePage() {
             <div className={styles.featureItem}>
               <div className={styles.featIcon}>✅</div>
               <div className={styles.featTitle}>Confirmation immediate</div>
-              <div className={styles.featDesc}>Fini lattente. Votre creneau est bloque instantanement.</div>
+              <div className={styles.featDesc}>Votre creneau est bloque instantanement.</div>
             </div>
             <div className={styles.featureItem}>
               <div className={styles.featIcon}>⭐</div>
@@ -133,8 +138,8 @@ export default function HomePage() {
 
       <section className={styles.proCta}>
         <div className="container">
-          <h2>Vous etes un professionnel de la beaute ?</h2>
-          <p>Rejoignez Bookme Pro pour gerer votre agenda et developper votre clientele.</p>
+          <h2>Vous etes un professionnel ?</h2>
+          <p>Rejoignez Bookme Pro pour gerer votre agenda en ligne et developper votre clientele.</p>
           <Link href="/pro" className={styles.proCtaBtn}>Decouvrir notre offre Pro</Link>
         </div>
       </section>
