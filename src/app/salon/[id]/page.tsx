@@ -38,7 +38,7 @@ export default function SalonPage() {
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'Inter, sans-serif', color: '#999' }}>Chargement...</div>
   if (!salon) return <div style={{ textAlign: 'center', padding: 60, fontFamily: 'Inter, sans-serif' }}><p>Salon introuvable.</p><Link href="/search" style={{ color: OR, fontWeight: 700 }}>Retour</Link></div>
 
-  const categories = [...new Set(services.map(s => s.categorie_service))]
+  const categories = Array.from(new Set(services.map(s => s.categorie_service)))
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
