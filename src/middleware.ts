@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const PUBLIC_PATHS = ['/', '/login', '/register', '/search', '/salon', '/pro', '/pro/login', '/pro/register']
-
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Routes client protégées
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/profile') || pathname.startsWith('/booking')) {
+  // On protège uniquement le dashboard et le profil client
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/profile')) {
     const token = req.cookies.get('bookme_token')?.value
     if (!token) {
       return NextResponse.redirect(new URL('/login?redirect=' + pathname, req.url))
@@ -19,7 +17,7 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Routes pro protégées
+  // On protège l'espace pro
   if (pathname.startsWith('/pro/dashboard') || pathname.startsWith('/pro/planning') || pathname.startsWith('/pro/clients') || pathname.startsWith('/pro/settings')) {
     const token = req.cookies.get('bookme_pro_token')?.value
     if (!token) {
