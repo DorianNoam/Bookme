@@ -7,9 +7,23 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
-type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number }
+type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number; ouverture?: string; fermeture?: string }
 type Service = { id: number; nom: string; prix: number; duree: number }
 type Creneau = { heure: string; emp_id: number }
+
+// Génère tous les créneaux possibles toutes les 30 mins entre l'ouverture et la fermeture
+function generateAllSlots(startStr = "09:00", endStr = "19:00") {
+  const slots = []
+  let [h, m] = startStr.substring(0, 5).split(':').map(Number)
+  const [endH, endM] = endStr.substring(0, 5).split(':').map(Number)
+  
+  while (h < endH || (h === endH && m < endM)) {
+    slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+    m += 30
+    if (m >= 60) { h += 1; m -= 60 }
+  }
+  return slots
+}
 
 function BookingContent() {
   const searchParams = useSearchParams()
@@ -21,16 +35,13 @@ function BookingContent() {
   const [service, setService] = useState<Service | null>(null)
   const [step, setStep] = useState(1)
   
-  // États du calendrier
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [date, setDate] = useState('')
   
-  // États des créneaux
   const [creneaux, setCreneaux] = useState<Creneau[]>([])
   const [ferme, setFerme] = useState(false)
   const [selectedCreneau, setSelectedCreneau] = useState<Creneau | null>(null)
   
-  // États client
   const [clientNom, setClientNom] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientTelephone, setClientTelephone] = useState('')
@@ -70,13 +81,11 @@ function BookingContent() {
       setCreneaux([])
     } finally {
       setLoadingCreneaux(false)
-      // Si on est à l'étape 1 et qu'on a cliqué sur une date, on passe à l'étape 2 automatiquement
       if (step === 1) setStep(2) 
     }
   }
 
   function handleDateSelect(dateObj: Date) {
-    // Formatage YYYY-MM-DD robuste
     const y = dateObj.getFullYear()
     const m = String(dateObj.getMonth() + 1).padStart(2, '0')
     const d = String(dateObj.getDate()).padStart(2, '0')
@@ -125,22 +134,17 @@ function BookingContent() {
     }
   }
 
-  // --- LOGIQUE DU CALENDRIER ---
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
-  const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1 // Lundi comme 1er jour
+  const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1 
 
   const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
 
-  function prevMonth() {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))
-  }
-  function nextMonth() {
-    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))
-  }
+  function prevMonth() { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)) }
+  function nextMonth() { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)) }
 
   function formatDateFr(d: string) {
     if (!d) return ''
@@ -148,7 +152,6 @@ function BookingContent() {
     return new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', opts)
   }
 
-  // --- RENDU ---
   if (!salonId || !serviceId) return (
     <div style={{ textAlign: 'center', padding: 60, fontFamily: 'Inter, sans-serif' }}>
       <p style={{ color: '#888', marginBottom: 20 }}>Paramètres manquants.</p>
@@ -174,7 +177,6 @@ function BookingContent() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
       
-      {/* HEADER SIMPLE */}
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '15px 0', marginBottom: 30 }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 22, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>Bookme<span style={{ color: OR }}>.dz</span></Link>
@@ -184,7 +186,6 @@ function BookingContent() {
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px' }}>
         
-        {/* RÉSUMÉ PRESTATION */}
         <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 800, fontSize: 16, color: NOIR }}>{salon?.nom}</div>
@@ -199,12 +200,10 @@ function BookingContent() {
 
         <div style={{ display: 'grid', gridTemplateColumns: step === 3 ? '1fr' : '1fr 1fr', gap: 24, alignItems: 'start' }}>
           
-          {/* COLONNE GAUCHE : CALENDRIER (Caché si étape 3) */}
           {step < 3 && (
             <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '30px 28px' }}>
               <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>1. Choisissez une date</h2>
               
-              {/* Navigation Mois */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <button onClick={prevMonth} disabled={currentMonth <= new Date(today.getFullYear(), today.getMonth(), 1)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: currentMonth <= new Date(today.getFullYear(), today.getMonth(), 1) ? 'default' : 'pointer', color: currentMonth <= new Date(today.getFullYear(), today.getMonth(), 1) ? '#ccc' : NOIR }}>◀</button>
                 <div style={{ fontWeight: 700, fontSize: 15, textTransform: 'capitalize' }}>
@@ -213,14 +212,12 @@ function BookingContent() {
                 <button onClick={nextMonth} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: NOIR }}>▶</button>
               </div>
 
-              {/* Jours de la semaine */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5, textAlign: 'center', marginBottom: 10 }}>
                 {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
                   <div key={d} style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase' }}>{d}</div>
                 ))}
               </div>
 
-              {/* Grille des jours */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5 }}>
                 {Array.from({ length: startOffset }).map((_, i) => <div key={`empty-${i}`} />)}
                 
@@ -229,7 +226,6 @@ function BookingContent() {
                   const dateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
                   const isPast = dateObj < today
                   
-                  // Format YYYY-MM-DD pour la comparaison
                   const y = dateObj.getFullYear()
                   const m = String(dateObj.getMonth() + 1).padStart(2, '0')
                   const d = String(dateObj.getDate()).padStart(2, '0')
@@ -262,7 +258,6 @@ function BookingContent() {
             </div>
           )}
 
-          {/* COLONNE DROITE : CRÉNEAUX (Caché si étape 3) */}
           {step === 2 && (
             <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '30px 28px', animation: 'fadeIn 0.3s ease-in-out' }}>
               <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 8 }}>2. Heure du rendez-vous</h2>
@@ -276,40 +271,42 @@ function BookingContent() {
                 <div style={{ textAlign: 'center', padding: 40, background: '#FFF4F4', borderRadius: 4, color: '#D32F2F', fontSize: 14 }}>
                   Le salon est fermé à cette date.
                 </div>
-              ) : creneaux.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 40, background: '#F9F9F9', borderRadius: 4, color: '#888', fontSize: 14 }}>
-                  Plus aucun créneau disponible pour ce jour.
-                </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 10 }}>
-                  {creneaux.map((c, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handleCreneauSelect(c)}
-                      style={{ 
-                        padding: '12px 0', 
-                        border: '1px solid #E0D8CE', 
-                        borderRadius: 4, 
-                        background: '#fff', 
-                        color: NOIR, 
-                        fontWeight: 700, 
-                        fontSize: 14, 
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={(e) => { e.currentTarget.style.borderColor = OR; e.currentTarget.style.color = OR }}
-                      onMouseOut={(e) => { e.currentTarget.style.borderColor = '#E0D8CE'; e.currentTarget.style.color = NOIR }}
-                    >
-                      {c.heure}
-                    </button>
-                  ))}
+                  {generateAllSlots(salon?.ouverture, salon?.fermeture).map((time, i) => {
+                    const creneauDispo = creneaux.find(c => c.heure.substring(0, 5) === time)
+                    const isAvailable = !!creneauDispo
+
+                    return (
+                      <button
+                        key={i}
+                        disabled={!isAvailable}
+                        onClick={() => isAvailable && handleCreneauSelect(creneauDispo)}
+                        style={{ 
+                          padding: '12px 0', 
+                          border: isAvailable ? '1px solid #E0D8CE' : '1px solid #F0F0F0', 
+                          borderRadius: 4, 
+                          background: isAvailable ? '#fff' : '#FAFAFA', 
+                          color: isAvailable ? NOIR : '#CCC', 
+                          fontWeight: 700, 
+                          fontSize: 14, 
+                          cursor: isAvailable ? 'pointer' : 'not-allowed',
+                          textDecoration: isAvailable ? 'none' : 'line-through',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => { if (isAvailable) { e.currentTarget.style.borderColor = OR; e.currentTarget.style.color = OR } }}
+                        onMouseOut={(e) => { if (isAvailable) { e.currentTarget.style.borderColor = '#E0D8CE'; e.currentTarget.style.color = NOIR } }}
+                      >
+                        {time}
+                      </button>
+                    )
+                  })}
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* ÉTAPE 3 — COORDONNÉES ET CONFIRMATION (Prend toute la largeur) */}
         {step === 3 && (
           <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '40px', animation: 'fadeIn 0.3s ease-in-out' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
@@ -322,7 +319,7 @@ function BookingContent() {
             <div style={{ background: BG, borderRadius: 4, padding: '20px', marginBottom: 30, display: 'flex', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Date du rendez-vous</div>
-                <div style={{ fontWeight: 700, color: NOIR, textTransform: 'capitalize' }}>{formatDateFr(date)} à {selectedCreneau?.heure}</div>
+                <div style={{ fontWeight: 700, color: NOIR, textTransform: 'capitalize' }}>{formatDateFr(date)} à {selectedCreneau?.heure.substring(0, 5)}</div>
               </div>
             </div>
 
@@ -357,7 +354,6 @@ function BookingContent() {
         )}
       </div>
       
-      {/* Animation d'apparition */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
