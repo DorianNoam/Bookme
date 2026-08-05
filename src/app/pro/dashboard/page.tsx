@@ -5,46 +5,61 @@ import { jwtVerify } from 'jose'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 
+// OBLIGATOIRE : Force Next.js à lire les cookies en temps réel à chaque rafraîchissement
+export const dynamic = 'force-dynamic'
+
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
 export default async function ProDashboardPage() {
-  // 1. Vérification du cookie serveur
   const cookieStore = cookies()
   const token = cookieStore.get('bookme_pro_token')?.value
 
   if (!token) {
-    redirect('/pro/login')
+    return (
+      <div style={{ padding: 50, background: NOIR, color: '#ff6b6b', minHeight: '100vh' }}>
+        <h1>Erreur : Cookie introuvable</h1>
+        <p>Le navigateur n'a pas envoyé le token JWT lors du rafraîchissement.</p>
+        <Link href="/pro/login" style={{ color: OR }}>Retour à la connexion</Link>
+      </div>
+    )
   }
 
   let proId;
   try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    if (!process.env.JWT_SECRET) {
+      throw new Error("La variable d'environnement JWT_SECRET est manquante sur Vercel.")
+    }
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     proId = payload.id as number
-  } catch (err) {
-    redirect('/pro/login')
+  } catch (err: any) {
+    // AU LIEU DE REDIRIGER, ON AFFICHE L'ERREUR POUR COMPRENDRE LE BUG
+    return (
+      <div style={{ padding: 50, background: NOIR, color: '#ff6b6b', minHeight: '100vh' }}>
+        <h1>Erreur de vérification JWT</h1>
+        <p style={{ fontWeight: 'bold' }}>{err.message}</p>
+        <p>Vérifie tes variables d'environnement Vercel.</p>
+        <Link href="/pro/login" style={{ color: OR }}>Retour à la connexion</Link>
+      </div>
+    )
   }
 
-  // 2. Connexion à Supabase
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-  // 3. Récupérer les infos du Pro
   const { data: pro } = await supabase
     .from('pros')
     .select('prenom, nom')
     .eq('id', proId)
     .single()
 
-  // 4. Récupérer son Salon
   const { data: salon } = await supabase
     .from('salons')
     .select('id, nom, ville')
     .eq('pro_id', proId)
     .single()
 
-  // 5. Récupérer les réservations du jour si le salon existe
   let reservationsAujourdhui: any[] = []
   if (salon) {
     const { data: res } = await supabase
@@ -61,13 +76,11 @@ export default async function ProDashboardPage() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
       
-   {/* HEADER DASHBOARD */}
+      {/* NOUVEAU HEADER AVEC AGENDA ET DÉCONNEXION */}
       <header style={{ background: NOIR, color: '#fff', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 20, fontWeight: 900 }}>
           Bookme<span style={{ color: OR }}>.dz</span> <span style={{ fontWeight: 400, fontSize: 14, color: '#888' }}>| Espace Pro</span>
         </div>
-        
-        {/* NOUVELLE NAVIGATION */}
         <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: '#888', marginRight: 10 }}>{pro?.prenom} {pro?.nom}</span>
           <Link href="/pro/dashboard" style={{ color: OR, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>Dashboard</Link>
@@ -76,19 +89,13 @@ export default async function ProDashboardPage() {
         </nav>
       </header>
 
-      {/* CONTENU PRINCIPAL */}
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px' }}>
         
         {!salon ? (
           <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: NOIR, marginBottom: 15 }}>Bienvenue sur Bookme Pro !</h2>
             <p style={{ color: '#666', marginBottom: 30 }}>Pour commencer à recevoir des réservations, vous devez configurer votre établissement.</p>
-            
-            {/* LE BOUTON MIS À JOUR AVEC LE COMPOSANT LINK */}
-            <Link 
-              href="/pro/salon/create" 
-              style={{ display: 'inline-block', background: OR, color: '#fff', textDecoration: 'none', padding: '12px 24px', borderRadius: 4, fontWeight: 700 }}
-            >
+            <Link href="/pro/salon/create" style={{ display: 'inline-block', background: OR, color: '#fff', textDecoration: 'none', padding: '12px 24px', borderRadius: 4, fontWeight: 700 }}>
               Créer mon salon
             </Link>
           </div>
@@ -99,7 +106,6 @@ export default async function ProDashboardPage() {
               <p style={{ color: '#666', fontSize: 14 }}>📍 {salon.ville}</p>
             </div>
 
-            {/* GRILLE STATS */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 20, marginBottom: 40 }}>
               <div style={{ background: '#fff', padding: 25, borderRadius: 6, borderLeft: `4px solid ${NOIR}`, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
                 <div style={{ color: '#888', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>RDV du jour</div>
@@ -113,7 +119,6 @@ export default async function ProDashboardPage() {
               </div>
             </div>
 
-            {/* LISTE DES RDV */}
             <div style={{ background: '#fff', borderRadius: 6, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
               <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Prochains rendez-vous</h3>
               
