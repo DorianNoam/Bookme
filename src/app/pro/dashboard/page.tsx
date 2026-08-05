@@ -52,7 +52,6 @@ export default async function ProDashboardPage() {
       .select('*')
       .eq('salon_id', salon.id)
       .eq('statut', 'confirme')
-      // Filtre simplifié pour l'exemple
       .order('date_rdv', { ascending: true })
       .limit(5)
     
@@ -80,9 +79,14 @@ export default async function ProDashboardPage() {
           <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
             <h2 style={{ fontSize: 24, fontWeight: 800, color: NOIR, marginBottom: 15 }}>Bienvenue sur Bookme Pro !</h2>
             <p style={{ color: '#666', marginBottom: 30 }}>Pour commencer à recevoir des réservations, vous devez configurer votre établissement.</p>
-            <button style={{ background: OR, color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>
+            
+            {/* LE BOUTON MIS À JOUR AVEC LE COMPOSANT LINK */}
+            <Link 
+              href="/pro/salon/create" 
+              style={{ display: 'inline-block', background: OR, color: '#fff', textDecoration: 'none', padding: '12px 24px', borderRadius: 4, fontWeight: 700 }}
+            >
               Créer mon salon
-            </button>
+            </Link>
           </div>
         ) : (
           <>
