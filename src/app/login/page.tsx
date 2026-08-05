@@ -12,7 +12,7 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  const redirectUrl = searchParams.get('redirect') || '/'
+  const redirectUrl = searchParams.get('redirect') || '/dashboard'
   const justRegistered = searchParams.get('registered') === 'true'
   
   const [email, setEmail] = useState('')
