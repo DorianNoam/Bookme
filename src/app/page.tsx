@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -30,7 +30,20 @@ export default function HomePage() {
   const [slide, setSlide] = useState(0)
   const [query, setQuery] = useState('')
   const [loc, setLoc] = useState('')
+  
+  // Nouvel état pour gérer la connexion
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  
   const current = SLIDES[slide]
+
+  // Vérification de la connexion au chargement de la page
+  useEffect(() => {
+    fetch('/api/user/dashboard')
+      .then(res => {
+        if (res.ok) setIsLoggedIn(true)
+      })
+      .catch(() => setIsLoggedIn(false))
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,8 +68,17 @@ export default function HomePage() {
             ))}
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link href="/login" style={{ color: '#444', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>Connexion</Link>
-            <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Inscription</Link>
+            {/* AFFICHAGE CONDITIONNEL DU BOUTON */}
+            {isLoggedIn ? (
+              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+                Mon espace
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" style={{ color: '#444', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>Connexion</Link>
+                <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Inscription</Link>
+              </>
+            )}
             <Link href="/pro" style={{ border: '1px solid ' + OR, color: OR, padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Espace Pro</Link>
           </div>
         </div>
