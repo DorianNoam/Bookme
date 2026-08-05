@@ -28,7 +28,20 @@ function SearchContent() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [loc, setLoc] = useState(searchParams.get('loc') || '')
+  
+  // Nouvel état pour gérer la connexion
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
 
+  // Vérification de la connexion au chargement
+  useEffect(() => {
+    fetch('/api/user/dashboard')
+      .then(res => {
+        if (res.ok) setIsLoggedIn(true)
+      })
+      .catch(() => setIsLoggedIn(false))
+  }, [])
+
+  // Gestion de la recherche
   useEffect(() => {
     const q = searchParams.get('q') || ''
     const l = searchParams.get('loc') || ''
@@ -79,8 +92,17 @@ function SearchContent() {
             <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '10px 25px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 13, letterSpacing: 0.5 }}>Rechercher</button>
           </form>
           <div style={{ display: 'flex', gap: 12, whiteSpace: 'nowrap', alignItems: 'center' }}>
-            <Link href="/login" style={{ color: '#555', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>Connexion</Link>
-            <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '8px 18px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Inscription</Link>
+            {/* AFFICHAGE CONDITIONNEL DU BOUTON */}
+            {isLoggedIn ? (
+              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 18px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                Mon espace
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" style={{ color: '#555', fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>Connexion</Link>
+                <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '8px 18px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Inscription</Link>
+              </>
+            )}
           </div>
         </div>
       </header>
