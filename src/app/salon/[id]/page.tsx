@@ -116,14 +116,22 @@ export default function SalonPage() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
       
-      {/* HEADER DE NAVIGATION */}
+ {/* HEADER DE NAVIGATION */}
       <header style={{ background: '#fff', padding: '15px 0' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 22, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>Bookme<span style={{ color: OR }}>.dz</span></Link>
           <Link href="/search" style={{ color: '#777', fontSize: 14, textDecoration: 'none' }}>← Retour aux résultats</Link>
           <div style={{ display: 'flex', gap: 15 }}>
-            <Link href="/login" style={{ color: NOIR, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Connexion</Link>
-            <Link href="/register" style={{ color: '#fff', background: NOIR, padding: '6px 16px', borderRadius: 4, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Inscription</Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard" style={{ color: '#fff', background: NOIR, padding: '6px 16px', borderRadius: 4, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
+                Mon espace
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" style={{ color: NOIR, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Connexion</Link>
+                <Link href="/register" style={{ color: '#fff', background: NOIR, padding: '6px 16px', borderRadius: 4, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Inscription</Link>
+              </>
+            )}
           </div>
         </div>
       </header>
