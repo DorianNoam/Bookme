@@ -91,7 +91,7 @@ function ProLoginContent() {
               />
             </div>
 
-            <button 
+<button 
               type="submit" 
               disabled={loading} 
               style={{ width: '100%', padding: '14px 0', background: loading ? '#555' : OR, color: '#fff', border: 'none', borderRadius: 4, fontWeight: 800, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', marginTop: 10, transition: 'background 0.2s' }}
@@ -99,6 +99,14 @@ function ProLoginContent() {
               {loading ? 'Connexion...' : 'Accéder à mon espace'}
             </button>
           </form>
+
+          {/* NOUVEAU LIEN D'INSCRIPTION */}
+          <div style={{ textAlign: 'center', marginTop: 24, fontSize: 14, color: '#888' }}>
+            Vous n'avez pas de compte ?{' '}
+            <Link href="/pro/register" style={{ color: OR, fontWeight: 700, textDecoration: 'none' }}>
+              Créer mon compte pro
+            </Link>
+          </div>
         </div>
       </div>
     </div>
