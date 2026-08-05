@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcryptjs' // Utilisation de bcryptjs pour Vercel
 import { SignJWT } from 'jose'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Identifiants incorrects.' }, { status: 401 })
     }
 
-    // 2. Vérifier le mot de passe
+    // 2. Vérification sécurisée avec bcryptjs
     const passwordMatch = await bcrypt.compare(password, pro.password)
     if (!passwordMatch) {
       return NextResponse.json({ success: false, error: 'Identifiants incorrects.' }, { status: 401 })
