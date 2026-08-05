@@ -18,7 +18,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // On protège l'espace pro
-  if (pathname.startsWith('/pro/dashboard') || pathname.startsWith('/pro/planning') || pathname.startsWith('/pro/clients') || pathname.startsWith('/pro/settings')) {
+  if (pathname.startsWith('/pro/dashboard') || pathname.startsWith('/pro/agenda') || pathname.startsWith('/pro/clients') || pathname.startsWith('/pro/settings')) {
     const token = req.cookies.get('bookme_pro_token')?.value
     if (!token) {
       return NextResponse.redirect(new URL('/pro/login', req.url))
