@@ -61,15 +61,19 @@ export default async function ProDashboardPage() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
       
-      {/* HEADER DASHBOARD */}
+   {/* HEADER DASHBOARD */}
       <header style={{ background: NOIR, color: '#fff', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 20, fontWeight: 900 }}>
           Bookme<span style={{ color: OR }}>.dz</span> <span style={{ fontWeight: 400, fontSize: 14, color: '#888' }}>| Espace Pro</span>
         </div>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>{pro?.prenom} {pro?.nom}</span>
-          <Link href="/pro/logout" style={{ color: '#ff6b6b', fontSize: 13, textDecoration: 'none', fontWeight: 700 }}>Déconnexion</Link>
-        </div>
+        
+        {/* NOUVELLE NAVIGATION */}
+        <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#888', marginRight: 10 }}>{pro?.prenom} {pro?.nom}</span>
+          <Link href="/pro/dashboard" style={{ color: OR, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>Dashboard</Link>
+          <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Agenda</Link>
+          <Link href="/pro/logout" style={{ color: '#ff6b6b', fontSize: 13, textDecoration: 'none', fontWeight: 700, marginLeft: 10 }}>Déconnexion</Link>
+        </nav>
       </header>
 
       {/* CONTENU PRINCIPAL */}
