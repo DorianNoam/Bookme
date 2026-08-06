@@ -1,4 +1,4 @@
-
+import LogoutButton from '@/app/pro/components/LogoutButton'
 import React from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -86,7 +86,7 @@ export default async function ProDashboardPage() {
           <span style={{ fontSize: 14, fontWeight: 600, color: '#888', marginRight: 10 }}>{pro?.prenom} {pro?.nom}</span>
           <Link href="/pro/dashboard" style={{ color: OR, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>Dashboard</Link>
           <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Agenda</Link>
-          <Link href="/pro/logout" style={{ color: '#ff6b6b', fontSize: 13, textDecoration: 'none', fontWeight: 700, marginLeft: 10 }}>Déconnexion</Link>
+         <LogoutButton />
         </nav>
       </header>
 
