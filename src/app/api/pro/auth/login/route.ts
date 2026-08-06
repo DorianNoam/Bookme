@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import bcrypt from 'bcryptjs' // Indispensable pour Vercel
+import bcrypt from 'bcryptjs'
 import { SignJWT } from 'jose'
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -34,6 +34,8 @@ export async function POST(req: NextRequest) {
       .sign(new TextEncoder().encode(process.env.JWT_SECRET!))
 
     const response = NextResponse.json({ success: true })
+    
+    // Ajout de sameSite pour la navigation Next.js
     response.cookies.set({
       name: 'bookme_pro_token',
       value: token,
@@ -41,6 +43,7 @@ export async function POST(req: NextRequest) {
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7,
+      sameSite: 'lax' 
     })
 
     return response
