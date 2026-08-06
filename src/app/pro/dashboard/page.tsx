@@ -82,12 +82,13 @@ export default async function ProDashboardPage() {
         <div style={{ fontSize: 20, fontWeight: 900 }}>
           Bookme<span style={{ color: OR }}>.dz</span> <span style={{ fontWeight: 400, fontSize: 14, color: '#888' }}>| Espace Pro</span>
         </div>
-        <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: '#888', marginRight: 10 }}>{pro?.prenom} {pro?.nom}</span>
-          <Link href="/pro/dashboard" style={{ color: OR, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>Dashboard</Link>
-          <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Agenda</Link>
-         <LogoutButton />
-        </nav>
+      <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+  <span style={{ fontSize: 14, fontWeight: 600, color: '#888', marginRight: 10 }}>{pro?.prenom} {pro?.nom}</span>
+  <Link href="/pro/dashboard" style={{ color: OR, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>Dashboard</Link>
+  <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Agenda</Link>
+  <Link href="/pro/settings" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Parametres</Link>
+  <LogoutButton />
+</nav>
       </header>
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px' }}>
