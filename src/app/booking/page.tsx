@@ -10,13 +10,12 @@ const BG = '#F8F5F0'
 type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number; ouverture?: string; fermeture?: string }
 type Service = { id: number; nom: string; prix: number; duree: number }
 type Creneau = { heure: string; emp_id: number }
+type UserInfo = { id: number; prenom: string; nom: string; email: string; telephone: string }
 
-// Génère tous les créneaux possibles toutes les 30 mins entre l'ouverture et la fermeture
 function generateAllSlots(startStr = "09:00", endStr = "19:00") {
   const slots = []
   let [h, m] = startStr.substring(0, 5).split(':').map(Number)
   const [endH, endM] = endStr.substring(0, 5).split(':').map(Number)
-  
   while (h < endH || (h === endH && m < endM)) {
     slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
     m += 30
@@ -34,24 +33,29 @@ function BookingContent() {
   const [salon, setSalon] = useState<Salon | null>(null)
   const [service, setService] = useState<Service | null>(null)
   const [step, setStep] = useState(1)
-  
+
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [date, setDate] = useState('')
-  
+
   const [creneaux, setCreneaux] = useState<Creneau[]>([])
   const [ferme, setFerme] = useState(false)
   const [selectedCreneau, setSelectedCreneau] = useState<Creneau | null>(null)
-  
+
+  // ── Client info ──
+  const [loggedUser, setLoggedUser] = useState<UserInfo | null>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
   const [clientNom, setClientNom] = useState('')
+  const [clientPrenom, setClientPrenom] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientTelephone, setClientTelephone] = useState('')
-  
+
   const [loading, setLoading] = useState(true)
   const [loadingCreneaux, setLoadingCreneaux] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
+  // Charger le salon + service
   useEffect(() => {
     if (!salonId || !serviceId) return
     fetch('/api/salons/' + salonId)
@@ -63,6 +67,23 @@ function BookingContent() {
         setLoading(false)
       })
   }, [salonId, serviceId])
+
+  // Verifier si le client est connecte
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(data => {
+        if (data.logged && data.user) {
+          setLoggedUser(data.user)
+          setClientNom(data.user.nom)
+          setClientPrenom(data.user.prenom)
+          setClientEmail(data.user.email)
+          setClientTelephone(data.user.telephone || '')
+        }
+        setCheckingAuth(false)
+      })
+      .catch(() => setCheckingAuth(false))
+  }, [])
 
   async function fetchCreneaux(d: string) {
     setLoadingCreneaux(true)
@@ -81,7 +102,7 @@ function BookingContent() {
       setCreneaux([])
     } finally {
       setLoadingCreneaux(false)
-      if (step === 1) setStep(2) 
+      if (step === 1) setStep(2)
     }
   }
 
@@ -90,7 +111,6 @@ function BookingContent() {
     const m = String(dateObj.getMonth() + 1).padStart(2, '0')
     const d = String(dateObj.getDate()).padStart(2, '0')
     const formattedDate = `${y}-${m}-${d}`
-    
     setDate(formattedDate)
     fetchCreneaux(formattedDate)
   }
@@ -101,9 +121,10 @@ function BookingContent() {
   }
 
   async function handleConfirm() {
-    if (!clientNom.trim() || !clientEmail.trim() || !clientTelephone.trim()) { 
-      setError('Veuillez remplir tous vos identifiants de contact.')
-      return 
+    const fullNom = clientPrenom ? `${clientPrenom} ${clientNom}`.trim() : clientNom.trim()
+    if (!fullNom || !clientEmail.trim() || !clientTelephone.trim()) {
+      setError('Veuillez remplir tous les champs de contact.')
+      return
     }
     setSubmitting(true)
     setError('')
@@ -117,6 +138,7 @@ function BookingContent() {
           employe_id: selectedCreneau!.emp_id,
           date_rdv: date + 'T' + selectedCreneau!.heure + ':00',
           client_nom: clientNom.trim(),
+          client_prenom: clientPrenom.trim(),
           client_email: clientEmail.trim(),
           client_telephone: clientTelephone.trim(),
         }),
@@ -125,7 +147,7 @@ function BookingContent() {
       if (data.success) {
         setSuccess(true)
       } else {
-        setError(data.error || 'Erreur lors de la réservation.')
+        setError(data.error || 'Erreur lors de la reservation.')
       }
     } catch {
       setError('Erreur de connexion.')
@@ -136,12 +158,12 @@ function BookingContent() {
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  
+
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
-  const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1 
+  const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1
 
-  const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
+  const monthNames = ["Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout", "Septembre", "Octobre", "Novembre", "Decembre"]
 
   function prevMonth() { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)) }
   function nextMonth() { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)) }
@@ -152,44 +174,66 @@ function BookingContent() {
     return new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', opts)
   }
 
+  // ── Guards ──
   if (!salonId || !serviceId) return (
     <div style={{ textAlign: 'center', padding: 60, fontFamily: 'Inter, sans-serif' }}>
-      <p style={{ color: '#888', marginBottom: 20 }}>Paramètres manquants.</p>
-      <Link href="/search" style={{ color: OR, fontWeight: 700, textDecoration: 'none' }}>Retour à la recherche</Link>
+      <p style={{ color: '#888', marginBottom: 20 }}>Parametres manquants.</p>
+      <Link href="/search" style={{ color: OR, fontWeight: 700, textDecoration: 'none' }}>Retour a la recherche</Link>
     </div>
   )
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'Inter, sans-serif', color: '#999' }}>Chargement...</div>
-  
+
+  // ── Ecran de succes ──
   if (success) return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
       <div style={{ maxWidth: 600, margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
         <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '50px 40px' }}>
-          <div style={{ fontSize: 50, marginBottom: 20 }}>✅</div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: NOIR, marginBottom: 10 }}>Réservation confirmée !</h1>
-          <p style={{ color: '#888', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>Votre rendez-vous au {salon?.nom} a été enregistré avec succès.</p>
-          <Link href="/search" style={{ display: 'inline-block', background: NOIR, color: '#fff', padding: '12px 28px', borderRadius: 4, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Retour à la recherche</Link>
+          <div style={{ fontSize: 50, marginBottom: 20 }}>{'✅'}</div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: NOIR, marginBottom: 10 }}>Reservation confirmee !</h1>
+          <p style={{ color: '#888', fontSize: 14, marginBottom: 8, lineHeight: 1.6 }}>
+            Votre rendez-vous au <strong>{salon?.nom}</strong> a ete enregistre.
+          </p>
+          <p style={{ color: '#666', fontSize: 14, marginBottom: 30, lineHeight: 1.6 }}>
+            <strong>{formatDateFr(date)}</strong> a <strong>{selectedCreneau?.heure.substring(0, 5)}</strong>
+            <br />{service?.nom} — {service?.prix?.toLocaleString()} DA
+          </p>
+          <p style={{ color: '#999', fontSize: 13, marginBottom: 30 }}>
+            Paiement sur place. Presentez-vous 5 min avant votre rendez-vous.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {loggedUser && (
+              <Link href="/dashboard" style={{ display: 'inline-block', background: OR, color: '#fff', padding: '12px 28px', borderRadius: 4, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                Mes rendez-vous
+              </Link>
+            )}
+            <Link href="/search" style={{ display: 'inline-block', background: NOIR, color: '#fff', padding: '12px 28px', borderRadius: 4, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+              Retour a la recherche
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   )
 
+  // ── Page principale ──
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
-      
+
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '15px 0', marginBottom: 30 }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 22, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>Bookme<span style={{ color: OR }}>.dz</span></Link>
-          <Link href={'/salon/' + salonId} style={{ color: '#777', fontSize: 14, textDecoration: 'none' }}>← Retour au salon</Link>
+          <Link href={'/salon/' + salonId} style={{ color: '#777', fontSize: 14, textDecoration: 'none' }}>{'← Retour au salon'}</Link>
         </div>
       </header>
 
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px' }}>
-        
+
+        {/* Resume salon + service */}
         <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '20px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 20 }}>
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 800, fontSize: 16, color: NOIR }}>{salon?.nom}</div>
-            <div style={{ color: '#999', fontSize: 12, marginTop: 2 }}>📍 {salon?.adresse}, {salon?.ville}</div>
+            <div style={{ color: '#999', fontSize: 12, marginTop: 2 }}>{'📍'} {salon?.adresse}, {salon?.ville}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 700, fontSize: 14, color: NOIR }}>{service?.nom}</div>
@@ -198,59 +242,59 @@ function BookingContent() {
           </div>
         </div>
 
+        {/* Indicateur connecte */}
+        {!checkingAuth && loggedUser && (
+          <div style={{ background: '#d4edda', border: '1px solid #c3e6cb', borderRadius: 4, padding: '10px 16px', marginBottom: 20, fontSize: 13, color: '#155724', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>{'✓'} Connecte en tant que <strong>{loggedUser.prenom} {loggedUser.nom}</strong> — vos infos seront pre-remplies</span>
+          </div>
+        )}
+
         <div style={{ display: 'grid', gridTemplateColumns: step === 3 ? '1fr' : '1fr 1fr', gap: 24, alignItems: 'start' }}>
-          
+
+          {/* ════ ETAPE 1 : Calendrier ════ */}
           {step < 3 && (
             <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '30px 28px' }}>
               <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>1. Choisissez une date</h2>
-              
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                <button onClick={prevMonth} disabled={currentMonth <= new Date(today.getFullYear(), today.getMonth(), 1)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: currentMonth <= new Date(today.getFullYear(), today.getMonth(), 1) ? 'default' : 'pointer', color: currentMonth <= new Date(today.getFullYear(), today.getMonth(), 1) ? '#ccc' : NOIR }}>◀</button>
-                <div style={{ fontWeight: 700, fontSize: 15, textTransform: 'capitalize' }}>
+                <button onClick={prevMonth} disabled={currentMonth <= new Date(today.getFullYear(), today.getMonth(), 1)} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#999' }}>{'◀'}</button>
+                <span style={{ fontWeight: 800, fontSize: 16, color: NOIR, textTransform: 'capitalize' }}>
                   {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                </div>
-                <button onClick={nextMonth} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: NOIR }}>▶</button>
+                </span>
+                <button onClick={nextMonth} style={{ background: 'none', border: 'none', fontSize: 18, cursor: 'pointer', color: '#999' }}>{'▶'}</button>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5, textAlign: 'center', marginBottom: 10 }}>
-                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
-                  <div key={d} style={{ fontSize: 11, fontWeight: 700, color: '#aaa', textTransform: 'uppercase' }}>{d}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 10 }}>
+                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(j => (
+                  <div key={j} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#bbb', padding: '6px 0' }}>{j}</div>
                 ))}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5 }}>
-                {Array.from({ length: startOffset }).map((_, i) => <div key={`empty-${i}`} />)}
-                
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+                {Array.from({ length: startOffset }).map((_, i) => <div key={'e' + i} />)}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day = i + 1
-                  const dateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day)
-                  const isPast = dateObj < today
-                  
-                  const y = dateObj.getFullYear()
-                  const m = String(dateObj.getMonth() + 1).padStart(2, '0')
-                  const d = String(dateObj.getDate()).padStart(2, '0')
-                  const dateStr = `${y}-${m}-${d}`
-                  
-                  const isSelected = date === dateStr
+                  const dayNum = i + 1
+                  const dayDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), dayNum)
+                  const isPast = dayDate < today
+                  const jourSemaine = dayDate.getDay() || 7
+                  const isOff = salon?.jour_off === jourSemaine
+                  const isDisabled = isPast || isOff
+                  const formatted = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+                  const isSelected = date === formatted
 
                   return (
                     <button
-                      key={day}
-                      disabled={isPast}
-                      onClick={() => handleDateSelect(dateObj)}
+                      key={dayNum}
+                      disabled={isDisabled}
+                      onClick={() => handleDateSelect(dayDate)}
                       style={{
-                        padding: '10px 0',
-                        borderRadius: 4,
-                        border: isSelected ? `2px solid ${OR}` : isPast ? '1px solid transparent' : '1px solid #E0D8CE',
-                        background: isSelected ? OR : isPast ? '#f9f9f9' : '#fff',
-                        color: isSelected ? '#fff' : isPast ? '#ccc' : NOIR,
-                        cursor: isPast ? 'not-allowed' : 'pointer',
-                        fontWeight: 700,
-                        fontSize: 14,
-                        transition: 'all 0.2s'
+                        padding: '10px 0', border: isSelected ? `2px solid ${OR}` : '1px solid #f0f0f0',
+                        borderRadius: 4, background: isSelected ? '#FFF8EE' : isDisabled ? '#fafafa' : '#fff',
+                        color: isDisabled ? '#ddd' : isSelected ? OR : NOIR, fontWeight: isSelected ? 800 : 600,
+                        fontSize: 14, cursor: isDisabled ? 'not-allowed' : 'pointer',
                       }}
                     >
-                      {day}
+                      {dayNum}
                     </button>
                   )
                 })}
@@ -258,102 +302,162 @@ function BookingContent() {
             </div>
           )}
 
-          {step === 2 && (
-            <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '30px 28px', animation: 'fadeIn 0.3s ease-in-out' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 8 }}>2. Heure du rendez-vous</h2>
-              <div style={{ color: OR, fontSize: 13, fontWeight: 600, marginBottom: 20, textTransform: 'capitalize' }}>
-                {formatDateFr(date)}
-              </div>
+          {/* ════ ETAPE 2 : Creneaux ════ */}
+          {step < 3 && (
+            <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '30px 28px' }}>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>2. Choisissez un creneau</h2>
 
-              {loadingCreneaux ? (
-                <div style={{ textAlign: 'center', padding: 40, color: '#999', fontSize: 14 }}>Recherche des disponibilités...</div>
-              ) : ferme ? (
-                <div style={{ textAlign: 'center', padding: 40, background: '#FFF4F4', borderRadius: 4, color: '#D32F2F', fontSize: 14 }}>
-                  Le salon est fermé à cette date.
+              {!date && <p style={{ color: '#bbb', fontSize: 14 }}>{'← Selectionnez une date'}</p>}
+
+              {date && loadingCreneaux && <p style={{ color: '#999', fontSize: 14 }}>Chargement des creneaux...</p>}
+
+              {date && !loadingCreneaux && ferme && (
+                <div style={{ background: '#FFF5F5', padding: 20, borderRadius: 4, textAlign: 'center' }}>
+                  <p style={{ color: '#d32f2f', fontWeight: 600, fontSize: 14 }}>Ferme ce jour-la</p>
                 </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 10 }}>
-                  {generateAllSlots(salon?.ouverture, salon?.fermeture).map((time, i) => {
-                    const creneauDispo = creneaux.find(c => c.heure.substring(0, 5) === time)
-                    const isAvailable = !!creneauDispo
+              )}
 
-                    return (
-                      <button
-                        key={i}
-                        disabled={!isAvailable}
-                        onClick={() => isAvailable && handleCreneauSelect(creneauDispo)}
-                        style={{ 
-                          padding: '12px 0', 
-                          border: isAvailable ? '1px solid #E0D8CE' : '1px solid #F0F0F0', 
-                          borderRadius: 4, 
-                          background: isAvailable ? '#fff' : '#FAFAFA', 
-                          color: isAvailable ? NOIR : '#CCC', 
-                          fontWeight: 700, 
-                          fontSize: 14, 
-                          cursor: isAvailable ? 'pointer' : 'not-allowed',
-                          textDecoration: isAvailable ? 'none' : 'line-through',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseOver={(e) => { if (isAvailable) { e.currentTarget.style.borderColor = OR; e.currentTarget.style.color = OR } }}
-                        onMouseOut={(e) => { if (isAvailable) { e.currentTarget.style.borderColor = '#E0D8CE'; e.currentTarget.style.color = NOIR } }}
-                      >
-                        {time}
-                      </button>
-                    )
-                  })}
+              {date && !loadingCreneaux && !ferme && creneaux.length === 0 && (
+                <p style={{ color: '#999', fontSize: 14 }}>Aucun creneau disponible pour cette date.</p>
+              )}
+
+              {date && !loadingCreneaux && !ferme && creneaux.length > 0 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  {(() => {
+                    const allSlots = generateAllSlots(salon?.ouverture || "09:00", salon?.fermeture || "19:00")
+                    const availableSet = new Set(creneaux.map(c => c.heure.substring(0, 5)))
+
+                    return allSlots.map(time => {
+                      const isAvailable = availableSet.has(time)
+                      const isSelected = selectedCreneau?.heure.substring(0, 5) === time
+                      const creneau = creneaux.find(c => c.heure.substring(0, 5) === time)
+
+                      return (
+                        <button
+                          key={time}
+                          disabled={!isAvailable}
+                          onClick={() => isAvailable && creneau && handleCreneauSelect(creneau)}
+                          style={{
+                            padding: '12px 8px',
+                            border: isSelected ? `2px solid ${OR}` : isAvailable ? '1px solid #E0D8CE' : '1px solid #F0F0F0',
+                            borderRadius: 4,
+                            background: isSelected ? '#FFF8EE' : isAvailable ? '#fff' : '#FAFAFA',
+                            color: isSelected ? OR : isAvailable ? NOIR : '#CCC',
+                            fontWeight: 700, fontSize: 14,
+                            cursor: isAvailable ? 'pointer' : 'not-allowed',
+                            textDecoration: isAvailable ? 'none' : 'line-through',
+                          }}
+                        >
+                          {time}
+                        </button>
+                      )
+                    })
+                  })()}
                 </div>
               )}
             </div>
           )}
         </div>
 
+        {/* ════ ETAPE 3 : Coordonnees ════ */}
         {step === 3 && (
           <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 4, padding: '40px', animation: 'fadeIn 0.3s ease-in-out' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 800, color: NOIR, margin: 0 }}>3. Vos coordonnées</h2>
+              <h2 style={{ fontSize: 22, fontWeight: 800, color: NOIR, margin: 0 }}>3. Vos coordonnees</h2>
               <button onClick={() => setStep(2)} style={{ color: OR, background: 'none', border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                ← Modifier la date/heure
+                {'← Modifier la date/heure'}
               </button>
             </div>
 
+            {/* Resume du RDV */}
             <div style={{ background: BG, borderRadius: 4, padding: '20px', marginBottom: 30, display: 'flex', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Date du rendez-vous</div>
-                <div style={{ fontWeight: 700, color: NOIR, textTransform: 'capitalize' }}>{formatDateFr(date)} à {selectedCreneau?.heure.substring(0, 5)}</div>
+                <div style={{ fontWeight: 700, color: NOIR, textTransform: 'capitalize' }}>{formatDateFr(date)} a {selectedCreneau?.heure.substring(0, 5)}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 12, color: '#888', marginBottom: 4 }}>Prestation</div>
+                <div style={{ fontWeight: 700, color: OR }}>{service?.nom} — {service?.prix?.toLocaleString()} DA</div>
               </div>
             </div>
 
-            <div style={{ marginBottom: 24, textAlign: 'center', padding: '15px', background: '#FDFBF7', borderRadius: '4px', border: `1px dashed ${OR}40` }}>
-              <p style={{ fontSize: 14, color: '#666', marginBottom: 10 }}>Vous avez déjà un compte client ?</p>
-              <Link href={`/login?redirect=/booking?salon=${salonId}&service=${serviceId}`} style={{ display: 'inline-block', color: OR, fontWeight: 700, textDecoration: 'none', fontSize: 14 }}>
-                Se connecter pour aller plus vite
-              </Link>
-            </div>
+            {/* ── SI CONNECTE : infos pre-remplies ── */}
+            {loggedUser ? (
+              <div>
+                <div style={{ background: '#d4edda', border: '1px solid #c3e6cb', borderRadius: 4, padding: '14px 20px', marginBottom: 25, fontSize: 14, color: '#155724' }}>
+                  {'✓'} Reservation au nom de <strong>{loggedUser.prenom} {loggedUser.nom}</strong> ({loggedUser.email})
+                </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 30 }}>
-              <div style={{ gridColumn: 'span 2' }}>
-                <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Nom complet</label>
-                <input value={clientNom} onChange={e => setClientNom(e.target.value)} placeholder="Ex: Amina Belkacem" style={{ width: '100%', padding: '14px 16px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 15 }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 30 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Prenom</label>
+                    <input value={clientPrenom} onChange={e => setClientPrenom(e.target.value)} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Nom</label>
+                    <input value={clientNom} onChange={e => setClientNom(e.target.value)} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Email</label>
+                    <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Telephone</label>
+                    <input type="tel" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} placeholder="0555 12 34 56" style={inputStyle} />
+                  </div>
+                </div>
               </div>
+            ) : (
+              /* ── SI NON CONNECTE : choix login ou guest ── */
               <div>
-                <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Email</label>
-                <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="amina@email.dz" style={{ width: '100%', padding: '14px 16px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 15 }} />
+                <div style={{ marginBottom: 24, textAlign: 'center', padding: '20px', background: '#FDFBF7', borderRadius: 4, border: `1px dashed ${OR}40` }}>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: NOIR, marginBottom: 8 }}>Vous avez deja un compte ?</p>
+                  <p style={{ fontSize: 13, color: '#888', marginBottom: 12 }}>
+                    Connectez-vous pour pre-remplir vos infos et retrouver vos rendez-vous.
+                  </p>
+                  <Link
+                    href={`/login?redirect=/booking?salon=${salonId}&service=${serviceId}`}
+                    style={{ display: 'inline-block', background: OR, color: '#fff', padding: '10px 24px', borderRadius: 4, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}
+                  >
+                    Se connecter
+                  </Link>
+                  <span style={{ display: 'block', marginTop: 12, fontSize: 13, color: '#aaa' }}>ou continuez en renseignant vos coordonnees ci-dessous</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 30 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Prenom</label>
+                    <input value={clientPrenom} onChange={e => setClientPrenom(e.target.value)} placeholder="Amina" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Nom</label>
+                    <input value={clientNom} onChange={e => setClientNom(e.target.value)} placeholder="Belkacem" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Email</label>
+                    <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="amina@email.dz" style={inputStyle} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Telephone</label>
+                    <input type="tel" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} placeholder="0555 12 34 56" style={inputStyle} />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 700, color: '#555', display: 'block', marginBottom: 8 }}>Téléphone</label>
-                <input type="tel" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} placeholder="0555 12 34 56" style={{ width: '100%', padding: '14px 16px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 15 }} />
-              </div>
-            </div>
+            )}
 
             {error && <div style={{ background: '#FFF0F0', color: '#d32f2f', padding: '12px 16px', borderRadius: 4, fontSize: 14, marginBottom: 20, fontWeight: 500 }}>{error}</div>}
 
             <button onClick={handleConfirm} disabled={submitting} style={{ width: '100%', padding: '16px 0', background: submitting ? '#999' : NOIR, color: '#fff', border: 'none', borderRadius: 4, fontWeight: 800, fontSize: 16, cursor: submitting ? 'not-allowed' : 'pointer', transition: 'background 0.2s' }}>
               {submitting ? 'Enregistrement en cours...' : 'Confirmer le rendez-vous'}
             </button>
+
+            <p style={{ textAlign: 'center', marginTop: 16, fontSize: 12, color: '#aaa' }}>
+              Paiement sur place (especes ou virement). Aucun prelevement en ligne.
+            </p>
           </div>
         )}
       </div>
-      
+
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
@@ -364,9 +468,14 @@ function BookingContent() {
   )
 }
 
+const inputStyle: React.CSSProperties = {
+  width: '100%', padding: '14px 16px', border: '1px solid #E0D8CE', borderRadius: 4,
+  fontSize: 15, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', outline: 'none',
+}
+
 export default function BookingPage() {
   return (
-    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'Inter, sans-serif' }}>Chargement du tunnel de réservation...</div>}>
+    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'Inter, sans-serif' }}>Chargement du tunnel de reservation...</div>}>
       <BookingContent />
     </Suspense>
   )
