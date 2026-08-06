@@ -1,5 +1,5 @@
-
 export const dynamic = 'force-dynamic'
+
 import React from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -16,19 +16,38 @@ export default async function ProAgendaPage({
 }: {
   searchParams: { date?: string }
 }) {
-  // 1. Vérification de la session
   const cookieStore = cookies()
   const token = cookieStore.get('bookme_pro_token')?.value
 
-  if (!token) redirect('/pro/login')
+  // 1. Mode Débogage : Afficher l'erreur si le cookie n'est pas transmis
+  if (!token) {
+    return (
+      <div style={{ padding: 50, background: NOIR, color: '#ff6b6b', minHeight: '100vh' }}>
+        <h1>Erreur Agenda : Cookie introuvable</h1>
+        <p>Le token n'a pas été envoyé par le navigateur lors de la navigation vers l'agenda.</p>
+        <Link href="/pro/login" style={{ color: OR }}>Retour à la connexion</Link>
+      </div>
+    )
+  }
 
   let proId;
   try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    if (!process.env.JWT_SECRET) {
+      throw new Error("Variable d'environnement JWT_SECRET manquante sur le serveur.")
+    }
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET)
     const { payload } = await jwtVerify(token, secret)
     proId = payload.id as number
-  } catch (err) {
-    redirect('/pro/login')
+  } catch (err: any) {
+    // 2. Mode Débogage : Afficher l'erreur exacte du décodage JWT
+    return (
+      <div style={{ padding: 50, background: NOIR, color: '#ff6b6b', minHeight: '100vh' }}>
+        <h1>Erreur Agenda : JWT invalide</h1>
+        <p style={{ fontWeight: 'bold' }}>{err.message}</p>
+        <p>Il y a un problème avec la vérification de la signature ou l'expiration du cookie.</p>
+        <Link href="/pro/login" style={{ color: OR }}>Retour à la connexion</Link>
+      </div>
+    )
   }
 
   // 2. Gestion de la date sélectionnée (Aujourd'hui par défaut)
