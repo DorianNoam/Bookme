@@ -3,7 +3,10 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+const OR = '#B8922A'
+
 export default function LogoutButton() {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   async function handleLogout() {
@@ -11,7 +14,7 @@ export default function LogoutButton() {
     try {
       await fetch('/api/pro/auth/logout', { method: 'POST' })
     } catch (e) {
-      // Même si l'API échoue, on redirige
+      // Même si l'API échoue, on redirige quand même
     }
     window.location.href = '/pro/login'
   }
