@@ -1,29 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import jwt from 'jsonwebtoken'
+import { jwtVerify } from 'jose'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { salon_id, service_id, employe_id, date_rdv, client_nom } = body
+    const { salon_id, service_id, employe_id, date_rdv, client_nom, client_prenom, client_email, client_telephone } = body
 
     if (!salon_id || !service_id || !date_rdv || !client_nom) {
-      return NextResponse.json({ error: 'Données manquantes' }, { status: 400 })
+      return NextResponse.json({ error: 'Donnees manquantes' }, { status: 400 })
     }
 
-    // Récupérer l'user si connecté
+    // Recuperer le user_id si le client est connecte
     let user_id: number | null = null
     const token = req.cookies.get('bookme_token')?.value
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
-        user_id = decoded.id
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+        const { payload } = await jwtVerify(token, secret)
+        user_id = payload.id as number
       } catch {}
     }
 
     const supabase = createAdminClient()
 
-    // Récupérer le service
+    // Recuperer le service pour le nom et le prix
     const { data: service } = await supabase
       .from('services')
       .select('nom, prix')
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Service introuvable' }, { status: 404 })
     }
 
-    // Créer la réservation
+    // Creer la reservation avec toutes les infos client
     const { data, error } = await supabase
       .from('reservations')
       .insert({
@@ -42,9 +43,12 @@ export async function POST(req: NextRequest) {
         user_id,
         service_id,
         employe_id: employe_id || null,
-        service_nom:  service.nom,
+        service_nom: service.nom,
         service_prix: service.prix,
         client_nom,
+        client_prenom: client_prenom || null,
+        client_email: client_email || null,
+        client_telephone: client_telephone || null,
         date_rdv,
         statut: 'confirme',
       })
@@ -62,20 +66,21 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get('bookme_token')?.value
-    if (!token) return NextResponse.json({ error: 'Non connecté' }, { status: 401 })
+    if (!token) return NextResponse.json({ error: 'Non connecte' }, { status: 401 })
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    const { payload } = await jwtVerify(token, secret)
     const supabase = createAdminClient()
 
     const { data, error } = await supabase
       .from('reservations')
-      .select('*, salons(nom, adresse), services(nom, duree)')
-      .eq('user_id', decoded.id)
+      .select('*, salons(id, nom, adresse, ville, image, type_salon)')
+      .eq('user_id', payload.id)
       .order('date_rdv', { ascending: false })
 
     if (error) throw error
 
-    return NextResponse.json({ reservations: data })
+    return NextResponse.json({ success: true, reservations: data })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
