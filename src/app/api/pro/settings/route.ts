@@ -24,7 +24,7 @@ async function getSalonId(proId: number): Promise<number | null> {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// GET — Recuperer salon + services + employes + catalogue
+// GET — Recuperer salon + services + employes + catalogue + ventes privees
 // ══════════════════════════════════════════════════════════════════
 
 export async function GET(req: NextRequest) {
@@ -39,10 +39,11 @@ export async function GET(req: NextRequest) {
 
   if (!salon) return NextResponse.json({ error: 'Aucun salon trouve' }, { status: 404 })
 
-  const [servicesRes, employesRes, catalogueRes] = await Promise.all([
+  const [servicesRes, employesRes, catalogueRes, ventesPriveesRes] = await Promise.all([
     supabase.from('services').select('*').eq('salon_id', salon.id).order('categorie_service'),
     supabase.from('employes').select('*').eq('salon_id', salon.id).order('nom'),
     supabase.from('catalogue_services').select('*').order('categorie').order('nom'),
+    supabase.from('ventes_privees').select('*').eq('salon_id', salon.id).order('created_at', { ascending: false })
   ])
 
   return NextResponse.json({
@@ -50,6 +51,7 @@ export async function GET(req: NextRequest) {
     services: servicesRes.data || [],
     employes: employesRes.data || [],
     catalogue: catalogueRes.data || [],
+    ventes_privees: ventesPriveesRes.data || []
   })
 }
 
@@ -65,10 +67,12 @@ export async function PATCH(req: NextRequest) {
   if (!salonId) return NextResponse.json({ error: 'Salon introuvable' }, { status: 404 })
 
   const body = await req.json()
-  const { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon, image } = body
+  const { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon, image, seuil_fidelite } = body
 
   const updateData: any = { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon }
+  
   if (image !== undefined) updateData.image = image
+  if (seuil_fidelite !== undefined) updateData.seuil_fidelite = parseInt(seuil_fidelite)
 
   const { error } = await supabase
     .from('salons')
@@ -81,7 +85,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// POST — Ajouter un service ou un employe
+// POST — Ajouter un service, une vente privee ou un employe
 // ══════════════════════════════════════════════════════════════════
 
 export async function POST(req: NextRequest) {
@@ -143,6 +147,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
+  // ── Ajouter une vente privee ──
+  if (body.action === 'add_vente_privee') {
+    const { nom, prix, duree, description } = body
+    if (!nom || !prix || !duree) {
+      return NextResponse.json({ error: 'Nom, prix et duree requis' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('ventes_privees')
+      .insert({ salon_id: salonId, nom, prix: parseInt(prix), duree: parseInt(duree), description })
+      .select()
+      .single()
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true, vente_privee: data })
+  }
+
+  // ── Modifier une vente privee ──
+  if (body.action === 'update_vente_privee') {
+    const { id, nom, prix, duree, description } = body
+    if (!id || !nom || !prix || !duree) {
+      return NextResponse.json({ error: 'ID, nom, prix et duree requis' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('ventes_privees')
+      .update({ nom, prix: parseInt(prix), duree: parseInt(duree), description })
+      .eq('id', id)
+      .eq('salon_id', salonId)
+      .select()
+      .single()
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true, vente_privee: data })
+  }
+
   // ── Ajouter un employe ──
   if (body.action === 'add_employe') {
     const { nom } = body
@@ -162,7 +202,7 @@ export async function POST(req: NextRequest) {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// DELETE — Supprimer un service ou un employe
+// DELETE — Supprimer un service, une vente privee ou un employe
 // ══════════════════════════════════════════════════════════════════
 
 export async function DELETE(req: NextRequest) {
@@ -175,9 +215,19 @@ export async function DELETE(req: NextRequest) {
   const body = await req.json()
 
   if (body.action === 'delete_service') {
-    // Verifier que le service appartient bien a ce salon
     const { error } = await supabase
       .from('services')
+      .delete()
+      .eq('id', body.id)
+      .eq('salon_id', salonId)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
+
+  if (body.action === 'delete_vente_privee') {
+    const { error } = await supabase
+      .from('ventes_privees')
       .delete()
       .eq('id', body.id)
       .eq('salon_id', salonId)
