@@ -107,6 +107,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, service: data })
   }
 
+  // ── Modifier un service ──
+  if (body.action === 'update_service') {
+    const { id, prix, duree, categorie_service } = body
+    if (!id || !prix || !duree) {
+      return NextResponse.json({ error: 'ID, prix et duree requis' }, { status: 400 })
+    }
+
+    const { data, error } = await supabase
+      .from('services')
+      .update({ prix: parseInt(prix), duree: parseInt(duree), categorie_service: categorie_service || undefined })
+      .eq('id', id)
+      .eq('salon_id', salonId)
+      .select()
+      .single()
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true, service: data })
+  }
+
   // ── Ajouter un employe ──
   if (body.action === 'add_employe') {
     const { nom } = body
