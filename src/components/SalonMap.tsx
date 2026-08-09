@@ -3,6 +3,17 @@
 import React from 'react'
 
 export default function SalonMap({ salons, hoveredSalonId }: { salons: any[], hoveredSalonId: number | null }) {
+  // Recherche si un salon est survolé pour centrer la carte dessus, sinon prend le premier salon ou Alger par défaut
+  const hoveredSalon = salons.find(s => s.id === hoveredSalonId)
+  const targetSalon = hoveredSalon || (salons.length > 0 ? salons[0] : null)
+  
+  const query = targetSalon 
+    ? `${targetSalon.nom}, ${targetSalon.ville}, Algérie` 
+    : 'Algérie'
+
+  // URL Google Maps intégrée et dynamique
+  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&t=&z=13&ie=UTF8&iwloc=&output=embed`
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#e5e3df' }}>
       <iframe
@@ -11,8 +22,8 @@ export default function SalonMap({ salons, hoveredSalonId }: { salons: any[], ho
         style={{ border: 0 }}
         loading="lazy"
         allowFullScreen
-        src="https://www.openstreetmap.org/export/embed.html?bbox=-1.0,34.0,9.0,37.5&layer=mapnik"
-        title="Carte des salons en Algérie"
+        src={mapSrc}
+        title="Carte Google Maps - Bookme.dz"
       />
       <div style={{ 
         position: 'absolute', 
@@ -26,9 +37,10 @@ export default function SalonMap({ salons, hoveredSalonId }: { salons: any[], ho
         fontWeight: 700,
         fontFamily: 'Inter, sans-serif',
         boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        border: '1px solid #B8922A'
+        border: '1px solid #B8922A',
+        pointerEvents: 'none'
       }}>
-        📍 {salons.length} établissement{salons.length > 1 ? 's' : ''} trouvé{salons.length > 1 ? 's' : ''} en Algérie
+        📍 {salons.length} établissement{salons.length > 1 ? 's' : ''} affiché{salons.length > 1 ? 's' : ''} sur Google Maps
       </div>
     </div>
   )
