@@ -32,7 +32,6 @@ type Service = {
   promo_active: boolean
 }
 
-// Nouveau type pour les Ventes Privées
 type VentePrivee = {
   id: number;
   nom: string;
@@ -41,18 +40,38 @@ type VentePrivee = {
   description: string;
 }
 
+type Avis = {
+  id: number;
+  note: number;
+  commentaire: string;
+  created_at: string;
+  users: { prenom: string; nom: string }
+}
+
 export default function SalonPage() {
   const params = useParams()
   const salonId = params.id as string
 
   const [salon, setSalon] = useState<Salon | null>(null)
   const [services, setServices] = useState<Service[]>([])
+  const [avisList, setAvisList] = useState<Avis[]>([])
   
-  // Nouveaux états pour la fonctionnalité VIP
+  // États VIP
   const [isVip, setIsVip] = useState(false)
   const [ventesPrivees, setVentesPrivees] = useState<VentePrivee[]>([])
   const [pastReservationsCount, setPastReservationsCount] = useState(0)
   
+  // États Avis Formulaire
+  const [canReview, setCanReview] = useState(false)
+  const [note, setNote] = useState(5)
+  const [noteAccueil, setNoteAccueil] = useState(5)
+  const [noteProprete, setNoteProprete] = useState(5)
+  const [noteAmbiance, setNoteAmbiance] = useState(5)
+  const [noteQualite, setNoteQualite] = useState(5)
+  const [commentaire, setCommentaire] = useState('')
+  const [reviewSubmitting, setReviewSubmitting] = useState(false)
+  const [reviewMessage, setReviewMessage] = useState('')
+
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('prestations')
   
@@ -67,10 +86,15 @@ export default function SalonPage() {
       .then(data => {
         setSalon(data.salon)
         setServices(data.services || [])
-        // Hydratation des variables VIP
+        setAvisList(data.avis || [])
         setIsVip(data.isVip || false)
         setVentesPrivees(data.ventesPrivees || [])
         setPastReservationsCount(data.pastReservationsCount || 0)
+        
+        // Si le client a au moins 1 RDV terminé, il peut laisser un avis
+        if (data.pastReservationsCount && data.pastReservationsCount > 0) {
+          setCanReview(true)
+        }
         
         setLoading(false)
       })
@@ -89,6 +113,41 @@ export default function SalonPage() {
       })
       .catch(() => setIsLoggedIn(false))
   }, [salonId])
+
+  async function handleReviewSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setReviewSubmitting(true)
+    setReviewMessage('')
+
+    try {
+      const res = await fetch('/api/avis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salon_id: parseInt(salonId),
+          note,
+          note_accueil: noteAccueil,
+          note_proprete: noteProprete,
+          note_ambiance: noteAmbiance,
+          note_qualite: noteQualite,
+          commentaire
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        setReviewMessage('Avis publié avec succès !')
+        setCommentaire('')
+        // Recharger les avis
+        window.location.reload()
+      } else {
+        setReviewMessage(data.error || 'Erreur lors de l\'envoi')
+      }
+    } catch (err) {
+      setReviewMessage('Erreur réseau')
+    }
+    setReviewSubmitting(false)
+  }
 
   async function toggleFavorite() {
     try {
@@ -221,7 +280,7 @@ export default function SalonPage() {
                 marginBottom: -2, cursor: 'pointer', transition: 'all 0.2s'
               }}
             >
-              {tab}
+              {tab} {tab === 'Avis' && `(${avisList.length})`}
             </button>
           ))}
         </div>
@@ -311,7 +370,6 @@ export default function SalonPage() {
                         return (
                           <div key={service.id} style={{ background: '#fff', border: hasPromo ? '1px solid #ffcccb' : '1px solid #EDE5D8', borderRadius: 6, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'box-shadow 0.2s', position: 'relative', overflow: 'hidden' }} onMouseOver={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)'} onMouseOut={e => e.currentTarget.style.boxShadow = 'none'}>
                             
-                            {/* Badge promo */}
                             {hasPromo && (
                               <div style={{ position: 'absolute', top: 0, right: 0, background: '#d32f2f', color: '#fff', fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: '0 0 0 8px' }}>
                                 -{service.promo_pourcentage}%
@@ -323,7 +381,6 @@ export default function SalonPage() {
                               <div style={{ color: '#888', fontSize: 13 }}>{service.duree} min</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-                              {/* Prix */}
                               <div style={{ textAlign: 'right' }}>
                                 {hasPromo ? (
                                   <div>
@@ -372,10 +429,105 @@ export default function SalonPage() {
             )}
 
             {activeTab === 'avis' && (
-              <div style={{ textAlign: 'center', padding: 60, background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6 }}>
-                <div style={{ fontSize: 40, marginBottom: 15 }}>{'⭐'}</div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 10 }}>Les avis arrivent bientot</h3>
-                <p style={{ color: '#888', fontSize: 14 }}>Seuls les clients ayant effectue une reservation peuvent laisser un avis.</p>
+              <div>
+                {/* FORMULAIRE D'AVIS (Si éligible) */}
+                {canReview ? (
+                  <div style={{ background: '#fff', border: `2px solid ${OR}`, borderRadius: 8, padding: 25, marginBottom: 30 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 15 }}>Laisser un avis</h3>
+                    {reviewMessage && (
+                      <div style={{ padding: 10, background: reviewMessage.includes('succès') ? '#d4edda' : '#f8d7da', color: reviewMessage.includes('succès') ? '#155724' : '#721c24', borderRadius: 6, marginBottom: 15, fontSize: 14, fontWeight: 600 }}>
+                        {reviewMessage}
+                      </div>
+                    )}
+                    <form onSubmit={handleReviewSubmit}>
+                      <div style={{ marginBottom: 15 }}>
+                        <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 5 }}>Note globale (1 à 5)</label>
+                        <select value={note} onChange={e => setNote(parseInt(e.target.value))} style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc' }}>
+                          <option value={5}>⭐⭐⭐⭐⭐ (5/5)</option>
+                          <option value={4}>⭐⭐⭐⭐ (4/5)</option>
+                          <option value={3}>⭐⭐⭐ (3/5)</option>
+                          <option value={2}>⭐⭐ (2/5)</option>
+                          <option value={1}>⭐ (1/5)</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
+                        <div>
+                          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 5 }}>Accueil</label>
+                          <select value={noteAccueil} onChange={e => setNoteAccueil(parseInt(e.target.value))} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}>
+                            {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}/5</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 5 }}>Propreté</label>
+                          <select value={noteProprete} onChange={e => setNoteProprete(parseInt(e.target.value))} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}>
+                            {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}/5</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 5 }}>Ambiance</label>
+                          <select value={noteAmbiance} onChange={e => setNoteAmbiance(parseInt(e.target.value))} style={{ width: '100%', padding: 8, borderRadius: 6, border: '1px solid #ccc' }}>
+                            {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}/5</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 5 }}>Qualité prestation</label>
+                          <select value={noteQualite} onChange={e => setNoteQualite(parseInt(e.target.value))} style={{ width: '100%', padding: 8, borderRadius: 8, border: '1px solid #ccc' }}>
+                            {[5,4,3,2,1].map(n => <option key={n} value={n}>{n}/5</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: 15 }}>
+                        <label style={{ display: 'block', fontSize: 14, fontWeight: 700, marginBottom: 5 }}>Votre commentaire</label>
+                        <textarea 
+                          rows={3} 
+                          value={commentaire} 
+                          onChange={e => setCommentaire(e.target.value)} 
+                          placeholder="Partagez votre expérience..." 
+                          style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', resize: 'vertical', fontFamily: 'Inter, sans-serif' }}
+                        />
+                      </div>
+
+                      <button 
+                        type="submit" 
+                        disabled={reviewSubmitting}
+                        style={{ background: OR, color: NOIR, border: 'none', padding: '12px 25px', borderRadius: 6, fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        {reviewSubmitting ? 'Publication...' : 'Publier mon avis'}
+                      </button>
+                    </form>
+                  </div>
+                ) : isLoggedIn ? (
+                  <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: 20, marginBottom: 30, textAlign: 'center', color: '#666' }}>
+                    Vous devez avoir effectué au moins un rendez-vous <strong>terminé</strong> dans ce salon pour pouvoir laisser un avis.
+                  </div>
+                ) : (
+                  <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: 20, marginBottom: 30, textAlign: 'center', color: '#666' }}>
+                    <Link href="/login" style={{ color: OR, fontWeight: 700 }}>Connectez-vous</Link> pour laisser un avis si vous avez déjà réservé ici.
+                  </div>
+                )}
+
+                {/* LISTE DES AVIS */}
+                {avisList.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 40, background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, color: '#888' }}>
+                    Aucun avis pour le moment. Soyez le premier à en laisser un !
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                    {avisList.map(avis => (
+                      <div key={avis.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: 20 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <span style={{ fontWeight: 800, color: NOIR }}>
+                            {avis.users ? `${avis.users.prenom} ${avis.users.nom}` : 'Client Bookme'}
+                          </span>
+                          <span style={{ color: OR, fontWeight: 800 }}>{'⭐'.repeat(avis.note)}</span>
+                        </div>
+                        <p style={{ color: '#555', fontSize: 14, margin: 0, lineHeight: 1.5 }}>{avis.commentaire}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
