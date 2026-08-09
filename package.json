@@ -33,13 +33,4 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.29"
   }
-
-  "dependencies": {
-  "leaflet": "^1.9.4",
-  ...
-},
-"devDependencies": {
-  "@types/leaflet": "^1.9.8",
-  ...
-}
 }
