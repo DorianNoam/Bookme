@@ -93,7 +93,6 @@ export default async function ProAgendaPage({
     rangeEnd.setDate(rangeEnd.getDate() + 6)
     rangeEnd.setHours(23, 59, 59, 999)
   } else {
-    // month
     rangeStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
     rangeEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999)
   }
@@ -135,30 +134,71 @@ export default async function ProAgendaPage({
     displayTitle = `${MOIS_NOMS[targetDate.getMonth()]} ${targetDate.getFullYear()}`
   }
 
-  const prevLabel = view === 'day' ? 'Jour precedent' : view === 'week' ? 'Semaine precedente' : 'Mois precedent'
-  const nextLabel = view === 'day' ? 'Jour suivant' : view === 'week' ? 'Semaine suivante' : 'Mois suivant'
-
   // ── Render ────────────────────────────────────────────────────────
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
 
       {/* HEADER */}
-      <header style={{ background: NOIR, color: '#fff', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 20, fontWeight: 900 }}>
-          Bookme<span style={{ color: OR }}>.dz</span> <span style={{ fontWeight: 400, fontSize: 14, color: '#888' }}>| Agenda</span>
+      <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          maxWidth: 1200,
+          margin: '0 auto'
+        }}>
+          <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
+            Bookme<span style={{ color: OR }}>.dz</span>
+            <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
+          </div>
+          <nav style={{
+            display: 'flex',
+            gap: 'clamp(8px, 2vw, 20px)',
+            alignItems: 'center'
+          }}>
+            <Link href="/pro/dashboard" style={{
+              color: '#aaa',
+              fontSize: 'clamp(12px, 2vw, 14px)',
+              textDecoration: 'none',
+              fontWeight: 600,
+              whiteSpace: 'nowrap'
+            }}>
+              Dashboard
+            </Link>
+            <Link href="/pro/agenda" style={{
+              color: OR,
+              fontSize: 'clamp(12px, 2vw, 14px)',
+              textDecoration: 'none',
+              fontWeight: 700,
+              whiteSpace: 'nowrap'
+            }}>
+              Agenda
+            </Link>
+            <Link href="/pro/settings" style={{
+              color: '#aaa',
+              fontSize: 'clamp(12px, 2vw, 14px)',
+              textDecoration: 'none',
+              fontWeight: 600,
+              whiteSpace: 'nowrap'
+            }}>
+              Param.
+            </Link>
+            <LogoutButton />
+          </nav>
         </div>
-        <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Dashboard</Link>
-          <Link href="/pro/agenda" style={{ color: OR, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>Agenda</Link>
-          <LogoutButton />
-        </nav>
       </header>
 
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '30px 20px' }}>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(16px, 4vw, 30px) 16px' }}>
 
-        {/* ONGLETS DE VUE */}
-        <div style={{ display: 'flex', gap: 0, marginBottom: 20 }}>
+        {/* ONGLETS DE VUE + Aujourd'hui */}
+        <div style={{
+          display: 'flex',
+          gap: 0,
+          marginBottom: 16,
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}>
           {(['day', 'week', 'month'] as const).map((v) => {
             const label = v === 'day' ? 'Jour' : v === 'week' ? 'Semaine' : 'Mois'
             const isActive = view === v
@@ -167,8 +207,8 @@ export default async function ProAgendaPage({
                 key={v}
                 href={`/pro/agenda?view=${v}&date=${formatDateForUrl(targetDate)}`}
                 style={{
-                  padding: '10px 24px',
-                  fontSize: 14,
+                  padding: 'clamp(8px, 2vw, 10px) clamp(14px, 3vw, 24px)',
+                  fontSize: 'clamp(12px, 2.5vw, 14px)',
                   fontWeight: isActive ? 800 : 600,
                   color: isActive ? '#fff' : NOIR,
                   background: isActive ? NOIR : '#fff',
@@ -176,6 +216,7 @@ export default async function ProAgendaPage({
                   textDecoration: 'none',
                   borderRadius: v === 'day' ? '6px 0 0 6px' : v === 'month' ? '0 6px 6px 0' : '0',
                   marginLeft: v === 'day' ? 0 : -1,
+                  whiteSpace: 'nowrap'
                 }}
               >
                 {label}
@@ -183,19 +224,19 @@ export default async function ProAgendaPage({
             )
           })}
 
-          {/* Bouton Aujourd'hui */}
           <Link
             href={`/pro/agenda?view=${view}&date=${formatDateForUrl(new Date())}`}
             style={{
-              padding: '10px 20px',
-              fontSize: 13,
+              padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)',
+              fontSize: 'clamp(11px, 2vw, 13px)',
               fontWeight: 700,
               color: OR,
               background: 'transparent',
               border: `1px solid ${OR}`,
               textDecoration: 'none',
               borderRadius: 6,
-              marginLeft: 15,
+              marginLeft: 'clamp(8px, 2vw, 15px)',
+              whiteSpace: 'nowrap'
             }}
           >
             {"Aujourd'hui"}
@@ -203,23 +244,61 @@ export default async function ProAgendaPage({
         </div>
 
         {/* NAVIGATION PREV / DATE / NEXT */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25, background: '#fff', padding: '12px 20px', borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 20,
+          background: '#fff',
+          padding: 'clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 20px)',
+          borderRadius: 8,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+          gap: 8
+        }}>
           <Link
             href={`/pro/agenda?view=${view}&date=${formatDateForUrl(prevDate)}`}
-            style={{ padding: '8px 16px', border: `1px solid ${NOIR}`, color: NOIR, borderRadius: 4, textDecoration: 'none', fontWeight: 600, fontSize: 13 }}
+            style={{
+              padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)',
+              border: `1px solid ${NOIR}`,
+              color: NOIR,
+              borderRadius: 4,
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: 'clamp(18px, 3vw, 13px)',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}
           >
-            {`\u2190 ${prevLabel}`}
+            {'\u2190'}
           </Link>
 
-          <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, textTransform: 'capitalize', margin: 0 }}>
+          <h2 style={{
+            fontSize: 'clamp(13px, 3vw, 18px)',
+            fontWeight: 800,
+            color: NOIR,
+            textTransform: 'capitalize',
+            margin: 0,
+            textAlign: 'center',
+            lineHeight: 1.3
+          }}>
             {displayTitle}
           </h2>
 
           <Link
             href={`/pro/agenda?view=${view}&date=${formatDateForUrl(nextDate)}`}
-            style={{ padding: '8px 16px', background: NOIR, color: '#fff', borderRadius: 4, textDecoration: 'none', fontWeight: 600, fontSize: 13 }}
+            style={{
+              padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)',
+              background: NOIR,
+              color: '#fff',
+              borderRadius: 4,
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: 'clamp(18px, 3vw, 13px)',
+              whiteSpace: 'nowrap',
+              flexShrink: 0
+            }}
           >
-            {`${nextLabel} \u2192`}
+            {'\u2192'}
           </Link>
         </div>
 
@@ -244,20 +323,31 @@ export default async function ProAgendaPage({
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// VUE JOUR — Grille Heures × Employes (existante, amelioree)
+// VUE JOUR
 // ═══════════════════════════════════════════════════════════════════
 
 function DayView({ employes, reservations }: { employes: any[]; reservations: any[] }) {
   const hours = Array.from({ length: 11 }, (_, i) => i + 9)
 
   return (
-    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
-      <div style={{ minWidth: 700 }}>
+    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ minWidth: 500 }}>
         {/* En-tete employes */}
         <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
-          <div style={{ width: 70, flexShrink: 0, padding: 12, borderRight: '1px solid #eee' }}></div>
+          <div style={{ width: 56, flexShrink: 0, padding: 10, borderRight: '1px solid #eee' }}></div>
           {employes.map((emp: any) => (
-            <div key={emp.id} style={{ flex: 1, padding: 12, textAlign: 'center', fontWeight: 800, fontSize: 14, color: NOIR, borderRight: '1px solid #eee' }}>
+            <div key={emp.id} style={{
+              flex: 1,
+              padding: '10px 4px',
+              textAlign: 'center',
+              fontWeight: 800,
+              fontSize: 'clamp(11px, 2vw, 14px)',
+              color: NOIR,
+              borderRight: '1px solid #eee',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}>
               {emp.nom}
             </div>
           ))}
@@ -266,7 +356,16 @@ function DayView({ employes, reservations }: { employes: any[]; reservations: an
         {/* Lignes heures */}
         {hours.map(hour => (
           <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #f0f0f0' }}>
-            <div style={{ width: 70, flexShrink: 0, padding: '15px 8px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#999', borderRight: '1px solid #eee' }}>
+            <div style={{
+              width: 56,
+              flexShrink: 0,
+              padding: '12px 4px',
+              textAlign: 'center',
+              fontSize: 12,
+              fontWeight: 600,
+              color: '#999',
+              borderRight: '1px solid #eee'
+            }}>
               {`${hour}:00`}
             </div>
             {employes.map((emp: any) => {
@@ -275,12 +374,18 @@ function DayView({ employes, reservations }: { employes: any[]; reservations: an
                 return rdvHour === hour && r.employe_id === emp.id
               })
               return (
-                <div key={emp.id} style={{ flex: 1, padding: 8, minHeight: 55, borderRight: '1px solid #f5f5f5', background: rdv ? '#FFF8EE' : 'transparent' }}>
+                <div key={emp.id} style={{
+                  flex: 1,
+                  padding: 6,
+                  minHeight: 48,
+                  borderRight: '1px solid #f5f5f5',
+                  background: rdv ? '#FFF8EE' : 'transparent'
+                }}>
                   {rdv && (
-                    <div style={{ borderLeft: `3px solid ${OR}`, paddingLeft: 8 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>{rdv.client_nom}</div>
-                      <div style={{ fontSize: 12, color: '#666' }}>{rdv.service_nom}</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: OR }}>{rdv.service_prix} DA</div>
+                    <div style={{ borderLeft: `3px solid ${OR}`, paddingLeft: 6 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
+                      <div style={{ fontSize: 11, color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.service_nom}</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: OR }}>{rdv.service_prix} DA</div>
                     </div>
                   )}
                 </div>
@@ -291,11 +396,18 @@ function DayView({ employes, reservations }: { employes: any[]; reservations: an
       </div>
 
       {/* Compteur du jour */}
-      <div style={{ padding: '15px 20px', borderTop: '2px solid #eee', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: NOIR }}>
+      <div style={{
+        padding: '12px 16px',
+        borderTop: '2px solid #eee',
+        background: '#fafafa',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>
           {reservations.length} rendez-vous
         </span>
-        <span style={{ fontSize: 14, fontWeight: 800, color: OR }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>
           {reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA
         </span>
       </div>
@@ -304,7 +416,7 @@ function DayView({ employes, reservations }: { employes: any[]; reservations: an
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// VUE SEMAINE — 7 colonnes avec creneaux horaires
+// VUE SEMAINE
 // ═══════════════════════════════════════════════════════════════════
 
 function WeekView({ monday, reservations, view }: { monday: Date; reservations: any[]; view: string }) {
@@ -317,19 +429,25 @@ function WeekView({ monday, reservations, view }: { monday: Date; reservations: 
   const today = new Date()
 
   return (
-    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto' }}>
-      <div style={{ minWidth: 800 }}>
+    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ minWidth: 600 }}>
         {/* En-tete jours de la semaine */}
         <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
-          <div style={{ width: 60, flexShrink: 0, padding: 10, borderRight: '1px solid #eee' }}></div>
+          <div style={{ width: 48, flexShrink: 0, padding: 8, borderRight: '1px solid #eee' }}></div>
           {days.map((day, i) => {
             const isToday = isSameDay(day, today)
             return (
-              <div key={i} style={{ flex: 1, padding: '10px 4px', textAlign: 'center', borderRight: '1px solid #eee', background: isToday ? '#FFF8EE' : 'transparent' }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#999', textTransform: 'uppercase' }}>
+              <div key={i} style={{
+                flex: 1,
+                padding: '8px 2px',
+                textAlign: 'center',
+                borderRight: '1px solid #eee',
+                background: isToday ? '#FFF8EE' : 'transparent'
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: '#999', textTransform: 'uppercase' }}>
                   {JOURS_COURTS[i]}
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: isToday ? OR : NOIR, marginTop: 2 }}>
+                <div style={{ fontSize: 'clamp(16px, 3vw, 20px)', fontWeight: 900, color: isToday ? OR : NOIR, marginTop: 2 }}>
                   {day.getDate()}
                 </div>
               </div>
@@ -340,8 +458,17 @@ function WeekView({ monday, reservations, view }: { monday: Date; reservations: 
         {/* Grille heures x jours */}
         {hours.map(hour => (
           <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #f5f5f5' }}>
-            <div style={{ width: 60, flexShrink: 0, padding: '10px 4px', textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#bbb', borderRight: '1px solid #eee' }}>
-              {`${hour}:00`}
+            <div style={{
+              width: 48,
+              flexShrink: 0,
+              padding: '8px 2px',
+              textAlign: 'center',
+              fontSize: 11,
+              fontWeight: 600,
+              color: '#bbb',
+              borderRight: '1px solid #eee'
+            }}>
+              {`${hour}h`}
             </div>
             {days.map((day, i) => {
               const dayReservations = reservations.filter((r: any) => {
@@ -350,17 +477,23 @@ function WeekView({ monday, reservations, view }: { monday: Date; reservations: 
               })
               const isToday = isSameDay(day, today)
               return (
-                <div key={i} style={{ flex: 1, padding: 3, minHeight: 45, borderRight: '1px solid #f8f8f8', background: isToday ? 'rgba(184,146,42,0.03)' : 'transparent' }}>
+                <div key={i} style={{
+                  flex: 1,
+                  padding: 2,
+                  minHeight: 40,
+                  borderRight: '1px solid #f8f8f8',
+                  background: isToday ? 'rgba(184,146,42,0.03)' : 'transparent'
+                }}>
                   {dayReservations.map((rdv: any, idx: number) => (
                     <div key={idx} style={{
                       background: '#FFF8EE',
-                      borderLeft: `3px solid ${OR}`,
-                      borderRadius: '0 4px 4px 0',
-                      padding: '4px 6px',
+                      borderLeft: `2px solid ${OR}`,
+                      borderRadius: '0 3px 3px 0',
+                      padding: '3px 4px',
                       marginBottom: 2,
                     }}>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
-                      <div style={{ fontSize: 10, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.service_nom}</div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
+                      <div style={{ fontSize: 9, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.service_nom}</div>
                     </div>
                   ))}
                 </div>
@@ -371,11 +504,18 @@ function WeekView({ monday, reservations, view }: { monday: Date; reservations: 
       </div>
 
       {/* Resume de la semaine */}
-      <div style={{ padding: '15px 20px', borderTop: '2px solid #eee', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: NOIR }}>
-          {reservations.length} rendez-vous cette semaine
+      <div style={{
+        padding: '12px 16px',
+        borderTop: '2px solid #eee',
+        background: '#fafafa',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>
+          {reservations.length} RDV cette semaine
         </span>
-        <span style={{ fontSize: 14, fontWeight: 800, color: OR }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>
           {reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA
         </span>
       </div>
@@ -384,7 +524,7 @@ function WeekView({ monday, reservations, view }: { monday: Date; reservations: 
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// VUE MOIS — Calendrier avec compteurs par jour
+// VUE MOIS
 // ═══════════════════════════════════════════════════════════════════
 
 function MonthView({ year, month, reservations, view }: { year: number; month: number; reservations: any[]; view: string }) {
@@ -392,18 +532,14 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
   const lastDay = new Date(year, month + 1, 0)
   const today = new Date()
 
-  // Quel jour de la semaine commence le mois (0=Lun ... 6=Dim)
   let startDow = firstDay.getDay() - 1
   if (startDow < 0) startDow = 6
 
-  // Construire les cases du calendrier
   const cells: (Date | null)[] = []
-  for (let i = 0; i < startDow; i++) cells.push(null) // cases vides avant le 1er
+  for (let i = 0; i < startDow; i++) cells.push(null)
   for (let d = 1; d <= lastDay.getDate(); d++) cells.push(new Date(year, month, d))
-  // Remplir la derniere ligne
   while (cells.length % 7 !== 0) cells.push(null)
 
-  // Compter les RDV par jour
   const countByDay: Record<number, number> = {}
   const revenueByDay: Record<number, number> = {}
   reservations.forEach((r: any) => {
@@ -412,7 +548,6 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
     revenueByDay[d] = (revenueByDay[d] || 0) + (r.service_prix || 0)
   })
 
-  // Regrouper en lignes de 7
   const rows: (Date | null)[][] = []
   for (let i = 0; i < cells.length; i += 7) {
     rows.push(cells.slice(i, i + 7))
@@ -423,7 +558,14 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
       {/* En-tete jours */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '2px solid #eee', background: '#fafafa' }}>
         {JOURS_COURTS.map(j => (
-          <div key={j} style={{ padding: '12px 8px', textAlign: 'center', fontSize: 12, fontWeight: 700, color: '#888', textTransform: 'uppercase' }}>
+          <div key={j} style={{
+            padding: 'clamp(6px, 1.5vw, 12px) 4px',
+            textAlign: 'center',
+            fontSize: 'clamp(10px, 2vw, 12px)',
+            fontWeight: 700,
+            color: '#888',
+            textTransform: 'uppercase'
+          }}>
             {j}
           </div>
         ))}
@@ -434,7 +576,7 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
         <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f0f0f0' }}>
           {row.map((cell, ci) => {
             if (!cell) {
-              return <div key={ci} style={{ minHeight: 90, background: '#fafafa', borderRight: '1px solid #f0f0f0' }} />
+              return <div key={ci} style={{ minHeight: 'clamp(60px, 12vw, 90px)', background: '#fafafa', borderRight: '1px solid #f0f0f0' }} />
             }
             const dayNum = cell.getDate()
             const count = countByDay[dayNum] || 0
@@ -447,8 +589,8 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
                 key={ci}
                 href={`/pro/agenda?view=day&date=${formatDateForUrl(cell)}`}
                 style={{
-                  minHeight: 90,
-                  padding: 8,
+                  minHeight: 'clamp(60px, 12vw, 90px)',
+                  padding: 'clamp(4px, 1vw, 8px)',
                   borderRight: '1px solid #f0f0f0',
                   textDecoration: 'none',
                   color: 'inherit',
@@ -460,10 +602,10 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
                 }}
               >
                 <div style={{
-                  fontSize: 16,
+                  fontSize: 'clamp(12px, 2.5vw, 16px)',
                   fontWeight: isToday ? 900 : 600,
                   color: isToday ? OR : NOIR,
-                  marginBottom: 6,
+                  marginBottom: 4,
                 }}>
                   {dayNum}
                 </div>
@@ -471,18 +613,18 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
                   <div style={{
                     background: count >= 5 ? OR : '#f0ead6',
                     color: count >= 5 ? '#fff' : NOIR,
-                    borderRadius: 4,
-                    padding: '4px 6px',
-                    fontSize: 11,
+                    borderRadius: 3,
+                    padding: 'clamp(2px, 0.5vw, 4px) clamp(3px, 1vw, 6px)',
+                    fontSize: 'clamp(9px, 1.8vw, 11px)',
                     fontWeight: 700,
-                    marginBottom: 3,
+                    marginBottom: 2,
                     textAlign: 'center',
                   }}>
                     {count} RDV
                   </div>
                 )}
                 {revenue > 0 && (
-                  <div style={{ fontSize: 11, fontWeight: 600, color: OR, textAlign: 'center' }}>
+                  <div style={{ fontSize: 'clamp(9px, 1.8vw, 11px)', fontWeight: 600, color: OR, textAlign: 'center' }}>
                     {revenue} DA
                   </div>
                 )}
@@ -493,11 +635,18 @@ function MonthView({ year, month, reservations, view }: { year: number; month: n
       ))}
 
       {/* Resume du mois */}
-      <div style={{ padding: '15px 20px', borderTop: '2px solid #eee', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 14, fontWeight: 700, color: NOIR }}>
-          {reservations.length} rendez-vous ce mois
+      <div style={{
+        padding: '12px 16px',
+        borderTop: '2px solid #eee',
+        background: '#fafafa',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>
+          {reservations.length} RDV ce mois
         </span>
-        <span style={{ fontSize: 14, fontWeight: 800, color: OR }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>
           {reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA
         </span>
       </div>
