@@ -65,11 +65,14 @@ export async function PATCH(req: NextRequest) {
   if (!salonId) return NextResponse.json({ error: 'Salon introuvable' }, { status: 404 })
 
   const body = await req.json()
-  const { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon } = body
+  const { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon, image } = body
+
+  const updateData: any = { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon }
+  if (image !== undefined) updateData.image = image
 
   const { error } = await supabase
     .from('salons')
-    .update({ nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon })
+    .update(updateData)
     .eq('id', salonId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
