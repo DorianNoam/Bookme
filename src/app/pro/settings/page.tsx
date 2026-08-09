@@ -11,7 +11,7 @@ const BG = '#F8F5F0'
 const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
 
-type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string }
+type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean }
 type Employe = { id: number; nom: string }
 type Salon = {
   id: number; nom: string; adresse: string; ville: string; telephone: string;
@@ -167,6 +167,11 @@ function ServicesTab({
   const [editDuree, setEditDuree] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
 
+  // Promo state
+  const [promoId, setPromoId] = useState<number | null>(null)
+  const [promoPct, setPromoPct] = useState('')
+  const [savingPromo, setSavingPromo] = useState(false)
+
   // Grouper les services par categorie
   const grouped = services.reduce((acc, s) => {
     const cat = s.categorie_service || 'General'
@@ -192,6 +197,42 @@ function ServicesTab({
     setEditingId(null)
     setEditPrix('')
     setEditDuree('')
+  }
+
+  async function handlePromoSave(s: Service) {
+    const pct = parseInt(promoPct)
+    if (isNaN(pct) || pct < 1 || pct > 99) return
+    setSavingPromo(true)
+    try {
+      const res = await fetch('/api/pro/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onUpdate({ ...s, promo_pourcentage: pct, promo_active: true })
+        setPromoId(null)
+      }
+    } catch (e) {}
+    setSavingPromo(false)
+  }
+
+  async function handlePromoRemove(s: Service) {
+    setSavingPromo(true)
+    try {
+      const res = await fetch('/api/pro/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: null, promo_active: false }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onUpdate({ ...s, promo_pourcentage: null, promo_active: false })
+        setPromoId(null)
+      }
+    } catch (e) {}
+    setSavingPromo(false)
   }
 
   async function handleSaveEdit(s: Service) {
@@ -267,7 +308,7 @@ function ServicesTab({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
             {/* Nom — soit catalogue soit custom */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Prestation</label>
+              <label style={labelStyle}>Nom de la prestation</label>
               <div style={{ display: 'flex', gap: 10 }}>
                 <select
                   value=""
@@ -289,7 +330,7 @@ function ServicesTab({
                 <span style={{ alignSelf: 'center', color: '#999', fontSize: 13 }}>ou</span>
                 <input
                   type="text"
-                  placeholder="Prestation personnalisée"
+                  placeholder="Nom personnalise"
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
                   style={{ ...inputStyle, flex: 1 }}
@@ -387,34 +428,103 @@ function ServicesTab({
                     </div>
                   ) : (
                     /* ── Mode lecture ── */
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <span style={{ fontWeight: 700, color: NOIR, fontSize: 14 }}>{s.nom}</span>
-                        <span style={{ color: '#999', fontSize: 13, marginLeft: 10 }}>{s.duree} min</span>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <span style={{ fontWeight: 700, color: NOIR, fontSize: 14 }}>{s.nom}</span>
+                          <span style={{ color: '#999', fontSize: 13, marginLeft: 10 }}>{s.duree} min</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          {/* Prix avec promo */}
+                          {s.promo_active && s.promo_pourcentage ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ fontSize: 13, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
+                              <span style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</span>
+                              <span style={{ background: '#d32f2f', color: '#fff', fontSize: 11, fontWeight: 800, padding: '2px 6px', borderRadius: 3 }}>-{s.promo_pourcentage}%</span>
+                            </div>
+                          ) : (
+                            <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
+                          )}
+                          <button
+                            onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : '') }}
+                            style={{
+                              background: s.promo_active ? '#fff0f0' : 'transparent',
+                              border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`,
+                              color: s.promo_active ? '#d32f2f' : '#888',
+                              padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
+                              fontFamily: 'Inter, sans-serif', fontWeight: 600,
+                            }}
+                          >
+                            {s.promo_active ? 'Promo' : '% Promo'}
+                          </button>
+                          <button
+                            onClick={() => startEdit(s)}
+                            style={{
+                              background: 'transparent', border: '1px solid #ddd', color: '#555',
+                              padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
+                              fontFamily: 'Inter, sans-serif',
+                            }}
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => handleDelete(s.id)}
+                            style={{
+                              background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000',
+                              padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
+                              fontFamily: 'Inter, sans-serif',
+                            }}
+                          >
+                            Supprimer
+                          </button>
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
-                        <button
-                          onClick={() => startEdit(s)}
-                          style={{
-                            background: 'transparent', border: '1px solid #ddd', color: '#555',
-                            padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
-                            fontFamily: 'Inter, sans-serif',
-                          }}
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => handleDelete(s.id)}
-                          style={{
-                            background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000',
-                            padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
-                            fontFamily: 'Inter, sans-serif',
-                          }}
-                        >
-                          Supprimer
-                        </button>
-                      </div>
+                      {/* Ligne promo inline */}
+                      {promoId === s.id && (
+                        <div style={{ marginTop: 12, padding: '14px 16px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Promotion :</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ fontSize: 13, color: '#888' }}>-</span>
+                            <input
+                              type="number"
+                              value={promoPct}
+                              onChange={(e) => setPromoPct(e.target.value)}
+                              placeholder="20"
+                              min="1"
+                              max="99"
+                              style={{ width: 60, padding: '6px 8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}
+                            />
+                            <span style={{ fontSize: 13, color: '#888' }}>%</span>
+                          </div>
+                          {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (
+                            <span style={{ fontSize: 13, color: '#666' }}>
+                              = <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong> au lieu de {s.prix} DA
+                            </span>
+                          )}
+                          <button
+                            onClick={() => handlePromoSave(s)}
+                            disabled={savingPromo}
+                            style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+                          >
+                            {savingPromo ? '...' : 'Activer'}
+                          </button>
+                          {s.promo_active && (
+                            <button
+                              onClick={() => handlePromoRemove(s)}
+                              disabled={savingPromo}
+                              style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '6px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+                            >
+                              Retirer
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setPromoId(null)}
+                            style={{ background: '#eee', color: '#888', border: 'none', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+                          >
+                            Fermer
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
