@@ -32,12 +32,27 @@ type Service = {
   promo_active: boolean
 }
 
+// Nouveau type pour les Ventes Privées
+type VentePrivee = {
+  id: number;
+  nom: string;
+  prix: number;
+  duree: number;
+  description: string;
+}
+
 export default function SalonPage() {
   const params = useParams()
   const salonId = params.id as string
 
   const [salon, setSalon] = useState<Salon | null>(null)
   const [services, setServices] = useState<Service[]>([])
+  
+  // Nouveaux états pour la fonctionnalité VIP
+  const [isVip, setIsVip] = useState(false)
+  const [ventesPrivees, setVentesPrivees] = useState<VentePrivee[]>([])
+  const [pastReservationsCount, setPastReservationsCount] = useState(0)
+  
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('prestations')
   
@@ -52,6 +67,11 @@ export default function SalonPage() {
       .then(data => {
         setSalon(data.salon)
         setServices(data.services || [])
+        // Hydratation des variables VIP
+        setIsVip(data.isVip || false)
+        setVentesPrivees(data.ventesPrivees || [])
+        setPastReservationsCount(data.pastReservationsCount || 0)
+        
         setLoading(false)
       })
       .catch(err => {
@@ -213,6 +233,70 @@ export default function SalonPage() {
               <div>
                 <p style={{ color: '#666', fontSize: 15, lineHeight: 1.6, marginBottom: 40 }}>{salon.description}</p>
                 
+                {/* ── SECTION VENTES PRIVÉES (Bandeau VIP) ── */}
+                {isVip && ventesPrivees && ventesPrivees.length > 0 && (
+                  <div style={{ marginBottom: 40 }}>
+                    <div style={{ 
+                      background: '#0A0A0A', 
+                      borderRadius: '8px 8px 0 0', 
+                      padding: '15px 20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 15,
+                      borderBottom: '2px solid #B8922A'
+                    }}>
+                      <span style={{ fontSize: 24 }}>⭐</span>
+                      <div>
+                        <h2 style={{ color: '#B8922A', margin: 0, fontSize: 18, fontWeight: 800 }}>Offres Exclusives VIP</h2>
+                        <p style={{ color: '#aaa', fontSize: 13, margin: '4px 0 0 0' }}>
+                          Merci pour votre fidélité ({pastReservationsCount} rendez-vous terminés). Ces offres vous sont strictement réservées.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div style={{ 
+                      background: '#fff', 
+                      border: '1px solid #0A0A0A',
+                      borderTop: 'none',
+                      borderRadius: '0 0 8px 8px', 
+                      overflow: 'hidden' 
+                    }}>
+                      {ventesPrivees.map((vp: VentePrivee, index: number) => (
+                        <div key={vp.id} style={{ 
+                          padding: '20px', 
+                          borderBottom: index < ventesPrivees.length - 1 ? '1px solid #eee' : 'none',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div>
+                            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#0A0A0A', margin: '0 0 8px 0' }}>{vp.nom}</h3>
+                            <p style={{ color: '#666', fontSize: 14, margin: '0 0 8px 0', maxWidth: 600 }}>{vp.description}</p>
+                            <span style={{ color: '#999', fontSize: 13 }}>⏱ {vp.duree} min</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+                            <span style={{ fontSize: 20, fontWeight: 900, color: '#B8922A' }}>{vp.prix.toLocaleString()} DA</span>
+                            <Link 
+                              href={`/booking?salon=${salon.id}&service=${vp.id}&type=vip`}
+                              style={{ 
+                                background: '#B8922A', 
+                                color: '#0A0A0A', 
+                                textDecoration: 'none',
+                                padding: '10px 24px', 
+                                borderRadius: 6, 
+                                fontWeight: 800, 
+                                cursor: 'pointer' 
+                              }}>
+                              Réserver VIP
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* ── SECTION PRESTATIONS CLASSIQUES ── */}
                 {Object.entries(servicesParCategorie).map(([categorie, items]) => (
                   <div key={categorie} style={{ marginBottom: 40 }}>
                     <h3 style={{ fontSize: 13, fontWeight: 800, color: OR, textTransform: 'uppercase', letterSpacing: 2, borderBottom: '1px solid #E0D8CE', paddingBottom: 10, marginBottom: 20 }}>
