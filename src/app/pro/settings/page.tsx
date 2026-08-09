@@ -1079,11 +1079,10 @@ function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => v
           <div>
             <label style={labelStyle}>Seuil de fidélité (RDV requis)</label>
             <select name="seuil_fidelite" value={form.seuil_fidelite || 4} onChange={handleChange} style={inputStyle}>
-              <option value={2}>2 rendez-vous terminés</option>
-              <option value={3}>3 rendez-vous terminés</option>
-              <option value={4}>4 rendez-vous terminés</option>
               <option value={5}>5 rendez-vous terminés</option>
               <option value={10}>10 rendez-vous terminés</option>
+              <option value={15}>15 rendez-vous terminés</option>
+              <option value={20}>20 rendez-vous terminés</option>
             </select>
           </div>
           
