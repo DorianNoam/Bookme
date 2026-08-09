@@ -31,12 +31,10 @@ export default function HomePage() {
   const [query, setQuery] = useState('')
   const [loc, setLoc] = useState('')
   
-  // Nouvel état pour gérer la connexion
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   
   const current = SLIDES[slide]
 
-  // Vérification de la connexion au chargement de la page
   useEffect(() => {
     fetch('/api/user/dashboard')
       .then(res => {
@@ -54,32 +52,31 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ fontFamily: 'Inter, sans-serif', width: '100%', overflowX: 'hidden' }}>
 
       {/* HEADER */}
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '15px 0', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 15 }}>
           <Link href="/" style={{ fontSize: 24, fontWeight: 900, color: NOIR, textDecoration: 'none', whiteSpace: 'nowrap' }}>
             Bookme<span style={{ color: OR }}>.dz</span>
           </Link>
-          <nav style={{ display: 'flex', gap: 28, alignItems: 'center' }}>
+          <nav style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap' }}>
             {NAV_LINKS.map(c => (
-              <Link key={c.val} href={'/search?q=' + c.val} style={{ color: '#444', fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>{c.label}</Link>
+              <Link key={c.val} href={'/search?q=' + c.val} style={{ color: '#444', fontWeight: 500, fontSize: 13, textDecoration: 'none', display: 'inline-block' }}>{c.label}</Link>
             ))}
           </nav>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* AFFICHAGE CONDITIONNEL DU BOUTON */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             {isLoggedIn ? (
-              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
                 Mon espace
               </Link>
             ) : (
               <>
-                <Link href="/login" style={{ color: '#444', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>Connexion</Link>
-                <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Inscription</Link>
+                <Link href="/login" style={{ color: '#444', fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>Connexion</Link>
+                <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Inscription</Link>
               </>
             )}
-            <Link href="/pro" style={{ border: '1px solid ' + OR, color: OR, padding: '9px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Espace Pro</Link>
+            <Link href="/pro" style={{ border: '1px solid ' + OR, color: OR, padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Espace Pro</Link>
           </div>
         </div>
       </header>
@@ -92,30 +89,32 @@ export default function HomePage() {
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
         />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(10,10,10,0.92) 45%, rgba(10,10,10,0.3) 100%)' }} />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '60px 20px' }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: '60px 20px', width: '100%', boxSizing: 'border-box' }}>
           <div style={{ width: 40, height: 2, background: OR, marginBottom: 20 }} />
           <div style={{ fontSize: 11, fontWeight: 600, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>
             Plateforme N°1 en Algerie
           </div>
-          <h1 style={{ fontSize: 50, fontWeight: 900, color: '#fff', marginBottom: 16, lineHeight: 1.1, maxWidth: 540, letterSpacing: -1 }}>
+          <h1 style={{ fontSize: 'clamp(32px, 5vw, 50px)', fontWeight: 900, color: '#fff', marginBottom: 16, lineHeight: 1.1, maxWidth: 540, letterSpacing: -1 }}>
             Reservez votre beaute en ligne
           </h1>
-          <p style={{ fontSize: 16, color: '#999', marginBottom: 38, maxWidth: 380, lineHeight: 1.7 }}>
+          <p style={{ fontSize: 15, color: '#999', marginBottom: 38, maxWidth: 380, lineHeight: 1.7 }}>
             Les meilleurs salons, instituts et spas partout en Algerie.
           </p>
-          <form onSubmit={handleSearch} style={{ background: '#fff', borderRadius: 4, display: 'flex', maxWidth: 680, boxShadow: '0 8px 40px rgba(0,0,0,0.4)', overflow: 'hidden' }}>
-            <div style={{ flex: 1, padding: '14px 20px', borderRight: '1px solid #F0EAE0' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: OR, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>Prestation</div>
-              <select value={query} onChange={e => setQuery(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, fontWeight: 500, color: NOIR, width: '100%', fontFamily: 'Inter, sans-serif', background: 'transparent' }}>
-                <option value="">Coiffure, massage, ongles...</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+          <form onSubmit={handleSearch} style={{ background: '#fff', borderRadius: 4, display: 'flex', flexDirection: 'column', maxWidth: 680, boxShadow: '0 8px 40px rgba(0,0,0,0.4)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}>
+              <div style={{ flex: '1 1 200px', padding: '14px 20px', borderBottom: '1px solid #F0EAE0', borderRight: '1px solid #F0EAE0' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: OR, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>Prestation</div>
+                <select value={query} onChange={e => setQuery(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, fontWeight: 500, color: NOIR, width: '100%', fontFamily: 'Inter, sans-serif', background: 'transparent' }}>
+                  <option value="">Coiffure, massage, ongles...</option>
+                  {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: '1 1 200px', padding: '14px 20px', borderBottom: '1px solid #F0EAE0' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: OR, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>Ville</div>
+                <input value={loc} onChange={e => setLoc(e.target.value)} placeholder="Alger, Oran, Constantine..." style={{ border: 'none', outline: 'none', fontSize: 14, fontWeight: 500, color: NOIR, width: '100%', fontFamily: 'Inter, sans-serif', background: 'transparent' }} />
+              </div>
             </div>
-            <div style={{ flex: 1, padding: '14px 20px', borderRight: '1px solid #F0EAE0' }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: OR, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>Ville</div>
-              <input value={loc} onChange={e => setLoc(e.target.value)} placeholder="Alger, Oran, Constantine..." style={{ border: 'none', outline: 'none', fontSize: 14, fontWeight: 500, color: NOIR, width: '100%', fontFamily: 'Inter, sans-serif', background: 'transparent' }} />
-            </div>
-            <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '0 28px', fontWeight: 800, fontSize: 12, cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase' }}>Rechercher</button>
+            <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '16px 28px', fontWeight: 800, fontSize: 12, cursor: 'pointer', letterSpacing: 1, textTransform: 'uppercase', width: '100%' }}>Rechercher</button>
           </form>
         </div>
       </section>
@@ -131,20 +130,20 @@ export default function HomePage() {
       </div>
 
       {/* CAROUSEL */}
-      <section style={{ padding: '80px 0', background: '#fff' }}>
+      <section style={{ padding: '60px 0', background: '#fff' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px' }}>
           <div style={{ fontSize: 11, fontWeight: 600, color: OR, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Selectionnes pour vous</div>
-          <div style={{ fontSize: 32, fontWeight: 800, color: NOIR, marginBottom: 44, letterSpacing: -0.5 }}>Decouvrez nos Professionnels</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 60, minHeight: 400 }}>
-            <div style={{ flex: 1, height: 400, borderRadius: 4, overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.12)' }}>
+          <div style={{ fontSize: 'clamp(24px, 4vw, 32px)', fontWeight: 800, color: NOIR, marginBottom: 30, letterSpacing: -0.5 }}>Decouvrez nos Professionnels</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 40, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 300px', height: 350, borderRadius: 4, overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.12)', width: '100%' }}>
               <img src={current.img} alt={current.cat} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 300px', width: '100%' }}>
               <div style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, color: OR, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14, borderBottom: '1px solid ' + OR, paddingBottom: 6 }}>{current.cat}</div>
-              <h3 style={{ fontSize: 30, fontWeight: 800, color: NOIR, margin: '0 0 16px', letterSpacing: -0.5 }}>{current.title}</h3>
+              <h3 style={{ fontSize: 'clamp(22px, 3vw, 30px)', fontWeight: 800, color: NOIR, margin: '0 0 16px', letterSpacing: -0.5 }}>{current.title}</h3>
               <p style={{ fontSize: 15, color: '#666', lineHeight: 1.7, marginBottom: 32 }}>{current.desc}</p>
-              <Link href={current.link} style={{ fontWeight: 700, color: NOIR, fontSize: 14, textDecoration: 'none', borderBottom: '1px solid ' + NOIR, paddingBottom: 2 }}>Voir les etablissements →</Link>
-              <div style={{ display: 'flex', gap: 10, marginTop: 44 }}>
+              <Link href={current.link} style={{ fontWeight: 700, color: NOIR, fontSize: 14, textDecoration: 'none', borderBottom: '1px solid ' + NOIR, paddingBottom: 2, display: 'inline-block' }}>Voir les etablissements →</Link>
+              <div style={{ display: 'flex', gap: 10, marginTop: 30 }}>
                 <button onClick={() => setSlide(s => s === 0 ? SLIDES.length - 1 : s - 1)} style={{ width: 46, height: 46, borderRadius: '50%', border: '1px solid #DDD', background: '#fff', fontSize: 20, cursor: 'pointer', color: NOIR }}>‹</button>
                 <button onClick={() => setSlide(s => s === SLIDES.length - 1 ? 0 : s + 1)} style={{ width: 46, height: 46, borderRadius: '50%', border: '1px solid #DDD', background: '#fff', fontSize: 20, cursor: 'pointer', color: NOIR }}>›</button>
               </div>
@@ -154,14 +153,14 @@ export default function HomePage() {
       </section>
 
       {/* FEATURES */}
-      <section style={{ background: BG, padding: '70px 0', borderTop: '1px solid #EDE5D8' }}>
+      <section style={{ background: BG, padding: '60px 0', borderTop: '1px solid #EDE5D8' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 40, textAlign: 'center' }}>
           {[
             { icon: '🕐', title: '24h/24, 7j/7', desc: 'Reservez a nimporte quel moment, ou que vous soyez en Algerie.' },
             { icon: '✅', title: 'Confirmation immediate', desc: 'Votre creneau est bloque instantanement, sans appel.' },
             { icon: '⭐', title: 'Avis verifies', desc: 'Seuls les clients ayant eu un RDV peuvent noter le salon.' },
           ].map(f => (
-            <div key={f.title} style={{ maxWidth: 260 }}>
+            <div key={f.title} style={{ maxWidth: 260, flex: '1 1 220px' }}>
               <div style={{ fontSize: 26, marginBottom: 16, background: '#F0EAE0', width: 60, height: 60, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>{f.icon}</div>
               <div style={{ fontWeight: 800, fontSize: 16, marginBottom: 10, color: NOIR }}>{f.title}</div>
               <div style={{ fontSize: 14, color: '#777', lineHeight: 1.6 }}>{f.desc}</div>
@@ -171,11 +170,11 @@ export default function HomePage() {
       </section>
 
       {/* CTA PRO */}
-      <section style={{ background: NOIR, color: '#fff', padding: '80px 20px', textAlign: 'center' }}>
+      <section style={{ background: NOIR, color: '#fff', padding: '70px 20px', textAlign: 'center' }}>
         <div style={{ width: 40, height: 2, background: OR, margin: '0 auto 20px' }} />
         <div style={{ fontSize: 11, fontWeight: 600, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 16 }}>Professionnels</div>
-        <h2 style={{ fontSize: 34, marginBottom: 16, fontWeight: 900, letterSpacing: -0.5 }}>Vous etes un professionnel ?</h2>
-        <p style={{ fontSize: 16, color: '#888', maxWidth: 460, margin: '0 auto', lineHeight: 1.7 }}>Rejoignez Bookme Pro pour gerer votre agenda en ligne et developper votre clientele partout en Algerie.</p>
+        <h2 style={{ fontSize: 'clamp(26px, 4vw, 34px)', marginBottom: 16, fontWeight: 900, letterSpacing: -0.5 }}>Vous etes un professionnel ?</h2>
+        <p style={{ fontSize: 15, color: '#888', maxWidth: 460, margin: '0 auto', lineHeight: 1.7 }}>Rejoignez Bookme Pro pour gerer votre agenda en ligne et developper votre clientele partout en Algerie.</p>
         <Link href="/pro" style={{ display: 'inline-block', background: OR, color: '#fff', padding: '14px 32px', fontWeight: 700, borderRadius: 4, marginTop: 32, fontSize: 14, textDecoration: 'none', letterSpacing: 0.5 }}>Decouvrir notre offre Pro</Link>
       </section>
 
