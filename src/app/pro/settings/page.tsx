@@ -120,6 +120,7 @@ export default function ProSettingsPage() {
             services={services}
             catalogue={catalogue}
             onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }}
+            onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }}
             onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }}
           />
         )}
@@ -148,10 +149,10 @@ export default function ProSettingsPage() {
 // ═══════════════════════════════════════════════════════════════════
 
 function ServicesTab({
-  services, catalogue, onAdd, onDelete
+  services, catalogue, onAdd, onUpdate, onDelete
 }: {
   services: Service[]; catalogue: CatalogueItem[];
-  onAdd: (s: Service) => void; onDelete: (id: number) => void
+  onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void
 }) {
   const [showForm, setShowForm] = useState(false)
   const [nom, setNom] = useState('')
@@ -159,6 +160,12 @@ function ServicesTab({
   const [duree, setDuree] = useState('30')
   const [categorie, setCategorie] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Edit state
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editPrix, setEditPrix] = useState('')
+  const [editDuree, setEditDuree] = useState('')
+  const [savingEdit, setSavingEdit] = useState(false)
 
   // Grouper les services par categorie
   const grouped = services.reduce((acc, s) => {
@@ -174,6 +181,36 @@ function ServicesTab({
     acc[c.categorie].push(c)
     return acc
   }, {} as Record<string, CatalogueItem[]>)
+
+  function startEdit(s: Service) {
+    setEditingId(s.id)
+    setEditPrix(String(s.prix))
+    setEditDuree(String(s.duree))
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditPrix('')
+    setEditDuree('')
+  }
+
+  async function handleSaveEdit(s: Service) {
+    if (!editPrix || !editDuree) return
+    setSavingEdit(true)
+    try {
+      const res = await fetch('/api/pro/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_service', id: s.id, prix: editPrix, duree: editDuree, categorie_service: s.categorie_service }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onUpdate(data.service)
+        setEditingId(null)
+      }
+    } catch (e) {}
+    setSavingEdit(false)
+  }
 
   async function handleAdd() {
     if (!nom || !prix || !duree) return
@@ -306,26 +343,80 @@ function ServicesTab({
             <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
               {items.map((s, i) => (
                 <div key={s.id} style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                   padding: '14px 20px', borderBottom: i < items.length - 1 ? '1px solid #f0f0f0' : 'none',
                 }}>
-                  <div>
-                    <span style={{ fontWeight: 700, color: NOIR, fontSize: 14 }}>{s.nom}</span>
-                    <span style={{ color: '#999', fontSize: 13, marginLeft: 10 }}>{s.duree} min</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                    <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
-                    <button
-                      onClick={() => handleDelete(s.id)}
-                      style={{
-                        background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000',
-                        padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
-                        fontFamily: 'Inter, sans-serif',
-                      }}
-                    >
-                      Supprimer
-                    </button>
-                  </div>
+                  {editingId === s.id ? (
+                    /* ── Mode edition ── */
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 700, color: NOIR, fontSize: 14, minWidth: 150 }}>{s.nom}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="number"
+                          value={editPrix}
+                          onChange={(e) => setEditPrix(e.target.value)}
+                          style={{ width: 90, padding: '8px 10px', border: `2px solid ${OR}`, borderRadius: 4, fontSize: 14, fontWeight: 700, fontFamily: 'Inter, sans-serif', textAlign: 'right' }}
+                        />
+                        <span style={{ fontSize: 13, color: '#888' }}>DA</span>
+                      </div>
+                      <select
+                        value={editDuree}
+                        onChange={(e) => setEditDuree(e.target.value)}
+                        style={{ padding: '8px 10px', border: `2px solid ${OR}`, borderRadius: 4, fontSize: 13, fontFamily: 'Inter, sans-serif' }}
+                      >
+                        <option value="15">15 min</option>
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">1h</option>
+                        <option value="90">1h30</option>
+                        <option value="120">2h</option>
+                        <option value="180">3h</option>
+                      </select>
+                      <button
+                        onClick={() => handleSaveEdit(s)}
+                        disabled={savingEdit}
+                        style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: savingEdit ? 0.5 : 1 }}
+                      >
+                        {savingEdit ? '...' : 'OK'}
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        style={{ background: '#eee', color: NOIR, border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    /* ── Mode lecture ── */
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontWeight: 700, color: NOIR, fontSize: 14 }}>{s.nom}</span>
+                        <span style={{ color: '#999', fontSize: 13, marginLeft: 10 }}>{s.duree} min</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
+                        <button
+                          onClick={() => startEdit(s)}
+                          style={{
+                            background: 'transparent', border: '1px solid #ddd', color: '#555',
+                            padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
+                            fontFamily: 'Inter, sans-serif',
+                          }}
+                        >
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => handleDelete(s.id)}
+                          style={{
+                            background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000',
+                            padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
+                            fontFamily: 'Inter, sans-serif',
+                          }}
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
