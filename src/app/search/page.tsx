@@ -130,10 +130,10 @@ function SearchContent() {
         </div>
       </div>
 
-      {/* CARTE INTERACTIVE EN HAUT */}
-      <div style={{ width: '100%', height: 360, borderBottom: `2px solid ${OR}` }}>
-        <MapWithNoSSR salons={salons} />
-      </div>
+    {/* CARTE INTERACTIVE EN HAUT */}
+<div style={{ width: '100%', height: 360, borderBottom: `2px solid ${OR}` }}>
+  <MapWithNoSSR salons={salons} hoveredSalonId={hoveredSalonId} />
+</div>
 
       {/* RESULTATS */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 16px' }}>
