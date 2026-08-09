@@ -308,7 +308,7 @@ function ServicesTab({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
             {/* Nom — soit catalogue soit custom */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Nom de la prestation</label>
+              <label style={labelStyle}>Prestation</label>
               <div style={{ display: 'flex', gap: 10 }}>
                 <select
                   value=""
@@ -330,7 +330,7 @@ function ServicesTab({
                 <span style={{ alignSelf: 'center', color: '#999', fontSize: 13 }}>ou</span>
                 <input
                   type="text"
-                  placeholder="Nom personnalise"
+                  placeholder="Prestation personnalisée"
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
                   style={{ ...inputStyle, flex: 1 }}
