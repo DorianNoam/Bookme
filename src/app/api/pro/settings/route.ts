@@ -126,6 +126,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, service: data })
   }
 
+  // ── Modifier une promo ──
+  if (body.action === 'set_promo') {
+    const { id, promo_pourcentage, promo_active } = body
+
+    const { error } = await supabase
+      .from('services')
+      .update({ promo_pourcentage: promo_pourcentage || null, promo_active: promo_active || false })
+      .eq('id', id)
+      .eq('salon_id', salonId)
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
+
   // ── Ajouter un employe ──
   if (body.action === 'add_employe') {
     const { nom } = body
