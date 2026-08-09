@@ -10,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const [salonRes, servicesRes, employesRes, avisRes, imagesRes] = await Promise.all([
       supabase.from('salons').select('*').eq('id', id).single(),
-      supabase.from('services').select('*').eq('salon_id', id).order('categorie_service'),
+      supabase.from('services').select('id, salon_id, nom, prix, duree, categorie_service, promo_pourcentage, promo_active').eq('salon_id', id).order('categorie_service'),
       supabase.from('employes').select('*').eq('salon_id', id),
       supabase.from('avis').select('*, users(prenom, nom)').eq('salon_id', id).order('date_avis', { ascending: false }),
       supabase.from('salon_images').select('*').eq('salon_id', id),
