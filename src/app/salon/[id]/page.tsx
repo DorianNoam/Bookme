@@ -256,9 +256,9 @@ export default function SalonPage() {
               <span>{'📍'} {salon.adresse}, {salon.ville}</span>
               <span>{'📞'} {salon.telephone}</span>
               <span>{'⏱'} {salon.ouverture?.substring(0, 5)} - {salon.fermeture?.substring(0, 5)}</span>
-              {salon.jour_off !== undefined && salon.jour_off !== null && (
-                <span style={{ color: '#ffaaaa' }}>Ferme le {jours[salon.jour_off]}</span>
-              )}
+             {salon.jour_off !== undefined && salon.jour_off !== null && salon.jour_off > 0 && salon.jour_off <= 7 && (
+  <span style={{ color: '#ffaaaa' }}>Fermé le {jours[salon.jour_off === 7 ? 0 : salon.jour_off]}</span>
+)}
             </div>
           </div>
         </div>
