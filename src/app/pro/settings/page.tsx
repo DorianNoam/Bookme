@@ -1,12 +1,28 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
+import { createClient } from '@supabase/supabase-js'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
+
+const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+const DEFAULT_IMAGES: Record<string, string> = {
+  'Coiffure': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+  'Barbier': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800',
+  'Beaute des ongles': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
+  'Massage et bien-etre': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+  'Hammam & Spa': 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800',
+  'Chirurgie esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
+  'Institut': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
+}
 
 const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
@@ -308,7 +324,7 @@ function ServicesTab({
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
             {/* Nom — soit catalogue soit custom */}
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Prestation</label>
+              <label style={labelStyle}>Nom de la prestation</label>
               <div style={{ display: 'flex', gap: 10 }}>
                 <select
                   value=""
@@ -330,7 +346,7 @@ function ServicesTab({
                 <span style={{ alignSelf: 'center', color: '#999', fontSize: 13 }}>ou</span>
                 <input
                   type="text"
-                  placeholder="Prestation personnalisée"
+                  placeholder="Nom personnalise"
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
                   style={{ ...inputStyle, flex: 1 }}
@@ -655,10 +671,84 @@ function EmployesTab({
 function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => void }) {
   const [form, setForm] = useState({ ...salon })
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadMsg, setUploadMsg] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const displayImage = form.image || DEFAULT_IMAGES[form.type_salon] || DEFAULT_IMAGES['Coiffure']
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     const { name, value } = e.target
     setForm({ ...form, [name]: name === 'jour_off' ? parseInt(value) : value })
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setUploadMsg('Fichier non valide. Choisissez une image.')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadMsg('Image trop lourde (max 5 Mo)')
+      return
+    }
+
+    setUploading(true)
+    setUploadMsg('')
+
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const fileName = `salon-${salon.id}-${Date.now()}.${ext}`
+
+      const { error: uploadError } = await supabaseClient.storage
+        .from('salon-images')
+        .upload(fileName, file, { upsert: true })
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabaseClient.storage
+        .from('salon-images')
+        .getPublicUrl(fileName)
+
+      const publicUrl = urlData.publicUrl
+
+      // Sauvegarder dans la BDD
+      const res = await fetch('/api/pro/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, image: publicUrl }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setForm({ ...form, image: publicUrl })
+        onUpdate({ ...form, image: publicUrl })
+        setUploadMsg('Photo mise a jour !')
+      }
+    } catch (err: any) {
+      setUploadMsg('Erreur : ' + (err.message || 'Upload echoue'))
+    }
+    setUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  async function handleRemoveImage() {
+    setSaving(true)
+    try {
+      const res = await fetch('/api/pro/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, image: '' }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setForm({ ...form, image: '' })
+        onUpdate({ ...form, image: '' })
+        setUploadMsg('Photo supprimee. Une image par defaut sera utilisee.')
+      }
+    } catch (e) {}
+    setSaving(false)
   }
 
   async function handleSave() {
@@ -677,6 +767,61 @@ function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => v
 
   return (
     <div>
+      {/* ── Photo de couverture ── */}
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Photo de couverture</h3>
+      <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', marginBottom: 30, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+        <div style={{ position: 'relative', height: 220, background: '#eee' }}>
+          <img
+            src={displayImage}
+            alt="Couverture"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            onError={(e: any) => { e.target.src = DEFAULT_IMAGES['Coiffure'] }}
+          />
+          {!form.image && (
+            <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 4 }}>
+              Image par defaut
+            </div>
+          )}
+        </div>
+        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleUpload}
+            style={{ display: 'none' }}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            style={{
+              background: OR, color: '#fff', border: 'none', padding: '10px 22px',
+              borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer',
+              fontFamily: 'Inter, sans-serif', opacity: uploading ? 0.5 : 1,
+            }}
+          >
+            {uploading ? 'Envoi en cours...' : 'Changer la photo'}
+          </button>
+          {form.image && (
+            <button
+              onClick={handleRemoveImage}
+              style={{
+                background: 'transparent', border: '1px solid #ddd', color: '#888',
+                padding: '10px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+              }}
+            >
+              Utiliser image par defaut
+            </button>
+          )}
+          <span style={{ fontSize: 12, color: '#aaa' }}>JPG, PNG ou WebP — max 5 Mo</span>
+          {uploadMsg && (
+            <span style={{ fontSize: 13, fontWeight: 600, color: uploadMsg.includes('Erreur') ? '#d32f2f' : '#2e7d32' }}>{uploadMsg}</span>
+          )}
+        </div>
+      </div>
+
+      {/* ── Infos du salon ── */}
       <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Informations du salon</h3>
 
       <div style={{ background: '#fff', padding: 30, borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
