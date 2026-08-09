@@ -27,7 +27,9 @@ type Service = {
   nom: string; 
   prix: number; 
   duree: number; 
-  categorie_service: string 
+  categorie_service: string;
+  promo_pourcentage: number | null;
+  promo_active: boolean
 }
 
 export default function SalonPage() {
@@ -39,14 +41,12 @@ export default function SalonPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('prestations')
   
-  // États pour les favoris
   const [isFavorite, setIsFavorite] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
     if (!salonId) return
 
-    // Récupération des données du salon et de ses services
     fetch('/api/salons/' + salonId)
       .then(r => r.json())
       .then(data => {
@@ -59,7 +59,6 @@ export default function SalonPage() {
         setLoading(false)
       })
 
-    // Vérification de l'état du favori
     fetch(`/api/favoris?salon_id=${salonId}`)
       .then(res => res.json())
       .then(data => {
@@ -80,7 +79,6 @@ export default function SalonPage() {
       })
       
       if (res.status === 401) {
-        // Rediriger vers la page de connexion s'il n'est pas connecté
         window.location.href = `/login?redirect=/salon/${salonId}`
         return
       }
@@ -94,7 +92,6 @@ export default function SalonPage() {
     }
   }
 
-  // Grouper les services par catégorie
   const servicesParCategorie = services.reduce((acc, service) => {
     const cat = service.categorie_service || 'Autres'
     if (!acc[cat]) acc[cat] = []
@@ -107,7 +104,7 @@ export default function SalonPage() {
   if (!salon) return (
     <div style={{ textAlign: 'center', padding: 60, fontFamily: 'Inter, sans-serif' }}>
       <p style={{ color: '#888', marginBottom: 20 }}>Salon introuvable.</p>
-      <Link href="/search" style={{ color: OR, fontWeight: 700, textDecoration: 'none' }}>Retour à la recherche</Link>
+      <Link href="/search" style={{ color: OR, fontWeight: 700, textDecoration: 'none' }}>Retour a la recherche</Link>
     </div>
   )
 
@@ -116,11 +113,11 @@ export default function SalonPage() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
       
- {/* HEADER DE NAVIGATION */}
+      {/* HEADER */}
       <header style={{ background: '#fff', padding: '15px 0' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 22, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>Bookme<span style={{ color: OR }}>.dz</span></Link>
-          <Link href="/search" style={{ color: '#777', fontSize: 14, textDecoration: 'none' }}>← Retour aux résultats</Link>
+          <Link href="/search" style={{ color: '#777', fontSize: 14, textDecoration: 'none' }}>{'← Retour aux resultats'}</Link>
           <div style={{ display: 'flex', gap: 15 }}>
             {isLoggedIn ? (
               <Link href="/dashboard" style={{ color: '#fff', background: NOIR, padding: '6px 16px', borderRadius: 4, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
@@ -136,7 +133,7 @@ export default function SalonPage() {
         </div>
       </header>
 
-      {/* HERO SECTION / BANNIÈRE */}
+      {/* HERO */}
       <div style={{ position: 'relative', height: 350, backgroundColor: NOIR, overflow: 'hidden' }}>
         <img 
           src={salon.image} 
@@ -150,7 +147,6 @@ export default function SalonPage() {
               {salon.type_salon}
             </div>
             
-            {/* TITRE ET BOUTON FAVORI */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 12 }}>
               <h1 style={{ fontSize: 42, fontWeight: 900, color: '#fff', margin: 0 }}>{salon.nom}</h1>
               
@@ -178,18 +174,18 @@ export default function SalonPage() {
             </div>
 
             <div style={{ color: '#eee', fontSize: 15, display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span>📍 {salon.adresse}, {salon.ville}</span>
-              <span>📞 {salon.telephone}</span>
-              <span>⏱ {salon.ouverture?.substring(0, 5)} - {salon.fermeture?.substring(0, 5)}</span>
+              <span>{'📍'} {salon.adresse}, {salon.ville}</span>
+              <span>{'📞'} {salon.telephone}</span>
+              <span>{'⏱'} {salon.ouverture?.substring(0, 5)} - {salon.fermeture?.substring(0, 5)}</span>
               {salon.jour_off !== undefined && salon.jour_off !== null && (
-                <span style={{ color: '#ffaaaa' }}>Fermé le {jours[salon.jour_off]}</span>
+                <span style={{ color: '#ffaaaa' }}>Ferme le {jours[salon.jour_off]}</span>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* CONTENU PRINCIPAL */}
+      {/* CONTENU */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px', display: 'flex', gap: 40, marginTop: 40, flexDirection: 'column' }}>
         
         {/* TABS */}
@@ -210,9 +206,7 @@ export default function SalonPage() {
           ))}
         </div>
 
-        {/* CONTENU DES TABS */}
         <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
-          
           <div style={{ flex: 1 }}>
             
             {activeTab === 'prestations' && (
@@ -226,27 +220,50 @@ export default function SalonPage() {
                     </h3>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
-                      {items.map(service => (
-                        <div key={service.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'box-shadow 0.2s' }} onMouseOver={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)'} onMouseOut={e => e.currentTarget.style.boxShadow = 'none'}>
-                          <div>
-                            <div style={{ fontWeight: 800, fontSize: 16, color: NOIR, marginBottom: 4 }}>{service.nom}</div>
-                            <div style={{ color: '#888', fontSize: 13 }}>{service.duree} min</div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 30 }}>
-                            <div style={{ fontWeight: 800, fontSize: 18, color: NOIR }}>
-                              {service.prix > 0 ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}
+                      {items.map(service => {
+                        const hasPromo = service.promo_active && service.promo_pourcentage && service.promo_pourcentage > 0
+                        const promoPrice = hasPromo ? Math.round(service.prix - (service.prix * service.promo_pourcentage! / 100)) : service.prix
+
+                        return (
+                          <div key={service.id} style={{ background: '#fff', border: hasPromo ? '1px solid #ffcccb' : '1px solid #EDE5D8', borderRadius: 6, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'box-shadow 0.2s', position: 'relative', overflow: 'hidden' }} onMouseOver={e => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)'} onMouseOut={e => e.currentTarget.style.boxShadow = 'none'}>
+                            
+                            {/* Badge promo */}
+                            {hasPromo && (
+                              <div style={{ position: 'absolute', top: 0, right: 0, background: '#d32f2f', color: '#fff', fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: '0 0 0 8px' }}>
+                                -{service.promo_pourcentage}%
+                              </div>
+                            )}
+
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: 16, color: NOIR, marginBottom: 4 }}>{service.nom}</div>
+                              <div style={{ color: '#888', fontSize: 13 }}>{service.duree} min</div>
                             </div>
-                            <Link 
-                              href={`/booking?salon=${salon.id}&service=${service.id}`}
-                              style={{ background: NOIR, color: '#fff', padding: '10px 24px', borderRadius: 4, fontWeight: 700, fontSize: 14, textDecoration: 'none', transition: 'background 0.2s' }}
-                              onMouseOver={e => e.currentTarget.style.background = OR}
-                              onMouseOut={e => e.currentTarget.style.background = NOIR}
-                            >
-                              Réserver
-                            </Link>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                              {/* Prix */}
+                              <div style={{ textAlign: 'right' }}>
+                                {hasPromo ? (
+                                  <div>
+                                    <span style={{ textDecoration: 'line-through', color: '#999', fontSize: 14 }}>{service.prix.toLocaleString()} DA</span>
+                                    <div style={{ fontWeight: 900, fontSize: 20, color: '#d32f2f' }}>{promoPrice.toLocaleString()} DA</div>
+                                  </div>
+                                ) : (
+                                  <div style={{ fontWeight: 800, fontSize: 18, color: NOIR }}>
+                                    {service.prix > 0 ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}
+                                  </div>
+                                )}
+                              </div>
+                              <Link 
+                                href={`/booking?salon=${salon.id}&service=${service.id}`}
+                                style={{ background: hasPromo ? '#d32f2f' : NOIR, color: '#fff', padding: '10px 24px', borderRadius: 4, fontWeight: 700, fontSize: 14, textDecoration: 'none', transition: 'background 0.2s', whiteSpace: 'nowrap' }}
+                                onMouseOver={e => e.currentTarget.style.background = OR}
+                                onMouseOut={e => e.currentTarget.style.background = hasPromo ? '#d32f2f' : NOIR}
+                              >
+                                Reserver
+                              </Link>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 ))}
@@ -255,7 +272,7 @@ export default function SalonPage() {
 
             {activeTab === 'informations' && (
               <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: 30 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>À propos</h3>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>A propos</h3>
                 <p style={{ color: '#555', lineHeight: 1.6, marginBottom: 30 }}>{salon.description}</p>
                 
                 <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Horaires</h3>
@@ -263,7 +280,7 @@ export default function SalonPage() {
                   {jours.map((jour, index) => (
                     <div key={jour} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 10, borderBottom: '1px solid #f0f0f0', color: salon.jour_off === index ? '#ffaaaa' : '#555' }}>
                       <span style={{ fontWeight: salon.jour_off === index ? 400 : 600 }}>{jour}</span>
-                      <span>{salon.jour_off === index ? 'Fermé' : `${salon.ouverture?.substring(0, 5)} - ${salon.fermeture?.substring(0, 5)}`}</span>
+                      <span>{salon.jour_off === index ? 'Ferme' : `${salon.ouverture?.substring(0, 5)} - ${salon.fermeture?.substring(0, 5)}`}</span>
                     </div>
                   ))}
                 </div>
@@ -272,9 +289,9 @@ export default function SalonPage() {
 
             {activeTab === 'avis' && (
               <div style={{ textAlign: 'center', padding: 60, background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6 }}>
-                <div style={{ fontSize: 40, marginBottom: 15 }}>⭐</div>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 10 }}>Les avis arrivent bientôt</h3>
-                <p style={{ color: '#888', fontSize: 14 }}>Seuls les clients ayant effectué une réservation peuvent laisser un avis.</p>
+                <div style={{ fontSize: 40, marginBottom: 15 }}>{'⭐'}</div>
+                <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 10 }}>Les avis arrivent bientot</h3>
+                <p style={{ color: '#888', fontSize: 14 }}>Seuls les clients ayant effectue une reservation peuvent laisser un avis.</p>
               </div>
             )}
 
