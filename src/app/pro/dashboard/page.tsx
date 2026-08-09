@@ -7,6 +7,7 @@ import { jwtVerify } from 'jose'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
+import CancelRdvButton from '@/app/pro/components/CancelRdvButton'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
@@ -247,11 +248,14 @@ export default async function ProDashboardPage() {
                         </div>
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: OR }}>{rdv.service_prix?.toLocaleString()} DA</div>
-                      <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
-                        {isToday ? "Aujourd'hui" : rdvDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: OR }}>{rdv.service_prix?.toLocaleString()} DA</div>
+                        <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
+                          {isToday ? "Aujourd'hui" : rdvDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </div>
                       </div>
+                      <CancelRdvButton id={rdv.id} />
                     </div>
                   </div>
                 )
