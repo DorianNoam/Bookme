@@ -38,10 +38,10 @@ export default async function ProDashboardPage() {
     return (
       <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
         <Header pro={pro} activePage="dashboard" />
-        <main style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px' }}>
-          <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-            <h2 style={{ fontSize: 24, fontWeight: 800, color: NOIR, marginBottom: 15 }}>Bienvenue sur Bookme Pro !</h2>
-            <p style={{ color: '#666', marginBottom: 30 }}>Pour commencer a recevoir des reservations, configurez votre etablissement.</p>
+        <main style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(20px, 5vw, 40px) 16px' }}>
+          <div style={{ background: '#fff', padding: 'clamp(24px, 5vw, 40px)', borderRadius: 8, textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <h2 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 800, color: NOIR, marginBottom: 15 }}>Bienvenue sur Bookme Pro !</h2>
+            <p style={{ color: '#666', marginBottom: 30, fontSize: 14 }}>Pour commencer a recevoir des reservations, configurez votre etablissement.</p>
             <Link href="/pro/salon/create" style={{ display: 'inline-block', background: OR, color: '#fff', textDecoration: 'none', padding: '12px 24px', borderRadius: 4, fontWeight: 700 }}>
               Creer mon salon
             </Link>
@@ -67,7 +67,7 @@ export default async function ProDashboardPage() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
 
-  // 4. Fetch toutes les reservations du mois (on filtre ensuite en JS)
+  // 4. Fetch toutes les reservations du mois
   const { data: allResas } = await supabase
     .from('reservations')
     .select('*')
@@ -78,7 +78,6 @@ export default async function ProDashboardPage() {
 
   const resas = allResas || []
 
-  // Filtrer par periode et statut
   const active = resas.filter(r => r.statut !== 'annule')
   const annules = resas.filter(r => r.statut === 'annule')
 
@@ -101,8 +100,8 @@ export default async function ProDashboardPage() {
     .sort(([, a], [, b]) => b.count - a.count)
     .slice(0, 5)
 
-  // 6. CA par jour de la semaine (pour le graphique texte)
-  const caByDow: number[] = [0, 0, 0, 0, 0, 0, 0] // Lun-Dim
+  // 6. CA par jour de la semaine
+  const caByDow: number[] = [0, 0, 0, 0, 0, 0, 0]
   active.forEach(r => {
     const d = new Date(r.date_rdv).getDay()
     const idx = d === 0 ? 6 : d - 1
@@ -110,7 +109,7 @@ export default async function ProDashboardPage() {
   })
   const maxCaDow = Math.max(...caByDow, 1)
 
-  // 7. Prochains RDV (a partir de maintenant)
+  // 7. Prochains RDV
   const { data: upcoming } = await supabase
     .from('reservations')
     .select('*, employes(nom)')
@@ -135,21 +134,43 @@ export default async function ProDashboardPage() {
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
       <Header pro={pro} activePage="dashboard" />
 
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '30px 20px' }}>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(16px, 4vw, 30px) 16px' }}>
 
         {/* Titre + lien agenda */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
-          <div>
-            <h1 style={{ fontSize: 26, fontWeight: 900, color: NOIR, margin: 0 }}>{salon.nom}</h1>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 20,
+          gap: 12,
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontSize: 'clamp(20px, 4vw, 26px)', fontWeight: 900, color: NOIR, margin: 0 }}>{salon.nom}</h1>
             <p style={{ color: '#888', fontSize: 14, margin: '4px 0 0' }}>{'📍'} {salon.ville}</p>
           </div>
-          <Link href="/pro/agenda" style={{ background: NOIR, color: '#fff', padding: '10px 22px', borderRadius: 6, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+          <Link href="/pro/agenda" style={{
+            background: NOIR,
+            color: '#fff',
+            padding: '10px 18px',
+            borderRadius: 6,
+            fontSize: 13,
+            fontWeight: 700,
+            textDecoration: 'none',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }}>
             Voir l'agenda {'→'}
           </Link>
         </div>
 
-        {/* ══════ KPIs ══════ */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 30 }}>
+        {/* KPIs */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))',
+          gap: 12,
+          marginBottom: 24
+        }}>
           <KpiCard label="RDV aujourd'hui" value={String(todayResas.length)} sub={`${caToday.toLocaleString()} DA`} accent={NOIR} />
           <KpiCard label="RDV cette semaine" value={String(weekResas.length)} sub={`${caWeek.toLocaleString()} DA`} accent={OR} />
           <KpiCard label="CA du mois" value={`${caMonth.toLocaleString()} DA`} sub={`${active.length} RDV confirmes`} accent="#2e7d32" />
@@ -157,26 +178,55 @@ export default async function ProDashboardPage() {
           <KpiCard label="Note moyenne" value={String(moyNote)} sub={`${nbAvis} avis`} accent={OR} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 30 }}>
+        {/* Top services + CA par jour */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+          gap: 16,
+          marginBottom: 24
+        }}>
 
-          {/* ══════ TOP SERVICES ══════ */}
-          <div style={{ background: '#fff', borderRadius: 8, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 18, marginTop: 0 }}>Top prestations du mois</h3>
+          {/* TOP SERVICES */}
+          <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 16, marginTop: 0 }}>Top prestations du mois</h3>
             {topServices.length === 0 ? (
               <p style={{ color: '#aaa', fontSize: 14 }}>Aucune prestation ce mois-ci.</p>
             ) : (
               <div>
                 {topServices.map(([name, data], i) => (
-                  <div key={name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: i < topServices.length - 1 ? '1px solid #f5f5f5' : 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ width: 22, height: 22, borderRadius: '50%', background: i === 0 ? OR : '#eee', color: i === 0 ? '#fff' : '#888', fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div key={name} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px 0',
+                    borderBottom: i < topServices.length - 1 ? '1px solid #f5f5f5' : 'none',
+                    gap: 8
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                      <span style={{
+                        width: 22, height: 22, borderRadius: '50%',
+                        background: i === 0 ? OR : '#eee',
+                        color: i === 0 ? '#fff' : '#888',
+                        fontSize: 11, fontWeight: 800,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
                         {i + 1}
                       </span>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: NOIR }}>{name}</span>
+                      <span style={{
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: NOIR,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {name}
+                      </span>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: OR }}>{data.count}x</span>
-                      <span style={{ fontSize: 12, color: '#999', marginLeft: 8 }}>{data.revenue.toLocaleString()} DA</span>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>{data.count}x</span>
+                      <span style={{ fontSize: 11, color: '#999', marginLeft: 6 }}>{data.revenue.toLocaleString()} DA</span>
                     </div>
                   </div>
                 ))}
@@ -184,19 +234,32 @@ export default async function ProDashboardPage() {
             )}
           </div>
 
-          {/* ══════ CA PAR JOUR ══════ */}
-          <div style={{ background: '#fff', borderRadius: 8, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 18, marginTop: 0 }}>Activite par jour (ce mois)</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* CA PAR JOUR */}
+          <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 16, marginTop: 0 }}>Activite par jour (ce mois)</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {JOURS.map((jour, i) => {
                 const pct = maxCaDow > 0 ? (caByDow[i] / maxCaDow) * 100 : 0
                 return (
-                  <div key={jour} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ width: 30, fontSize: 12, fontWeight: 700, color: '#888' }}>{jour}</span>
-                    <div style={{ flex: 1, height: 22, background: '#f5f5f5', borderRadius: 4, overflow: 'hidden' }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: pct > 0 ? `linear-gradient(90deg, ${OR}, #d4a83a)` : 'transparent', borderRadius: 4, transition: 'width 0.3s' }} />
+                  <div key={jour} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ width: 28, fontSize: 12, fontWeight: 700, color: '#888', flexShrink: 0 }}>{jour}</span>
+                    <div style={{ flex: 1, height: 20, background: '#f5f5f5', borderRadius: 4, overflow: 'hidden', minWidth: 0 }}>
+                      <div style={{
+                        width: `${pct}%`,
+                        height: '100%',
+                        background: pct > 0 ? `linear-gradient(90deg, ${OR}, #d4a83a)` : 'transparent',
+                        borderRadius: 4,
+                        transition: 'width 0.3s'
+                      }} />
                     </div>
-                    <span style={{ width: 70, textAlign: 'right', fontSize: 12, fontWeight: 700, color: caByDow[i] > 0 ? NOIR : '#ccc' }}>
+                    <span style={{
+                      width: 'clamp(50px, 12vw, 70px)',
+                      textAlign: 'right',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: caByDow[i] > 0 ? NOIR : '#ccc',
+                      flexShrink: 0
+                    }}>
                       {caByDow[i] > 0 ? `${caByDow[i].toLocaleString()} DA` : '-'}
                     </span>
                   </div>
@@ -206,15 +269,15 @@ export default async function ProDashboardPage() {
           </div>
         </div>
 
-        {/* ══════ PROCHAINS RDV ══════ */}
-        <div style={{ background: '#fff', borderRadius: 8, padding: 25, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, margin: 0 }}>Prochains rendez-vous</h3>
+        {/* PROCHAINS RDV */}
+        <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, margin: 0 }}>Prochains rendez-vous</h3>
             <Link href="/pro/agenda" style={{ fontSize: 13, color: OR, fontWeight: 700, textDecoration: 'none' }}>Voir tout {'→'}</Link>
           </div>
 
           {(!upcoming || upcoming.length === 0) ? (
-            <div style={{ textAlign: 'center', padding: '40px 0', color: '#999', fontSize: 14 }}>
+            <div style={{ textAlign: 'center', padding: '32px 0', color: '#999', fontSize: 14 }}>
               Aucun rendez-vous a venir.
             </div>
           ) : (
@@ -224,34 +287,55 @@ export default async function ProDashboardPage() {
                 const isToday = rdvDate.toDateString() === now.toDateString()
                 return (
                   <div key={rdv.id} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '14px 0', borderBottom: i < upcoming.length - 1 ? '1px solid #f5f5f5' : 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '12px 0',
+                    borderBottom: i < upcoming.length - 1 ? '1px solid #f5f5f5' : 'none',
+                    gap: 10,
+                    flexWrap: 'wrap'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
                       {/* Heure */}
                       <div style={{
-                        width: 50, height: 50, borderRadius: 8,
+                        width: 44, height: 44, borderRadius: 8,
                         background: isToday ? OR : '#f5f5f5',
                         color: isToday ? '#fff' : NOIR,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexShrink: 0
                       }}>
-                        <div style={{ fontSize: 16, fontWeight: 900, lineHeight: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 900, lineHeight: 1 }}>
                           {String(rdvDate.getHours()).padStart(2, '0')}h{String(rdvDate.getMinutes()).padStart(2, '0')}
                         </div>
                       </div>
                       {/* Infos */}
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: NOIR }}>{rdv.client_nom}</div>
-                        <div style={{ fontSize: 13, color: '#888' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color: NOIR,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {rdv.client_nom}
+                        </div>
+                        <div style={{
+                          fontSize: 12,
+                          color: '#888',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
                           {rdv.service_nom}
                           {rdv.employes?.nom && <span style={{ color: '#bbb' }}> — {rdv.employes.nom}</span>}
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 14, fontWeight: 800, color: OR }}>{rdv.service_prix?.toLocaleString()} DA</div>
-                        <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: OR }}>{rdv.service_prix?.toLocaleString()} DA</div>
+                        <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>
                           {isToday ? "Aujourd'hui" : rdvDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
                         </div>
                       </div>
@@ -275,27 +359,77 @@ export default async function ProDashboardPage() {
 
 function Header({ pro, activePage }: { pro: any; activePage: string }) {
   return (
-    <header style={{ background: NOIR, color: '#fff', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <div style={{ fontSize: 20, fontWeight: 900 }}>
-        Bookme<span style={{ color: OR }}>.dz</span> <span style={{ fontWeight: 400, fontSize: 14, color: '#888' }}>| Espace Pro</span>
+    <header style={{
+      background: NOIR,
+      color: '#fff',
+      padding: '12px 16px'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        maxWidth: 1200,
+        margin: '0 auto'
+      }}>
+        <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
+          Bookme<span style={{ color: OR }}>.dz</span>
+          <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
+        </div>
+        <nav style={{
+          display: 'flex',
+          gap: 'clamp(8px, 2vw, 20px)',
+          alignItems: 'center',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none'
+        }}>
+          <Link href="/pro/dashboard" style={{
+            color: activePage === 'dashboard' ? OR : '#aaa',
+            fontSize: 'clamp(12px, 2vw, 14px)',
+            textDecoration: 'none',
+            fontWeight: activePage === 'dashboard' ? 700 : 600,
+            whiteSpace: 'nowrap'
+          }}>
+            Dashboard
+          </Link>
+          <Link href="/pro/agenda" style={{
+            color: activePage === 'agenda' ? OR : '#aaa',
+            fontSize: 'clamp(12px, 2vw, 14px)',
+            textDecoration: 'none',
+            fontWeight: activePage === 'agenda' ? 700 : 600,
+            whiteSpace: 'nowrap'
+          }}>
+            Agenda
+          </Link>
+          <Link href="/pro/settings" style={{
+            color: activePage === 'settings' ? OR : '#aaa',
+            fontSize: 'clamp(12px, 2vw, 14px)',
+            textDecoration: 'none',
+            fontWeight: activePage === 'settings' ? 700 : 600,
+            whiteSpace: 'nowrap'
+          }}>
+            Param.
+          </Link>
+          <LogoutButton />
+        </nav>
       </div>
-      <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#888', marginRight: 10 }}>{pro?.prenom} {pro?.nom}</span>
-        <Link href="/pro/dashboard" style={{ color: activePage === 'dashboard' ? OR : '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: activePage === 'dashboard' ? 700 : 600 }}>Dashboard</Link>
-        <Link href="/pro/agenda" style={{ color: activePage === 'agenda' ? OR : '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: activePage === 'agenda' ? 700 : 600 }}>Agenda</Link>
-        <Link href="/pro/settings" style={{ color: activePage === 'settings' ? OR : '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: activePage === 'settings' ? 700 : 600 }}>Parametres</Link>
-        <LogoutButton />
-      </nav>
     </header>
   )
 }
 
 function KpiCard({ label, value, sub, accent }: { label: string; value: string; sub: string; accent: string }) {
   return (
-    <div style={{ background: '#fff', padding: 22, borderRadius: 8, borderLeft: `4px solid ${accent}`, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-      <div style={{ color: '#888', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 900, color: NOIR, lineHeight: 1 }}>{value}</div>
-      <div style={{ fontSize: 13, color: accent, fontWeight: 600, marginTop: 6 }}>{sub}</div>
+    <div style={{
+      background: '#fff',
+      padding: 'clamp(14px, 3vw, 22px)',
+      borderRadius: 8,
+      borderLeft: `4px solid ${accent}`,
+      boxShadow: '0 2px 10px rgba(0,0,0,0.03)'
+    }}>
+      <div style={{ color: '#888', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>{label}</div>
+      <div style={{ fontSize: 'clamp(22px, 4vw, 28px)', fontWeight: 900, color: NOIR, lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 12, color: accent, fontWeight: 600, marginTop: 5 }}>{sub}</div>
     </div>
   )
 }
