@@ -369,7 +369,7 @@ export default function DashboardPage() {
 
             {/* Zone danger */}
             <div style={{ background: '#fff', border: '1px solid #ffcccb', borderRadius: 8, padding: 24 }}>
-              <h4 style={{ fontSize: 15, fontWeight: 800, color: '#d32f2f', margin: '0 0 8px' }}>Zone danger</h4>
+              <h4 style={{ fontSize: 15, fontWeight: 800, color: '#d32f2f', margin: '0 0 8px' }}>Attention</h4>
               <p style={{ fontSize: 13, color: '#888', margin: '0 0 16px', lineHeight: 1.5 }}>
                 La suppression est definitive. Vos rendez-vous resteront visibles pour les professionnels mais ne seront plus lies a votre compte.
               </p>
