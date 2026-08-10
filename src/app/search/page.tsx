@@ -1,114 +1,105 @@
-'use client'
-import React, { useState, useEffect, Suspense } from 'react'
-import Link from 'next/link'
-import { useSearchParams, useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
-import { format, addDays } from 'date-fns'
-import { fr } from 'date-fns/locale'
-import { VILLES_ALGERIE } from '@/data/villes'
+'use client';
+import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { format, addDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { VILLES_ALGERIE } from '@/data/villes';
 
 // Import dynamique de la carte Leaflet
 const SearchMap = dynamic(() => import('@/components/SearchMap'), { 
   ssr: false, 
   loading: () => <div style={{ width: '100%', height: '100%', background: '#e5e3df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>Chargement de la carte...</div> 
-})
+});
 
 type Salon = {
-  id: number
-  nom: string
-  adresse: string
-  image: string
-  type_salon: string
-  telephone: string
-  description: string
-  ville: string
-  moy_note: string | null
-  nb_avis: number
-  latitude?: number
-  longitude?: number
-}
+  id: number;
+  nom: string;
+  adresse: string;
+  image: string;
+  type_salon: string;
+  telephone: string;
+  description: string;
+  ville: string;
+  moy_note: string | null;
+  nb_avis: number;
+  latitude?: number;
+  longitude?: number;
+};
 
-const CATEGORIES = ['Coiffure', 'Beaute des ongles', 'Massage et bien-etre', 'Barbier', 'Hammam & Spa', 'Chirurgie esthetique']
-const NOIR = '#0A0A0A'
-const OR = '#B8922A'
-const BG = '#F8F5F0'
+const CATEGORIES = ['Coiffure', 'Beaute des ongles', 'Massage et bien-etre', 'Barbier', 'Hammam & Spa', 'Chirurgie esthetique'];
+const NOIR = '#0A0A0A';
+const OR = '#B8922A';
+const BG = '#F8F5F0';
 
 function SearchContent() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const [salons, setSalons] = useState<Salon[]>([])
-  const [loading, setLoading] = useState(true)
-  const [query, setQuery] = useState(searchParams.get('q') || '')
-  const [loc, setLoc] = useState(searchParams.get('loc') || '')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [hoveredSalonId, setHoveredSalonId] = useState<number | null>(null)
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [salons, setSalons] = useState<Salon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [loc, setLoc] = useState(searchParams.get('loc') || '');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [hoveredSalonId, setHoveredSalonId] = useState<number | null>(null);
   
   // États pour la version Mobile
-  const [showMap, setShowMap] = useState(false)
-  const [showMobilePrestations, setShowMobilePrestations] = useState(false)
-  const [showMobileFiltres, setShowMobileFiltres] = useState(false)
+  const [showMap, setShowMap] = useState(false);
+  const [showMobilePrestations, setShowMobilePrestations] = useState(false);
+  const [showMobileFiltres, setShowMobileFiltres] = useState(false);
 
-  useEffect(() => {
-    if (showMap) {
-      // Force Leaflet à se redessiner 100ms après avoir affiché l'onglet Carte
-      setTimeout(() => {
-        window.dispatchEvent(new Event('resize'))
-      }, 100)
-    }
-  }, [showMap])
-
-  // Génération des 3 prochains jours pour l'affichage Planity
+  // Génération des 3 prochains jours
   const nextDays = Array.from({ length: 3 }).map((_, i) => {
-    const d = addDays(new Date(), i + 1)
-    return format(d, 'E.d', { locale: fr }) 
-  })
+    const d = addDays(new Date(), i + 1);
+    return format(d, 'E.d', { locale: fr });
+  });
 
   useEffect(() => {
     fetch('/api/auth/me')
       .then(res => res.json())
-      .then(data => { if (data.logged) setIsLoggedIn(true) })
-      .catch(() => {})
-  }, [])
+      .then(data => { if (data.logged) setIsLoggedIn(true); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
-    const q = searchParams.get('q') || ''
-    const l = searchParams.get('loc') || ''
-    setQuery(q)
-    setLoc(l)
-    fetchSalons(q, l)
-  }, [searchParams])
+    const q = searchParams.get('q') || '';
+    const l = searchParams.get('loc') || '';
+    setQuery(q);
+    setLoc(l);
+    fetchSalons(q, l);
+  }, [searchParams]);
 
   async function fetchSalons(q: string, l: string) {
-    setLoading(true)
+    setLoading(true);
     try {
-      const params = new URLSearchParams()
-      if (q) params.set('q', q)
-      if (l) params.set('loc', l)
-      const res = await fetch('/api/salons?' + params.toString())
-      const data = await res.json()
-      setSalons(data.salons || [])
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (l) params.set('loc', l);
+      const res = await fetch('/api/salons?' + params.toString());
+      const data = await res.json();
+      setSalons(data.salons || []);
     } catch {
-      setSalons([])
+      setSalons([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
-    applyFilters(query, loc)
+    e.preventDefault();
+    applyFilters(query, loc);
   }
 
   function applyFilters(newQuery: string, newLoc: string) {
-    const params = new URLSearchParams()
-    if (newQuery) params.set('q', newQuery)
-    if (newLoc) params.set('loc', newLoc)
-    router.push('/search?' + params.toString())
-    setShowMobilePrestations(false)
-    setShowMobileFiltres(false)
+    const params = new URLSearchParams();
+    if (newQuery) params.set('q', newQuery);
+    if (newLoc) params.set('loc', newLoc);
+    router.push('/search?' + params.toString());
+    setShowMobilePrestations(false);
+    setShowMobileFiltres(false);
   }
 
-  const hasMappable = salons.some(s => s.latitude && s.longitude)
+  const hasMappable = salons.some(s => s.latitude && s.longitude);
 
   return (
     <div style={{ background: BG, minHeight: '100vh', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column' }}>
@@ -152,7 +143,7 @@ function SearchContent() {
               onClick={() => applyFilters(query, '')} 
               style={{ padding: '16px', textAlign: 'left', background: !loc ? NOIR : BG, color: !loc ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: 'none' }}
             >
-              Toute l'Algérie
+              Toute l&apos;Algérie
             </button>
             {VILLES_ALGERIE.map(v => (
               <button 
@@ -174,7 +165,6 @@ function SearchContent() {
             Bookme<span style={{ color: OR }}>.dz</span>
           </Link>
 
-          {/* Formulaire de recherche (Caché sur mobile) */}
           <form onSubmit={handleSearch} className="hide-mobile" style={{ flex: 1, display: 'flex', gap: 8, minWidth: 0 }}>
             <select value={query} onChange={e => setQuery(e.target.value)} style={{ flex: '1 1 140px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, cursor: 'pointer' }}>
               <option value="">Toutes les prestations</option>
@@ -202,7 +192,7 @@ function SearchContent() {
         </div>
       </header>
 
-      {/* BARRE D'ONGLETS MOBILE (FAÇON PLANITY) */}
+      {/* BARRE D'ONGLETS MOBILE */}
       <div className="hide-desktop" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '10px 16px', display: 'flex', gap: 8, position: 'sticky', top: 54, zIndex: 90, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
         <button onClick={() => setShowMobilePrestations(true)} style={{ flex: 1, padding: '10px 4px', background: BG, border: '1px solid #E0D8CE', borderRadius: 6, fontSize: 13, fontWeight: 600, color: NOIR, cursor: 'pointer', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
           🏷️ {query ? query : 'Prestations'}
@@ -228,11 +218,9 @@ function SearchContent() {
         </div>
       </div>
 
-      {/* CONTENU PRINCIPAL : SPLIT LAYOUT AVEC CLASSES CSS (Voir balise <style> en bas) */}
+      {/* CONTENU PRINCIPAL */}
       <div className="split-layout">
-
-        {/* COLONNE GAUCHE : LISTE DES SALONS */}
-        <div className={`list-col ${showMap ? 'hide-mobile' : ''}`}>
+        <div className={`list-col ${showMap ? 'hide-on-mobile' : ''}`}>
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 800, color: NOIR, marginBottom: 4 }}>
               {query ? query : 'Sélectionnez un établissement'}
@@ -270,21 +258,18 @@ function SearchContent() {
                   }}
                 >
                   <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                    {/* Image */}
                     <div style={{ width: '260px', minHeight: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
                       <img
                         src={salon.image}
                         alt={salon.nom}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                       />
                       <button style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>♡</button>
                     </div>
 
-                    {/* Infos & Créneaux */}
                     <div style={{ flex: 1, padding: '20px', minWidth: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
-                        {/* En-tête */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                           <Link
                             href={'/salon/' + salon.id}
@@ -297,14 +282,12 @@ function SearchContent() {
                           📍 {salon.adresse}{salon.ville ? ', ' + salon.ville : ''}
                         </div>
 
-                        {/* Note & Catégorie */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                           {salon.moy_note ? <span style={{ color: NOIR, fontWeight: 700 }}>★ {salon.moy_note} <span style={{ color: '#888', fontWeight: 400 }}>({salon.nb_avis} avis)</span></span> : <span style={{ color: '#bbb' }}>Nouveau</span>}
                           <span style={{ color: '#ddd' }}>•</span>
                           <span style={{ color: '#888' }}>{salon.type_salon}</span>
                         </div>
 
-                        {/* Grille de disponibilités */}
                         <div style={{ marginTop: '24px', borderTop: '1px solid #F5F0E6', paddingTop: '20px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
                             <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>MATIN</span>
@@ -329,10 +312,9 @@ function SearchContent() {
                         </div>
                       </div>
 
-                      {/* Footer de la carte */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 }}>
                         <Link href={'/salon/' + salon.id} style={{ color: '#444', fontSize: 13, fontWeight: 600, textDecoration: 'underline' }}>
-                          Plus d'informations
+                          Plus d&apos;informations
                         </Link>
                         <Link href={'/booking?salon=' + salon.id} className="hide-mobile" style={{ background: NOIR, color: '#fff', padding: '10px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
                           Prendre RDV
@@ -346,11 +328,9 @@ function SearchContent() {
           )}
         </div>
 
-       {/* COLONNE DROITE : CARTE LEAFLET */}
         {hasMappable && (
-          <div className={`map-col ${!showMap ? 'hide-mobile' : ''}`}>
+          <div className={`map-col ${showMap ? 'show-on-mobile' : 'hide-on-mobile'}`}>
             <SearchMap
-              key={String(showMap)} /* 👈 L'astuce est ici : force la carte à recalculer sa taille sur mobile */
               salons={salons}
               hoveredSalonId={hoveredSalonId}
               onMarkerClick={(id: number) => router.push('/salon/' + id)}
@@ -358,38 +338,37 @@ function SearchContent() {
           </div>
         )}
 
-        {/* Fallback si pas de coords */}
         {!hasMappable && !loading && salons.length > 0 && (
-          <div className={`map-col ${!showMap ? 'hide-mobile' : ''}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e3df', color: '#999', fontSize: 14, textAlign: 'center', padding: 20 }}>
+          <div className={`map-col ${showMap ? 'show-on-mobile' : 'hide-on-mobile'}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e3df', color: '#999', fontSize: 14, textAlign: 'center', padding: 20 }}>
             <div>
               <div style={{ fontSize: 36, marginBottom: 12 }}>{'🗺️'}</div>
-              Carte indisponible.<br />Les salons n'ont pas encore de coordonnées GPS.
+              Carte indisponible.<br />Les salons n&apos;ont pas encore de coordonnées GPS.
             </div>
           </div>
         )}
       </div>
 
-  <style dangerouslySetInnerHTML={{__html: `
-        /* Layout principal */
+      <style dangerouslySetInnerHTML={{__html: `
         .split-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
         .list-col { flex: 0 0 60%; max-width: 760px; padding: 20px 16px; overflow-y: auto; height: calc(100vh - 120px); background: #F8F5F0; }
         .map-col { flex: 1; position: relative; border-left: 1px solid #EDE5D8; height: calc(100vh - 120px); background: #e5e3df; }
         
-        /* Version Mobile */
         @media (max-width: 900px) {
           .split-layout { display: block; }
           .list-col { width: 100%; max-width: 100%; height: calc(100vh - 170px); }
           .list-col.hide-on-mobile { display: none; }
           
-          /* On masque proprement la carte, le useEffect en JS la réveillera au clic */
-          .map-col { display: none; width: 100%; height: calc(100vh - 170px); border-left: none; }
-          .map-col.show-on-mobile { display: block; }
+          .map-col { position: absolute; top: 0; left: 0; width: 100%; height: calc(100vh - 170px); border-left: none; transition: opacity 0.2s ease; }
+          .map-col.hide-on-mobile { opacity: 0; pointer-events: none; z-index: -1; }
+          .map-col.show-on-mobile { opacity: 1; pointer-events: auto; z-index: 10; }
           
-          /* Cartes salons adaptées pour mobile */
           .salon-result-card > div { flex-direction: column; }
           .salon-image-container { width: 100% !important; height: 220px; min-height: auto !important; }
         }
       `}} />
+    </div>
+  );
+}
 
 export default function SearchPage() {
   return (
@@ -400,5 +379,5 @@ export default function SearchPage() {
     }>
       <SearchContent />
     </Suspense>
-  )
+  );
 }
