@@ -149,7 +149,7 @@ export default function SalonPage() {
               </button>
             </div>
 
-            <div className="salon-info-bar" style={{ color: '#eee', fontSize: 13, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+         <div className="salon-info-bar" style={{ color: '#eee', fontSize: 13, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
               <span>{'📍'} {salon.ville}</span>
               <span className="hide-mobile">{'📍'} {salon.adresse}</span>
               <span>{'📞'} {salon.telephone}</span>
@@ -157,6 +157,28 @@ export default function SalonPage() {
               {salon.jour_off !== undefined && salon.jour_off !== null && salon.jour_off > 0 && salon.jour_off <= 7 && (
                 <span style={{ color: '#ffaaaa' }}>Ferme le {jours[salon.jour_off === 7 ? 0 : salon.jour_off]}</span>
               )}
+              
+              {/* BOUTON ITINÉRAIRE GOOGLE MAPS */}
+              <a 
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${salon.adresse}, ${salon.ville}, Algérie`)}`}
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: OR,
+                  color: NOIR,
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  marginLeft: 'auto' // Pour pousser le bouton à droite si possible
+                }}
+              >
+                🗺️ Y aller
+              </a>
+            </div>
             </div>
           </div>
         </div>
