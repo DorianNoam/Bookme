@@ -364,26 +364,46 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
       color: '#fff',
       padding: '12px 16px'
     }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        maxWidth: 1200,
-        margin: '0 auto'
-      }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        .pro-header-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .pro-header-nav {
+          display: flex;
+          gap: 20px;
+          align-items: center;
+        }
+        /* Mode Mobile */
+        @media (max-width: 768px) {
+          .pro-header-container {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+          }
+          .pro-header-nav {
+            width: 100%;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            gap: 24px;
+            -ms-overflow-style: none;  /* Cache la scrollbar sur IE/Edge */
+            scrollbar-width: none;  /* Cache la scrollbar sur Firefox */
+          }
+          .pro-header-nav::-webkit-scrollbar {
+            display: none; /* Cache la scrollbar sur Chrome/Safari */
+          }
+        }
+      `}} />
+      
+      <div className="pro-header-container">
         <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
           Bookme<span style={{ color: OR }}>.dz</span>
           <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
         </div>
-        <nav style={{
-          display: 'flex',
-          gap: 'clamp(8px, 2vw, 20px)',
-          alignItems: 'center',
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none'
-        }}>
+        <nav className="pro-header-nav">
           <Link href="/pro/dashboard" style={{
             color: activePage === 'dashboard' ? OR : '#aaa',
             fontSize: 'clamp(12px, 2vw, 14px)',
@@ -411,7 +431,9 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
           }}>
             Param.
           </Link>
-          <LogoutButton />
+          <div style={{ whiteSpace: 'nowrap' }}>
+            <LogoutButton />
+          </div>
         </nav>
       </div>
     </header>
