@@ -369,26 +369,27 @@ function SearchContent() {
         )}
       </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
+  <style dangerouslySetInnerHTML={{__html: `
         /* Layout principal */
-        .split-layout { display: flex; flex: 1; overflow: hidden; }
-        .list-col { flex: 0 0 60%; max-width: 760px; padding: 20px 16px; overflow-y: auto; height: calc(100vh - 120px); }
-        .map-col { flex: 1; position: relative; border-left: 1px solid #EDE5D8; height: calc(100vh - 120px); }
+        .split-layout { display: flex; flex: 1; overflow: hidden; position: relative; }
+        .list-col { flex: 0 0 60%; max-width: 760px; padding: 20px 16px; overflow-y: auto; height: calc(100vh - 120px); background: #F8F5F0; }
+        .map-col { flex: 1; position: relative; border-left: 1px solid #EDE5D8; height: calc(100vh - 120px); background: #e5e3df; }
         
         /* Version Mobile */
         @media (max-width: 900px) {
-          .split-layout { flex-direction: column; }
-          .list-col { flex: 1; max-width: 100%; height: calc(100vh - 170px); }
-          .map-col { flex: 1; border-left: none; height: calc(100vh - 170px); }
+          .split-layout { display: block; }
+          .list-col { width: 100%; max-width: 100%; height: calc(100vh - 170px); }
+          .list-col.hide-on-mobile { display: none; }
+          
+          /* On masque proprement la carte, le useEffect en JS la réveillera au clic */
+          .map-col { display: none; width: 100%; height: calc(100vh - 170px); border-left: none; }
+          .map-col.show-on-mobile { display: block; }
           
           /* Cartes salons adaptées pour mobile */
           .salon-result-card > div { flex-direction: column; }
           .salon-image-container { width: 100% !important; height: 220px; min-height: auto !important; }
         }
       `}} />
-    </div>
-  )
-}
 
 export default function SearchPage() {
   return (
