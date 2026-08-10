@@ -337,10 +337,11 @@ function SearchContent() {
           )}
         </div>
 
-        {/* COLONNE DROITE : CARTE LEAFLET */}
+       {/* COLONNE DROITE : CARTE LEAFLET */}
         {hasMappable && (
           <div className={`map-col ${!showMap ? 'hide-mobile' : ''}`}>
             <SearchMap
+              key={String(showMap)} /* 👈 L'astuce est ici : force la carte à recalculer sa taille sur mobile */
               salons={salons}
               hoveredSalonId={hoveredSalonId}
               onMarkerClick={(id: number) => router.push('/salon/' + id)}
