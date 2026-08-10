@@ -32,9 +32,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: 'Reservation introuvable' }, { status: 403 })
     }
 
+    // Récupérer les nouvelles données envoyées par le frontend
+    const body = await req.json().catch(() => ({}));
+    
+    // On prépare l'objet de mise à jour. Si une donnée est fournie, on l'utilise.
+    // Sinon, on garde le statut 'annule' par défaut si c'est une simple annulation.
+    const updateData: any = {};
+    if (body.statut) updateData.statut = body.statut;
+    if (body.date_rdv) updateData.date_rdv = body.date_rdv;
+    if (body.employe_id) updateData.employe_id = body.employe_id;
+
+    // Si le body est vide (ancien comportement), on force l'annulation
+    if (Object.keys(updateData).length === 0) {
+      updateData.statut = 'annule';
+    }
+
     const { error } = await supabase
       .from('reservations')
-      .update({ statut: 'annule' })
+      .update(updateData)
       .eq('id', params.id)
 
     if (error) throw error
