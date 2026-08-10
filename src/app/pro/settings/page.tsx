@@ -85,6 +85,51 @@ export default function ProSettingsPage() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
 
+      {/* STYLE GLOBAL RESPONSIVE POUR LES LISTES (Prestations, VIP, Employés) */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .responsive-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .responsive-info {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+        }
+        .responsive-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        /* Mobile Breakpoint */
+        @media (max-width: 768px) {
+          .responsive-row {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 12px;
+          }
+          .responsive-info {
+            width: 100%;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+          .responsive-actions {
+            width: 100%;
+            justify-content: flex-end;
+            border-top: 1px dashed #eee;
+            padding-top: 12px;
+            flex-wrap: wrap;
+          }
+          .responsive-edit-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .responsive-edit-actions {
+            justify-content: flex-start !important;
+          }
+        }
+      `}} />
+
       {/* HEADER RESPONSIVE MOBILE */}
       <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
         <style dangerouslySetInnerHTML={{__html: `
@@ -100,7 +145,6 @@ export default function ProSettingsPage() {
             gap: 20px;
             align-items: center;
           }
-          /* Masquer les barres de defilement horizontales proprement */
           .hide-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
@@ -162,7 +206,7 @@ export default function ProSettingsPage() {
           </div>
         )}
 
-        {/* ONGLETS avec la classe hide-scrollbar */}
+        {/* ONGLETS */}
         <div className="hide-scrollbar" style={{ display: 'flex', gap: 0, marginBottom: 30, overflowX: 'auto' }}>
           {tabs.map((t, i) => (
             <button
@@ -327,15 +371,16 @@ function VentesPriveesTab({
             background: showForm ? '#eee' : OR, color: showForm ? NOIR : '#fff',
             border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 14,
             fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+            whiteSpace: 'nowrap'
           }}
         >
-          {showForm ? 'Annuler' : '+ Créer une offre VIP'}
+          {showForm ? 'Annuler' : '+ Créer VIP'}
         </button>
       </div>
 
       {showForm && (
         <div style={{ background: '#fff', padding: 25, borderRadius: 8, marginBottom: 25, border: `2px solid ${OR}`, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
+          <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Nom de l'offre VIP</label>
               <input type="text" placeholder="Ex: Soin Kératine VIP (Offre Fidélité)" value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} />
@@ -364,6 +409,7 @@ function VentesPriveesTab({
               background: OR, color: '#fff', border: 'none', padding: '12px 30px',
               borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer',
               fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1,
+              width: '100%'
             }}
           >
             {submitting ? 'Création...' : 'Créer l\'offre VIP'}
@@ -380,7 +426,7 @@ function VentesPriveesTab({
           {ventesPrivees.map((v, i) => (
             <div key={v.id} style={{ padding: '16px 20px', borderBottom: i < ventesPrivees.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
               {editingId === v.id ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div style={{ gridColumn: '1 / -1' }}><input type="text" value={editNom} onChange={e => setEditNom(e.target.value)} style={inputStyle} /></div>
                   <div><input type="number" value={editPrix} onChange={e => setEditPrix(e.target.value)} style={inputStyle} /></div>
                   <div>
@@ -391,25 +437,29 @@ function VentesPriveesTab({
                     </select>
                   </div>
                   <div style={{ gridColumn: '1 / -1' }}><textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} style={inputStyle} rows={2} /></div>
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
-                    <button onClick={() => handleSaveEdit(v)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, cursor: 'pointer' }}>{savingEdit ? '...' : 'OK'}</button>
-                    <button onClick={cancelEdit} style={{ background: '#eee', border: 'none', padding: '8px 14px', borderRadius: 4, fontWeight: 600, cursor: 'pointer' }}>Annuler</button>
+                  <div className="responsive-edit-actions" style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
+                    <button onClick={() => handleSaveEdit(v)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button>
+                    <button onClick={cancelEdit} style={{ background: '#eee', border: 'none', padding: '8px 14px', borderRadius: 4, fontWeight: 600, cursor: 'pointer', flex: 1 }}>Annuler</button>
                   </div>
                 </div>
               ) : (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{v.nom}</span>
-                      <span style={{ background: NOIR, color: OR, fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>VIP</span>
+                <div className="responsive-row" style={{ alignItems: 'flex-start' }}>
+                  <div className="responsive-info">
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                        <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{v.nom}</span>
+                        <span style={{ background: NOIR, color: OR, fontSize: 10, fontWeight: 800, padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase' }}>VIP</span>
+                      </div>
+                      <p style={{ color: '#666', fontSize: 13, margin: '0 0 8px 0', maxWidth: 500 }}>{v.description}</p>
                     </div>
-                    <p style={{ color: '#666', fontSize: 13, margin: '0 0 8px 0', maxWidth: 500 }}>{v.description}</p>
-                    <span style={{ fontWeight: 800, color: NOIR, fontSize: 14 }}>{v.prix} DA</span>
-                    <span style={{ color: '#999', fontSize: 13, marginLeft: 10 }}>• {v.duree} min</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 800, color: NOIR, fontSize: 15, whiteSpace: 'nowrap' }}>{v.prix} DA</div>
+                      <div style={{ color: '#999', fontSize: 12, marginTop: 2 }}>{v.duree} min</div>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => startEdit(v)} style={{ background: 'transparent', border: '1px solid #ddd', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Modifier</button>
-                    <button onClick={() => handleDelete(v.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Supprimer</button>
+                  <div className="responsive-actions">
+                    <button onClick={() => startEdit(v)} style={{ background: 'transparent', border: '1px solid #ddd', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', color: '#444' }}>Modifier</button>
+                    <button onClick={() => handleDelete(v.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Supprimer</button>
                   </div>
                 </div>
               )}
@@ -573,27 +623,28 @@ function ServicesTab({
             background: showForm ? '#eee' : OR, color: showForm ? NOIR : '#fff',
             border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 14,
             fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+            whiteSpace: 'nowrap'
           }}
         >
-          {showForm ? 'Annuler' : '+ Ajouter une prestation'}
+          {showForm ? 'Annuler' : '+ Ajouter'}
         </button>
       </div>
 
       {/* Formulaire d'ajout */}
       {showForm && (
         <div style={{ background: '#fff', padding: 25, borderRadius: 8, marginBottom: 25, border: `2px solid ${OR}`, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
+          <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
             {/* Nom — soit catalogue soit custom */}
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Nom de la prestation</label>
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
                 <select
                   value=""
                   onChange={(e) => {
                     const item = catalogue.find(c => c.nom === e.target.value)
                     if (item) { setNom(item.nom); setCategorie(item.categorie) }
                   }}
-                  style={{ ...inputStyle, flex: 1 }}
+                  style={inputStyle}
                 >
                   <option value="">Choisir du catalogue...</option>
                   {Object.entries(catalogueGrouped).map(([cat, items]) => (
@@ -604,13 +655,12 @@ function ServicesTab({
                     </optgroup>
                   ))}
                 </select>
-                <span style={{ alignSelf: 'center', color: '#999', fontSize: 13 }}>ou</span>
                 <input
                   type="text"
-                  placeholder="Nom personnalise"
+                  placeholder="Ou tapez un nom personnalise"
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
-                  style={{ ...inputStyle, flex: 1 }}
+                  style={inputStyle}
                 />
               </div>
             </div>
@@ -622,15 +672,12 @@ function ServicesTab({
             <div>
               <label style={labelStyle}>Duree (min)</label>
               <select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}>
-                <option value="15">15 min</option>
-                <option value="30">30 min</option>
-                <option value="45">45 min</option>
-                <option value="60">1h</option>
-                <option value="90">1h30</option>
-                <option value="120">2h</option>
+                <option value="15">15 min</option><option value="30">30 min</option>
+                <option value="45">45 min</option><option value="60">1h</option>
+                <option value="90">1h30</option><option value="120">2h</option>
               </select>
             </div>
-            <div>
+            <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Categorie</label>
               <input type="text" placeholder="Coiffure, Soin, etc." value={categorie} onChange={(e) => setCategorie(e.target.value)} style={inputStyle} />
             </div>
@@ -641,7 +688,7 @@ function ServicesTab({
             style={{
               background: OR, color: '#fff', border: 'none', padding: '12px 30px',
               borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1,
+              fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1, width: '100%'
             }}
           >
             {submitting ? 'Ajout en cours...' : 'Ajouter'}
@@ -660,106 +707,83 @@ function ServicesTab({
             <h4 style={{ fontSize: 13, fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>{cat}</h4>
             <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
               {items.map((s, i) => (
-                <div key={s.id} style={{
-                  padding: '14px 20px', borderBottom: i < items.length - 1 ? '1px solid #f0f0f0' : 'none',
-                }}>
+                <div key={s.id} style={{ padding: '16px 20px', borderBottom: i < items.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
                   {editingId === s.id ? (
                     /* ── Mode edition ── */
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                      <span style={{ fontWeight: 700, color: NOIR, fontSize: 14, minWidth: 150 }}>{s.nom}</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <input
-                          type="number"
-                          value={editPrix}
-                          onChange={(e) => setEditPrix(e.target.value)}
-                          style={{ width: 90, padding: '8px 10px', border: `2px solid ${OR}`, borderRadius: 4, fontSize: 14, fontWeight: 700, fontFamily: 'Inter, sans-serif', textAlign: 'right' }}
-                        />
-                        <span style={{ fontSize: 13, color: '#888' }}>DA</span>
+                    <div className="responsive-row" style={{ alignItems: 'center' }}>
+                      <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, marginBottom: 10, display: 'block' }}>{s.nom}</span>
+                      <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <input
+                            type="number"
+                            value={editPrix}
+                            onChange={(e) => setEditPrix(e.target.value)}
+                            style={{ ...inputStyle, textAlign: 'right' }}
+                          />
+                          <span style={{ fontSize: 13, color: '#888' }}>DA</span>
+                        </div>
+                        <select value={editDuree} onChange={(e) => setEditDuree(e.target.value)} style={inputStyle}>
+                          <option value="15">15 min</option><option value="30">30 min</option>
+                          <option value="45">45 min</option><option value="60">1h</option>
+                          <option value="90">1h30</option><option value="120">2h</option>
+                          <option value="180">3h</option>
+                        </select>
+                        <div className="responsive-edit-actions" style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
+                          <button onClick={() => handleSaveEdit(s)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button>
+                          <button onClick={cancelEdit} style={{ background: '#eee', color: NOIR, border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer', flex: 1 }}>Annuler</button>
+                        </div>
                       </div>
-                      <select
-                        value={editDuree}
-                        onChange={(e) => setEditDuree(e.target.value)}
-                        style={{ padding: '8px 10px', border: `2px solid ${OR}`, borderRadius: 4, fontSize: 13, fontFamily: 'Inter, sans-serif' }}
-                      >
-                        <option value="15">15 min</option>
-                        <option value="30">30 min</option>
-                        <option value="45">45 min</option>
-                        <option value="60">1h</option>
-                        <option value="90">1h30</option>
-                        <option value="120">2h</option>
-                        <option value="180">3h</option>
-                      </select>
-                      <button
-                        onClick={() => handleSaveEdit(s)}
-                        disabled={savingEdit}
-                        style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: savingEdit ? 0.5 : 1 }}
-                      >
-                        {savingEdit ? '...' : 'OK'}
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        style={{ background: '#eee', color: NOIR, border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
-                      >
-                        Annuler
-                      </button>
                     </div>
                   ) : (
                     /* ── Mode lecture ── */
                     <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <span style={{ fontWeight: 700, color: NOIR, fontSize: 14 }}>{s.nom}</span>
-                          <span style={{ color: '#999', fontSize: 13, marginLeft: 10 }}>{s.duree} min</span>
+                      <div className="responsive-row">
+                        <div className="responsive-info">
+                          <div>
+                            <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block', marginBottom: 2 }}>{s.nom}</span>
+                            <span style={{ color: '#888', fontSize: 12 }}>{s.duree} min</span>
+                          </div>
+                          <div style={{ textAlign: 'right', minWidth: '80px' }}>
+                            {/* Prix avec promo */}
+                            {s.promo_active && s.promo_pourcentage ? (
+                              <div>
+                                <span style={{ fontSize: 12, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
+                                <div style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>
+                                  {Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA
+                                </div>
+                                <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block', marginTop: 2 }}>-{s.promo_pourcentage}%</span>
+                              </div>
+                            ) : (
+                              <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
+                            )}
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          {/* Prix avec promo */}
-                          {s.promo_active && s.promo_pourcentage ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 13, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
-                              <span style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</span>
-                              <span style={{ background: '#d32f2f', color: '#fff', fontSize: 11, fontWeight: 800, padding: '2px 6px', borderRadius: 3 }}>-{s.promo_pourcentage}%</span>
-                            </div>
-                          ) : (
-                            <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
-                          )}
+
+                        <div className="responsive-actions">
                           <button
                             onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : '') }}
                             style={{
                               background: s.promo_active ? '#fff0f0' : 'transparent',
                               border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`,
-                              color: s.promo_active ? '#d32f2f' : '#888',
-                              padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
-                              fontFamily: 'Inter, sans-serif', fontWeight: 600,
+                              color: s.promo_active ? '#d32f2f' : '#666',
+                              padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600,
                             }}
                           >
-                            {s.promo_active ? 'Promo' : '% Promo'}
+                            {s.promo_active ? '% Promo' : '+ Promo'}
                           </button>
-                          <button
-                            onClick={() => startEdit(s)}
-                            style={{
-                              background: 'transparent', border: '1px solid #ddd', color: '#555',
-                              padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
-                              fontFamily: 'Inter, sans-serif',
-                            }}
-                          >
+                          <button onClick={() => startEdit(s)} style={{ background: 'transparent', border: '1px solid #ddd', color: '#444', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>
                             Modifier
                           </button>
-                          <button
-                            onClick={() => handleDelete(s.id)}
-                            style={{
-                              background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000',
-                              padding: '4px 10px', borderRadius: 4, fontSize: 12, cursor: 'pointer',
-                              fontFamily: 'Inter, sans-serif',
-                            }}
-                          >
+                          <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>
                             Supprimer
                           </button>
                         </div>
                       </div>
+
                       {/* Ligne promo inline */}
                       {promoId === s.id && (
-                        <div style={{ marginTop: 12, padding: '14px 16px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Promotion :</span>
+                        <div style={{ marginTop: 15, padding: '14px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Mettre en promotion :</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 13, color: '#888' }}>-</span>
                             <input
@@ -769,37 +793,22 @@ function ServicesTab({
                               placeholder="20"
                               min="1"
                               max="99"
-                              style={{ width: 60, padding: '6px 8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}
+                              style={{ width: 80, padding: '8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}
                             />
-                            <span style={{ fontSize: 13, color: '#888' }}>%</span>
+                            <span style={{ fontSize: 13, fontWeight: 700 }}>% de réduction</span>
                           </div>
                           {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (
                             <span style={{ fontSize: 13, color: '#666' }}>
-                              = <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong> au lieu de {s.prix} DA
+                              Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong>
                             </span>
                           )}
-                          <button
-                            onClick={() => handlePromoSave(s)}
-                            disabled={savingPromo}
-                            style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '6px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
-                          >
-                            {savingPromo ? '...' : 'Activer'}
-                          </button>
-                          {s.promo_active && (
-                            <button
-                              onClick={() => handlePromoRemove(s)}
-                              disabled={savingPromo}
-                              style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '6px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
-                            >
-                              Retirer
-                            </button>
-                          )}
-                          <button
-                            onClick={() => setPromoId(null)}
-                            style={{ background: '#eee', color: '#888', border: 'none', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}
-                          >
-                            Fermer
-                          </button>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                            <button onClick={() => handlePromoSave(s)} disabled={savingPromo} style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingPromo ? '...' : 'Activer'}</button>
+                            {s.promo_active && (
+                              <button onClick={() => handlePromoRemove(s)} disabled={savingPromo} style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>Retirer</button>
+                            )}
+                            <button onClick={() => setPromoId(null)} style={{ background: '#eee', color: '#666', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Fermer</button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -893,10 +902,7 @@ function EmployesTab({
       ) : (
         <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
           {employes.map((emp, i) => (
-            <div key={emp.id} style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '16px 20px', borderBottom: i < employes.length - 1 ? '1px solid #f0f0f0' : 'none',
-            }}>
+            <div key={emp.id} className="responsive-row" style={{ padding: '16px 20px', borderBottom: i < employes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
                   width: 36, height: 36, borderRadius: '50%', background: NOIR,
@@ -1089,7 +1095,7 @@ function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => v
       <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Informations du salon</h3>
 
       <div style={{ background: '#fff', padding: 30, borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
           <div>
             <label style={labelStyle}>Nom du salon</label>
@@ -1158,6 +1164,7 @@ function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => v
               background: OR, color: '#fff', border: 'none', padding: '14px 40px',
               borderRadius: 6, fontSize: 15, fontWeight: 800, cursor: 'pointer',
               fontFamily: 'Inter, sans-serif', opacity: saving ? 0.5 : 1,
+              width: typeof window !== 'undefined' && window.innerWidth <= 768 ? '100%' : 'auto'
             }}
           >
             {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
