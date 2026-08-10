@@ -3,7 +3,7 @@
 import React, { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css' // 👈 LA CORRECTION EST ICI : on force Next.js à charger le CSS avec le composant
-
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 const OR = '#B8922A'
 const NOIR = '#0A0A0A'
 
