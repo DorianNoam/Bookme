@@ -48,6 +48,15 @@ function SearchContent() {
   const [showMobilePrestations, setShowMobilePrestations] = useState(false)
   const [showMobileFiltres, setShowMobileFiltres] = useState(false)
 
+  useEffect(() => {
+    if (showMap) {
+      // Force Leaflet à se redessiner 100ms après avoir affiché l'onglet Carte
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'))
+      }, 100)
+    }
+  }, [showMap])
+
   // Génération des 3 prochains jours pour l'affichage Planity
   const nextDays = Array.from({ length: 3 }).map((_, i) => {
     const d = addDays(new Date(), i + 1)
