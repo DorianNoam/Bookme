@@ -7,7 +7,11 @@ import { format, addDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { VILLES_ALGERIE } from '@/data/villes'
 
-const SearchMap = dynamic(() => import('@/components/SearchMap'), { ssr: false, loading: () => <div style={{ width: '100%', height: '100%', background: '#e5e3df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>Chargement de la carte...</div> })
+// Import dynamique de la carte Leaflet (pour éviter les erreurs SSR sur Vercel)
+const SearchMap = dynamic(() => import('@/components/SearchMap'), { 
+  ssr: false, 
+  loading: () => <div style={{ width: '100%', height: '100%', background: '#e5e3df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>Chargement de la carte...</div> 
+})
 
 type Salon = {
   id: number
@@ -38,9 +42,11 @@ function SearchContent() {
   const [loc, setLoc] = useState(searchParams.get('loc') || '')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [hoveredSalonId, setHoveredSalonId] = useState<number | null>(null)
+  
+  // État pour la bascule Liste/Carte sur Mobile
   const [showMap, setShowMap] = useState(false)
 
-  // Génération des 3 prochains jours pour l'affichage des disponibilités
+  // Génération des 3 prochains jours pour l'affichage des disponibilités façon Planity
   const nextDays = Array.from({ length: 3 }).map((_, i) => {
     const d = addDays(new Date(), i + 1)
     return format(d, 'E.d', { locale: fr }) // ex: "mar.11"
@@ -90,14 +96,16 @@ function SearchContent() {
   return (
     <div style={{ background: BG, minHeight: '100vh', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column' }}>
 
-      {/* HEADER */}
+      {/* HEADER DESKTOP & MOBILE */}
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '10px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 900, color: NOIR, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
             Bookme<span style={{ color: OR }}>.dz</span>
           </Link>
+
+          {/* Formulaire de recherche */}
           <form onSubmit={handleSearch} style={{ flex: 1, display: 'flex', gap: 8, minWidth: 0 }}>
-            <select value={query} onChange={e => setQuery(e.target.value)} style={{ flex: '1 1 140px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, minWidth: 0, cursor: 'pointer' }}>
+            <select value={query} onChange={e => setQuery(e.target.value)} className="hide-mobile" style={{ flex: '1 1 140px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, cursor: 'pointer' }}>
               <option value="">Toutes les prestations</option>
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -109,6 +117,7 @@ function SearchContent() {
 
             <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '8px 18px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, letterSpacing: 0.5, whiteSpace: 'nowrap', flexShrink: 0 }}>Rechercher</button>
           </form>
+
           <div className="hide-mobile" style={{ display: 'flex', gap: 10, whiteSpace: 'nowrap', alignItems: 'center' }}>
             {isLoggedIn ? (
               <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Mon espace</Link>
@@ -122,36 +131,29 @@ function SearchContent() {
         </div>
       </header>
 
-      {/* FILTRES */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '8px 0' }}>
+      {/* BARRE D'ONGLETS MOBILE (FAÇON PLANITY) */}
+      <div className="hide-desktop" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '10px 16px', display: 'flex', gap: 8, position: 'sticky', top: 54, zIndex: 90, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+        <button style={{ flex: 1, padding: '10px', background: '#F8F5F0', border: '1px solid #E0D8CE', borderRadius: 8, fontSize: 13, fontWeight: 600, color: NOIR, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          Prestations
+        </button>
+        <button 
+          onClick={() => setShowMap(!showMap)} 
+          style={{ flex: 1, padding: '10px', background: showMap ? OR : '#fff', border: `1px solid ${showMap ? OR : '#E0D8CE'}`, borderRadius: 8, fontSize: 13, fontWeight: 700, color: showMap ? '#fff' : NOIR, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s' }}
+        >
+          {showMap ? '☰ Liste' : '🗺️ Carte'}
+        </button>
+        <button style={{ flex: 1, padding: '10px', background: '#F8F5F0', border: '1px solid #E0D8CE', borderRadius: 8, fontSize: 13, fontWeight: 600, color: NOIR, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          Filtres
+        </button>
+      </div>
+
+      {/* FILTRES PAR CATÉGORIE (DESKTOP) */}
+      <div className="hide-mobile" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '8px 0' }}>
         <div style={{ padding: '0 16px', display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           <button onClick={() => router.push('/search')} style={{ background: !query ? NOIR : 'transparent', color: !query ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: !query ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>Tous</button>
           {CATEGORIES.map(cat => (
             <button key={cat} onClick={() => router.push('/search?q=' + cat)} style={{ background: query === cat ? NOIR : 'transparent', color: query === cat ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: query === cat ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: query === cat ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{cat}</button>
           ))}
-
-          {/* Toggle carte mobile */}
-          {hasMappable && (
-            <button
-              className="hide-desktop"
-              onClick={() => setShowMap(!showMap)}
-              style={{
-                background: showMap ? OR : 'transparent',
-                color: showMap ? '#fff' : OR,
-                padding: '6px 14px',
-                borderRadius: 3,
-                border: `1px solid ${OR}`,
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                fontFamily: 'Inter, sans-serif',
-                marginLeft: 'auto'
-              }}
-            >
-              {showMap ? 'Liste' : 'Carte'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -163,18 +165,18 @@ function SearchContent() {
           className={showMap ? 'hide-mobile' : ''}
           style={{
             flex: '0 0 60%',
-            maxWidth: 720,
+            maxWidth: 760,
             overflowY: 'auto',
             padding: '20px 16px',
-            height: 'calc(100vh - 100px)',
+            height: 'calc(100vh - 120px)',
           }}
         >
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 800, color: NOIR, marginBottom: 4 }}>
-              {query ? query : 'Tous les etablissements'}{loc ? ' à ' + loc : ''}
+              {query ? query : 'Sélectionnez un établissement'}
             </h1>
-            <p style={{ color: '#999', fontSize: 13 }}>
-              {loading ? 'Chargement...' : salons.length + ' établissement(s) trouvé(s)'}
+            <p style={{ color: '#888', fontSize: 13 }}>
+              {loading ? 'Recherche en cours...' : `Les meilleurs salons et instituts ${loc ? 'à ' + loc : 'en Algérie'} : Réservation en ligne`}
             </p>
           </div>
 
@@ -187,25 +189,27 @@ function SearchContent() {
               <Link href="/search" style={{ color: OR, fontWeight: 700, textDecoration: 'none', borderBottom: '1px solid ' + OR, paddingBottom: 2, fontSize: 14 }}>Voir tous les établissements</Link>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {salons.map(salon => (
                 <div
                   key={salon.id}
                   onMouseEnter={() => setHoveredSalonId(salon.id)}
                   onMouseLeave={() => setHoveredSalonId(null)}
+                  className="salon-result-card"
                   style={{
                     background: '#fff',
                     borderRadius: 8,
                     border: hoveredSalonId === salon.id ? `2px solid ${OR}` : '1px solid #EDE5D8',
                     overflow: 'hidden',
-                    cursor: 'pointer',
                     transition: 'border-color 0.2s, box-shadow 0.2s',
-                    boxShadow: hoveredSalonId === salon.id ? '0 4px 20px rgba(184,146,42,0.15)' : 'none'
+                    boxShadow: hoveredSalonId === salon.id ? '0 4px 20px rgba(184,146,42,0.15)' : 'none',
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}
                 >
                   <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                     {/* Image */}
-                    <div style={{ width: 'clamp(100px, 25vw, 220px)', minHeight: 'clamp(100px, 20vw, 200px)', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }}>
+                    <div style={{ width: '260px', minHeight: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }}>
                       <img
                         src={salon.image}
                         alt={salon.nom}
@@ -215,14 +219,15 @@ function SearchContent() {
                       <button style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>♡</button>
                     </div>
 
-                    {/* Infos */}
-                    <div style={{ flex: 1, padding: 'clamp(12px, 2vw, 20px)', minWidth: 300, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    {/* Infos & Créneaux */}
+                    <div style={{ flex: 1, padding: '20px 24px', minWidth: 300, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                        {/* En-tête */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                           <Link
                             href={'/salon/' + salon.id}
                             style={{
-                              fontSize: 'clamp(16px, 2.5vw, 20px)',
+                              fontSize: '20px',
                               fontWeight: 800,
                               color: NOIR,
                               textDecoration: 'none'
@@ -231,26 +236,26 @@ function SearchContent() {
                             {salon.nom}
                           </Link>
                         </div>
-                        <div style={{ color: '#888', fontSize: 13, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ color: '#666', fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                           📍 {salon.adresse}{salon.ville ? ', ' + salon.ville : ''}
                         </div>
 
                         {/* Note & Catégorie */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 16 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                           {salon.moy_note ? <span style={{ color: NOIR, fontWeight: 700 }}>★ {salon.moy_note} <span style={{ color: '#888', fontWeight: 400 }}>({salon.nb_avis} avis)</span></span> : <span style={{ color: '#bbb' }}>Nouveau</span>}
                           <span style={{ color: '#ddd' }}>•</span>
                           <span style={{ color: '#888' }}>{salon.type_salon}</span>
                         </div>
 
                         {/* Grille de disponibilités (Style Planity) */}
-                        <div style={{ marginTop: '16px', borderTop: '1px solid #F5F0E6', paddingTop: '16px' }}>
+                        <div style={{ marginTop: '24px', borderTop: '1px solid #F5F0E6', paddingTop: '20px' }}>
                           
                           {/* Ligne Matin */}
-                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
                             <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>MATIN</span>
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                               {nextDays.map(day => (
-                                <Link key={'m'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}
+                                <Link key={'m'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}
                                   onMouseOver={e => { e.currentTarget.style.background = OR; e.currentTarget.style.color = '#fff' }}
                                   onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = OR }}
                                 >
@@ -261,11 +266,11 @@ function SearchContent() {
                           </div>
 
                           {/* Ligne Après-midi */}
-                          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
                             <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>APRÈS-MIDI</span>
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                               {nextDays.map(day => (
-                                <Link key={'a'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}
+                                <Link key={'a'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}
                                   onMouseOver={e => { e.currentTarget.style.background = OR; e.currentTarget.style.color = '#fff' }}
                                   onMouseOut={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = OR }}
                                 >
@@ -278,20 +283,19 @@ function SearchContent() {
 
                       </div>
 
-                      {/* Actions */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 20, gap: 8 }}>
+                      {/* Footer de la carte */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 }}>
                         <Link href={'/salon/' + salon.id} style={{ color: '#444', fontSize: 13, fontWeight: 600, textDecoration: 'underline' }}>
                           Plus d'informations
                         </Link>
-                        <Link href={'/booking?salon=' + salon.id} style={{
+                        <Link href={'/booking?salon=' + salon.id} className="hide-mobile" style={{
                           background: NOIR,
                           color: '#fff',
-                          padding: '10px 20px',
-                          borderRadius: 4,
-                          fontSize: 13,
+                          padding: '10px 24px',
+                          borderRadius: 6,
+                          fontSize: 14,
                           fontWeight: 700,
-                          textDecoration: 'none',
-                          whiteSpace: 'nowrap'
+                          textDecoration: 'none'
                         }}>
                           Prendre RDV
                         </Link>
@@ -304,7 +308,7 @@ function SearchContent() {
           )}
         </div>
 
-        {/* COLONNE DROITE : CARTE */}
+        {/* COLONNE DROITE : CARTE LEAFLET */}
         {hasMappable && (
           <div
             className={!showMap ? 'hide-mobile' : ''}
@@ -312,7 +316,7 @@ function SearchContent() {
               flex: 1,
               position: 'sticky',
               top: 100,
-              height: 'calc(100vh - 100px)',
+              height: 'calc(100vh - 120px)',
               borderLeft: '1px solid #EDE5D8',
               minWidth: 0
             }}
@@ -327,11 +331,11 @@ function SearchContent() {
 
         {/* Fallback si pas de coords */}
         {!hasMappable && !loading && salons.length > 0 && (
-          <div className="hide-mobile" style={{
+          <div className={!showMap ? 'hide-mobile' : ''} style={{
             flex: 1,
             position: 'sticky',
             top: 100,
-            height: 'calc(100vh - 100px)',
+            height: 'calc(100vh - 120px)',
             borderLeft: '1px solid #EDE5D8',
             display: 'flex',
             alignItems: 'center',
@@ -349,6 +353,13 @@ function SearchContent() {
           </div>
         )}
       </div>
+
+      <style dangerouslySetInnerHTML={{__html: `
+        @media (max-width: 900px) {
+          .salon-result-card > div { flex-direction: column; }
+          .salon-result-card > div > div:first-child { width: 100% !important; height: 220px; }
+        }
+      `}} />
     </div>
   )
 }
