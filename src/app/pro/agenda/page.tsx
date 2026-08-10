@@ -1,655 +1,286 @@
-export const dynamic = 'force-dynamic'
+'use client';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { format, addDays, subDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import LogoutButton from '../components/LogoutButton';
 
-import React from 'react'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { jwtVerify } from 'jose'
-import { createClient } from '@supabase/supabase-js'
-import Link from 'next/link'
-import LogoutButton from '@/app/pro/components/LogoutButton'
+const OR = '#B8922A';
+const NOIR = '#0A0A0A';
+const BG = '#F8F5F0';
 
-const NOIR = '#0A0A0A'
-const OR = '#B8922A'
-const BG = '#F8F5F0'
+const HEURES = ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
 
-// ── Helpers ──────────────────────────────────────────────────────────
+// Liste statique pour l'exemple (à dynamiser plus tard avec la table employes)
+const EMPLOYES = [
+  { id: 1, nom: 'Yasmina' },
+  { id: 2, nom: 'Amel' },
+  { id: 3, nom: 'Souad' }
+];
 
-function formatDateForUrl(d: Date) {
-  return d.toISOString().split('T')[0]
-}
+export default function ProAgenda() {
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date()); 
+  const [loading, setLoading] = useState(true);
+  
+  // États des modales
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  
+  // États du formulaire
+  const [selectedEmploye, setSelectedEmploye] = useState(1);
+  const [selectedTime, setSelectedTime] = useState('09:00');
+  const [clientName, setClientName] = useState('');
+  const [serviceName, setServiceName] = useState('');
+  const [servicePrice, setServicePrice] = useState('');
+  const [activeRdv, setActiveRdv] = useState<any>(null);
 
-function getMonday(d: Date) {
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  const monday = new Date(d)
-  monday.setDate(diff)
-  monday.setHours(0, 0, 0, 0)
-  return monday
-}
+  useEffect(() => {
+    fetchReservations();
+  }, []);
 
-function isSameDay(a: Date, b: Date) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
-}
+  const fetchReservations = async () => {
+    try {
+      const res = await fetch('/api/pro/reservations');
+      const data = await res.json();
+      if (data.reservations) {
+        setReservations(data.reservations);
+      }
+    } catch (err) {
+      console.error("Erreur", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const JOURS_COURTS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-const MOIS_NOMS = ['Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre']
+  const prevDay = () => setCurrentDate(subDays(currentDate, 1));
+  const nextDay = () => setCurrentDate(addDays(currentDate, 1));
 
-// ── Page principale ──────────────────────────────────────────────────
+  // Ouvrir modale AJOUT
+  const handleSlotClick = (employeId: number, heure: string) => {
+    setSelectedEmploye(employeId);
+    setSelectedTime(heure.length === 4 ? `0${heure}` : heure);
+    setClientName('');
+    setServiceName('');
+    setServicePrice('');
+    setIsAddModalOpen(true);
+  };
 
-export default async function ProAgendaPage({
-  searchParams,
-}: {
-  searchParams: { date?: string; view?: string }
-}) {
-  // 1. Auth
-  const cookieStore = cookies()
-  const token = cookieStore.get('bookme_pro_token')?.value
+  // Ouvrir modale MODIFICATION
+  const handleRdvClick = (e: React.MouseEvent, rdv: any) => {
+    e.stopPropagation();
+    setActiveRdv(rdv);
+    setSelectedEmploye(rdv.employe_id);
+    const dateObj = new Date(rdv.date_rdv);
+    setSelectedTime(dateObj.toTimeString().substring(0, 5));
+    setIsEditModalOpen(true);
+  };
 
-  if (!token) {
-    redirect('/pro/login')
-  }
+  // Soumettre un nouveau RDV manuel
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const dateRdv = `${format(currentDate, 'yyyy-MM-dd')}T${selectedTime}:00`;
+    
+    const res = await fetch('/api/pro/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        employe_id: selectedEmploye, 
+        client_nom: clientName, 
+        service_nom: serviceName, 
+        service_prix: servicePrice, 
+        date_rdv: dateRdv 
+      })
+    });
 
-  let proId: number
-  try {
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
-    const { payload } = await jwtVerify(token, secret)
-    proId = payload.id as number
-  } catch {
-    redirect('/pro/login')
-  }
+    if (res.ok) {
+      fetchReservations(); // On recharge la liste depuis le serveur
+      setIsAddModalOpen(false);
+    } else {
+      alert("Erreur lors de l'ajout.");
+    }
+  };
 
-  // 2. Params
-  const view = (searchParams.view === 'week' || searchParams.view === 'month') ? searchParams.view : 'day'
-  const targetDate = searchParams.date ? new Date(searchParams.date + 'T12:00:00') : new Date()
+  // Soumettre un déplacement
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const dateRdv = `${format(currentDate, 'yyyy-MM-dd')}T${selectedTime}:00`;
 
-  // 3. Supabase
-  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+    const res = await fetch(`/api/pro/reservations/${activeRdv.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        employe_id: selectedEmploye, 
+        date_rdv: dateRdv 
+      })
+    });
 
-  const { data: salon } = await supabase
-    .from('salons')
-    .select('id, nom')
-    .eq('pro_id', proId)
-    .single()
+    if (res.ok) {
+      fetchReservations();
+      setIsEditModalOpen(false);
+    } else {
+      alert("Erreur lors de la modification.");
+    }
+  };
 
-  if (!salon) redirect('/pro/dashboard')
+  const rdvDuJour = reservations.filter(r => {
+    if (!r.date_rdv) return false;
+    return format(new Date(r.date_rdv), 'yyyy-MM-dd') === format(currentDate, 'yyyy-MM-dd');
+  });
 
-  const { data: employes } = await supabase
-    .from('employes')
-    .select('*')
-    .eq('salon_id', salon.id)
-
-  // 4. Calcul de la plage de dates selon la vue
-  let rangeStart: Date
-  let rangeEnd: Date
-
-  if (view === 'day') {
-    rangeStart = new Date(targetDate)
-    rangeStart.setHours(0, 0, 0, 0)
-    rangeEnd = new Date(targetDate)
-    rangeEnd.setHours(23, 59, 59, 999)
-  } else if (view === 'week') {
-    rangeStart = getMonday(targetDate)
-    rangeEnd = new Date(rangeStart)
-    rangeEnd.setDate(rangeEnd.getDate() + 6)
-    rangeEnd.setHours(23, 59, 59, 999)
-  } else {
-    rangeStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
-    rangeEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59, 999)
-  }
-
-  const { data: reservations } = await supabase
-    .from('reservations')
-    .select('*')
-    .eq('salon_id', salon.id)
-    .gte('date_rdv', rangeStart.toISOString())
-    .lte('date_rdv', rangeEnd.toISOString())
-    .neq('statut', 'annule')
-    .order('date_rdv', { ascending: true })
-
-  const allReservations = reservations || []
-
-  // 5. Navigation prev/next
-  let prevDate: Date
-  let nextDate: Date
-  let displayTitle: string
-
-  if (view === 'day') {
-    prevDate = new Date(targetDate)
-    prevDate.setDate(prevDate.getDate() - 1)
-    nextDate = new Date(targetDate)
-    nextDate.setDate(nextDate.getDate() + 1)
-    displayTitle = targetDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-  } else if (view === 'week') {
-    const monday = getMonday(targetDate)
-    const sunday = new Date(monday)
-    sunday.setDate(sunday.getDate() + 6)
-    prevDate = new Date(monday)
-    prevDate.setDate(prevDate.getDate() - 7)
-    nextDate = new Date(monday)
-    nextDate.setDate(nextDate.getDate() + 7)
-    displayTitle = `${monday.getDate()} - ${sunday.getDate()} ${MOIS_NOMS[sunday.getMonth()]} ${sunday.getFullYear()}`
-  } else {
-    prevDate = new Date(targetDate.getFullYear(), targetDate.getMonth() - 1, 1)
-    nextDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 1)
-    displayTitle = `${MOIS_NOMS[targetDate.getMonth()]} ${targetDate.getFullYear()}`
-  }
-
-  // ── Render ────────────────────────────────────────────────────────
+  const totalCA = rdvDuJour.reduce((acc, rdv) => acc + (rdv.service_prix || 0), 0);
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
-
-      {/* HEADER */}
-      <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          maxWidth: 1200,
-          margin: '0 auto'
-        }}>
-          <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
-            <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
-          </div>
-          <nav style={{
-            display: 'flex',
-            gap: 'clamp(8px, 2vw, 20px)',
-            alignItems: 'center'
-          }}>
-            <Link href="/pro/dashboard" style={{
-              color: '#aaa',
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              textDecoration: 'none',
-              fontWeight: 600,
-              whiteSpace: 'nowrap'
-            }}>
-              Dashboard
-            </Link>
-            <Link href="/pro/agenda" style={{
-              color: OR,
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              textDecoration: 'none',
-              fontWeight: 700,
-              whiteSpace: 'nowrap'
-            }}>
-              Agenda
-            </Link>
-            <Link href="/pro/settings" style={{
-              color: '#aaa',
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              textDecoration: 'none',
-              fontWeight: 600,
-              whiteSpace: 'nowrap'
-            }}>
-              Param.
-            </Link>
-            <LogoutButton />
-          </nav>
+    <div style={{ background: '#f5f5f5', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
+      
+      {/* HEADER PRO */}
+      <header style={{ background: NOIR, padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ color: '#fff', fontSize: 20, fontWeight: 900 }}>
+          Bookme<span style={{ color: OR }}>.dz</span> <span style={{ fontSize: 14, fontWeight: 400, opacity: 0.8 }}>Pro</span>
+        </div>
+        <div style={{ display: 'flex', gap: 20, fontSize: 14, fontWeight: 600, alignItems: 'center' }}>
+          <Link href="/pro/dashboard" style={{ color: '#aaa', textDecoration: 'none' }}>Dashboard</Link>
+          <Link href="/pro/agenda" style={{ color: OR, textDecoration: 'none' }}>Agenda</Link>
+          <Link href="/pro/settings" style={{ color: '#aaa', textDecoration: 'none' }}>Param.</Link>
+          <LogoutButton />
         </div>
       </header>
 
-      <main style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(16px, 4vw, 30px) 16px' }}>
-
-        {/* ONGLETS DE VUE + Aujourd'hui */}
-        <div style={{
-          display: 'flex',
-          gap: 0,
-          marginBottom: 16,
-          flexWrap: 'wrap',
-          alignItems: 'center'
-        }}>
-          {(['day', 'week', 'month'] as const).map((v) => {
-            const label = v === 'day' ? 'Jour' : v === 'week' ? 'Semaine' : 'Mois'
-            const isActive = view === v
-            return (
-              <Link
-                key={v}
-                href={`/pro/agenda?view=${v}&date=${formatDateForUrl(targetDate)}`}
-                style={{
-                  padding: 'clamp(8px, 2vw, 10px) clamp(14px, 3vw, 24px)',
-                  fontSize: 'clamp(12px, 2.5vw, 14px)',
-                  fontWeight: isActive ? 800 : 600,
-                  color: isActive ? '#fff' : NOIR,
-                  background: isActive ? NOIR : '#fff',
-                  border: `1px solid ${isActive ? NOIR : '#ddd'}`,
-                  textDecoration: 'none',
-                  borderRadius: v === 'day' ? '6px 0 0 6px' : v === 'month' ? '0 6px 6px 0' : '0',
-                  marginLeft: v === 'day' ? 0 : -1,
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                {label}
-              </Link>
-            )
-          })}
-
-          <Link
-            href={`/pro/agenda?view=${view}&date=${formatDateForUrl(new Date())}`}
-            style={{
-              padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)',
-              fontSize: 'clamp(11px, 2vw, 13px)',
-              fontWeight: 700,
-              color: OR,
-              background: 'transparent',
-              border: `1px solid ${OR}`,
-              textDecoration: 'none',
-              borderRadius: 6,
-              marginLeft: 'clamp(8px, 2vw, 15px)',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            {"Aujourd'hui"}
-          </Link>
-        </div>
-
-        {/* NAVIGATION PREV / DATE / NEXT */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 20,
-          background: '#fff',
-          padding: 'clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 20px)',
-          borderRadius: 8,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-          gap: 8
-        }}>
-          <Link
-            href={`/pro/agenda?view=${view}&date=${formatDateForUrl(prevDate)}`}
-            style={{
-              padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)',
-              border: `1px solid ${NOIR}`,
-              color: NOIR,
-              borderRadius: 4,
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: 'clamp(18px, 3vw, 13px)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}
-          >
-            {'\u2190'}
-          </Link>
-
-          <h2 style={{
-            fontSize: 'clamp(13px, 3vw, 18px)',
-            fontWeight: 800,
-            color: NOIR,
-            textTransform: 'capitalize',
-            margin: 0,
-            textAlign: 'center',
-            lineHeight: 1.3
-          }}>
-            {displayTitle}
-          </h2>
-
-          <Link
-            href={`/pro/agenda?view=${view}&date=${formatDateForUrl(nextDate)}`}
-            style={{
-              padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)',
-              background: NOIR,
-              color: '#fff',
-              borderRadius: 4,
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: 'clamp(18px, 3vw, 13px)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}
-          >
-            {'\u2192'}
-          </Link>
-        </div>
-
-        {/* ────── VUE JOUR ────── */}
-        {view === 'day' && (
-          <DayView employes={employes || []} reservations={allReservations} />
-        )}
-
-        {/* ────── VUE SEMAINE ────── */}
-        {view === 'week' && (
-          <WeekView monday={getMonday(targetDate)} reservations={allReservations} view={view} />
-        )}
-
-        {/* ────── VUE MOIS ────── */}
-        {view === 'month' && (
-          <MonthView year={targetDate.getFullYear()} month={targetDate.getMonth()} reservations={allReservations} view={view} />
-        )}
-
-      </main>
-    </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// VUE JOUR
-// ═══════════════════════════════════════════════════════════════════
-
-function DayView({ employes, reservations }: { employes: any[]; reservations: any[] }) {
-  const hours = Array.from({ length: 11 }, (_, i) => i + 9)
-
-  return (
-    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-      <div style={{ minWidth: 500 }}>
-        {/* En-tete employes */}
-        <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
-          <div style={{ width: 56, flexShrink: 0, padding: 10, borderRight: '1px solid #eee' }}></div>
-          {employes.map((emp: any) => (
-            <div key={emp.id} style={{
-              flex: 1,
-              padding: '10px 4px',
-              textAlign: 'center',
-              fontWeight: 800,
-              fontSize: 'clamp(11px, 2vw, 14px)',
-              color: NOIR,
-              borderRight: '1px solid #eee',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis'
-            }}>
-              {emp.nom}
-            </div>
-          ))}
-        </div>
-
-        {/* Lignes heures */}
-        {hours.map(hour => (
-          <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #f0f0f0' }}>
-            <div style={{
-              width: 56,
-              flexShrink: 0,
-              padding: '12px 4px',
-              textAlign: 'center',
-              fontSize: 12,
-              fontWeight: 600,
-              color: '#999',
-              borderRight: '1px solid #eee'
-            }}>
-              {`${hour}:00`}
-            </div>
-            {employes.map((emp: any) => {
-              const rdv = reservations.find((r: any) => {
-                const rdvHour = new Date(r.date_rdv).getHours()
-                return rdvHour === hour && r.employe_id === emp.id
-              })
-              return (
-                <div key={emp.id} style={{
-                  flex: 1,
-                  padding: 6,
-                  minHeight: 48,
-                  borderRight: '1px solid #f5f5f5',
-                  background: rdv ? '#FFF8EE' : 'transparent'
-                }}>
-                  {rdv && (
-                    <div style={{ borderLeft: `3px solid ${OR}`, paddingLeft: 6 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
-                      <div style={{ fontSize: 11, color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.service_nom}</div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: OR }}>{rdv.service_prix} DA</div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
+        
+        {/* BARRE DE CONTROLES */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div style={{ display: 'flex', background: '#fff', borderRadius: 8, overflow: 'hidden', border: '1px solid #ddd' }}>
+            <button style={{ padding: '8px 24px', background: NOIR, color: '#fff', border: 'none', fontWeight: 700, cursor: 'pointer' }}>Jour</button>
+            <button style={{ padding: '8px 24px', background: '#fff', color: NOIR, border: 'none', borderLeft: '1px solid #ddd', fontWeight: 600, cursor: 'pointer' }}>Semaine</button>
+            <button style={{ padding: '8px 24px', background: '#fff', color: NOIR, border: 'none', borderLeft: '1px solid #ddd', fontWeight: 600, cursor: 'pointer' }}>Mois</button>
+            <button onClick={() => setCurrentDate(new Date())} style={{ padding: '8px 24px', background: '#fff', color: OR, border: 'none', borderLeft: '1px solid #ddd', fontWeight: 600, cursor: 'pointer' }}>Aujourd&apos;hui</button>
           </div>
-        ))}
-      </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24, background: '#fff', padding: '8px 16px', borderRadius: 8, border: '1px solid #ddd' }}>
+            <button onClick={prevDay} style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 4, width: 32, height: 32, cursor: 'pointer' }}>←</button>
+            <span style={{ fontWeight: 800, fontSize: 18, minWidth: 240, textAlign: 'center', textTransform: 'capitalize' }}>
+              {format(currentDate, 'EEEE d MMMM yyyy', { locale: fr })}
+            </span>
+            <button onClick={nextDay} style={{ background: NOIR, color: '#fff', border: 'none', borderRadius: 4, width: 32, height: 32, cursor: 'pointer' }}>→</button>
+          </div>
+        </div>
 
-      {/* Compteur du jour */}
-      <div style={{
-        padding: '12px 16px',
-        borderTop: '2px solid #eee',
-        background: '#fafafa',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>
-          {reservations.length} rendez-vous
-        </span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>
-          {reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA
-        </span>
-      </div>
-    </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// VUE SEMAINE
-// ═══════════════════════════════════════════════════════════════════
-
-function WeekView({ monday, reservations, view }: { monday: Date; reservations: any[]; view: string }) {
-  const hours = Array.from({ length: 11 }, (_, i) => i + 9)
-  const days: Date[] = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday)
-    d.setDate(d.getDate() + i)
-    return d
-  })
-  const today = new Date()
-
-  return (
-    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-      <div style={{ minWidth: 600 }}>
-        {/* En-tete jours de la semaine */}
-        <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
-          <div style={{ width: 48, flexShrink: 0, padding: 8, borderRight: '1px solid #eee' }}></div>
-          {days.map((day, i) => {
-            const isToday = isSameDay(day, today)
-            return (
-              <div key={i} style={{
-                flex: 1,
-                padding: '8px 2px',
-                textAlign: 'center',
-                borderRight: '1px solid #eee',
-                background: isToday ? '#FFF8EE' : 'transparent'
-              }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: '#999', textTransform: 'uppercase' }}>
-                  {JOURS_COURTS[i]}
-                </div>
-                <div style={{ fontSize: 'clamp(16px, 3vw, 20px)', fontWeight: 900, color: isToday ? OR : NOIR, marginTop: 2 }}>
-                  {day.getDate()}
-                </div>
+        {/* GRILLE AGENDA */}
+        <div style={{ background: '#fff', borderRadius: 8, border: '1px solid #ddd', overflow: 'hidden' }}>
+          
+          <div style={{ display: 'flex', borderBottom: '1px solid #eee', background: '#fafafa' }}>
+            <div style={{ width: 80, flexShrink: 0, borderRight: '1px solid #eee' }}></div>
+            {EMPLOYES.map(emp => (
+              <div key={emp.id} style={{ flex: 1, padding: '16px', textAlign: 'center', fontWeight: 700, borderRight: '1px solid #eee', color: NOIR }}>
+                {emp.nom}
               </div>
-            )
-          })}
-        </div>
+            ))}
+          </div>
 
-        {/* Grille heures x jours */}
-        {hours.map(hour => (
-          <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #f5f5f5' }}>
-            <div style={{
-              width: 48,
-              flexShrink: 0,
-              padding: '8px 2px',
-              textAlign: 'center',
-              fontSize: 11,
-              fontWeight: 600,
-              color: '#bbb',
-              borderRight: '1px solid #eee'
-            }}>
-              {`${hour}h`}
-            </div>
-            {days.map((day, i) => {
-              const dayReservations = reservations.filter((r: any) => {
-                const rd = new Date(r.date_rdv)
-                return isSameDay(rd, day) && rd.getHours() === hour
-              })
-              const isToday = isSameDay(day, today)
-              return (
-                <div key={i} style={{
-                  flex: 1,
-                  padding: 2,
-                  minHeight: 40,
-                  borderRight: '1px solid #f8f8f8',
-                  background: isToday ? 'rgba(184,146,42,0.03)' : 'transparent'
-                }}>
-                  {dayReservations.map((rdv: any, idx: number) => (
-                    <div key={idx} style={{
-                      background: '#FFF8EE',
-                      borderLeft: `2px solid ${OR}`,
-                      borderRadius: '0 3px 3px 0',
-                      padding: '3px 4px',
-                      marginBottom: 2,
-                    }}>
-                      <div style={{ fontSize: 10, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
-                      <div style={{ fontSize: 9, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.service_nom}</div>
+          {loading ? (
+            <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>Chargement de l&apos;agenda...</div>
+          ) : (
+            HEURES.map(heure => (
+              <div key={heure} style={{ display: 'flex', borderBottom: '1px solid #f5f5f5', minHeight: 70 }}>
+                <div style={{ width: 80, flexShrink: 0, borderRight: '1px solid #eee', padding: '8px', color: '#888', fontSize: 13, textAlign: 'center', display: 'flex', alignItems: 'flex-start', justifyContent: 'center' }}>
+                  {heure}
+                </div>
+                
+                {EMPLOYES.map(emp => {
+                  const rdvIci = rdvDuJour.find(r => 
+                    r.employe_id === emp.id && 
+                    format(new Date(r.date_rdv), 'H:mm') === heure
+                  );
+
+                  return (
+                    <div 
+                      key={`${emp.id}-${heure}`} 
+                      onClick={() => handleSlotClick(emp.id, heure)}
+                      style={{ flex: 1, borderRight: '1px solid #f5f5f5', position: 'relative', cursor: 'pointer', padding: 4 }}
+                      className="agenda-slot"
+                    >
+                      {rdvIci && (
+                        <div 
+                          onClick={(e) => handleRdvClick(e, rdvIci)}
+                          style={{ background: '#FCF9F2', borderLeft: `4px solid ${OR}`, padding: '8px 12px', borderRadius: 4, height: '100%', cursor: 'grab', transition: 'box-shadow 0.2s' }}
+                          className="rdv-card"
+                        >
+                          <div style={{ fontWeight: 800, fontSize: 12, color: NOIR }}>{rdvIci.client_nom}</div>
+                          <div style={{ fontSize: 11, color: '#666', margin: '4px 0' }}>{rdvIci.service_nom}</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: OR }}>{rdvIci.service_prix} DA</div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )
-            })}
+                  );
+                })}
+              </div>
+            ))
+          )}
+          
+          <div style={{ display: 'flex', padding: '16px 24px', background: '#fafafa', borderTop: '1px solid #ddd', justifyContent: 'space-between', fontWeight: 700, color: NOIR }}>
+            <div>{rdvDuJour.length} rendez-vous</div>
+            <div style={{ color: OR }}>{totalCA} DA</div>
           </div>
-        ))}
-      </div>
-
-      {/* Resume de la semaine */}
-      <div style={{
-        padding: '12px 16px',
-        borderTop: '2px solid #eee',
-        background: '#fafafa',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>
-          {reservations.length} RDV cette semaine
-        </span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>
-          {reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA
-        </span>
-      </div>
-    </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// VUE MOIS
-// ═══════════════════════════════════════════════════════════════════
-
-function MonthView({ year, month, reservations, view }: { year: number; month: number; reservations: any[]; view: string }) {
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const today = new Date()
-
-  let startDow = firstDay.getDay() - 1
-  if (startDow < 0) startDow = 6
-
-  const cells: (Date | null)[] = []
-  for (let i = 0; i < startDow; i++) cells.push(null)
-  for (let d = 1; d <= lastDay.getDate(); d++) cells.push(new Date(year, month, d))
-  while (cells.length % 7 !== 0) cells.push(null)
-
-  const countByDay: Record<number, number> = {}
-  const revenueByDay: Record<number, number> = {}
-  reservations.forEach((r: any) => {
-    const d = new Date(r.date_rdv).getDate()
-    countByDay[d] = (countByDay[d] || 0) + 1
-    revenueByDay[d] = (revenueByDay[d] || 0) + (r.service_prix || 0)
-  })
-
-  const rows: (Date | null)[][] = []
-  for (let i = 0; i < cells.length; i += 7) {
-    rows.push(cells.slice(i, i + 7))
-  }
-
-  return (
-    <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-      {/* En-tete jours */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '2px solid #eee', background: '#fafafa' }}>
-        {JOURS_COURTS.map(j => (
-          <div key={j} style={{
-            padding: 'clamp(6px, 1.5vw, 12px) 4px',
-            textAlign: 'center',
-            fontSize: 'clamp(10px, 2vw, 12px)',
-            fontWeight: 700,
-            color: '#888',
-            textTransform: 'uppercase'
-          }}>
-            {j}
-          </div>
-        ))}
-      </div>
-
-      {/* Cases du mois */}
-      {rows.map((row, ri) => (
-        <div key={ri} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #f0f0f0' }}>
-          {row.map((cell, ci) => {
-            if (!cell) {
-              return <div key={ci} style={{ minHeight: 'clamp(60px, 12vw, 90px)', background: '#fafafa', borderRight: '1px solid #f0f0f0' }} />
-            }
-            const dayNum = cell.getDate()
-            const count = countByDay[dayNum] || 0
-            const revenue = revenueByDay[dayNum] || 0
-            const isToday = isSameDay(cell, today)
-            const isPast = cell < today && !isToday
-
-            return (
-              <Link
-                key={ci}
-                href={`/pro/agenda?view=day&date=${formatDateForUrl(cell)}`}
-                style={{
-                  minHeight: 'clamp(60px, 12vw, 90px)',
-                  padding: 'clamp(4px, 1vw, 8px)',
-                  borderRight: '1px solid #f0f0f0',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  background: isToday ? '#FFF8EE' : 'transparent',
-                  opacity: isPast ? 0.5 : 1,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'background 0.15s',
-                }}
-              >
-                <div style={{
-                  fontSize: 'clamp(12px, 2.5vw, 16px)',
-                  fontWeight: isToday ? 900 : 600,
-                  color: isToday ? OR : NOIR,
-                  marginBottom: 4,
-                }}>
-                  {dayNum}
-                </div>
-                {count > 0 && (
-                  <div style={{
-                    background: count >= 5 ? OR : '#f0ead6',
-                    color: count >= 5 ? '#fff' : NOIR,
-                    borderRadius: 3,
-                    padding: 'clamp(2px, 0.5vw, 4px) clamp(3px, 1vw, 6px)',
-                    fontSize: 'clamp(9px, 1.8vw, 11px)',
-                    fontWeight: 700,
-                    marginBottom: 2,
-                    textAlign: 'center',
-                  }}>
-                    {count} RDV
-                  </div>
-                )}
-                {revenue > 0 && (
-                  <div style={{ fontSize: 'clamp(9px, 1.8vw, 11px)', fontWeight: 600, color: OR, textAlign: 'center' }}>
-                    {revenue} DA
-                  </div>
-                )}
-              </Link>
-            )
-          })}
         </div>
-      ))}
-
-      {/* Resume du mois */}
-      <div style={{
-        padding: '12px 16px',
-        borderTop: '2px solid #eee',
-        background: '#fafafa',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>
-          {reservations.length} RDV ce mois
-        </span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>
-          {reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA
-        </span>
       </div>
+
+      {/* MODALE : AJOUTER UN RDV MANUEL */}
+      {isAddModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, width: '100%', maxWidth: 450, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ marginBottom: 24, color: NOIR, fontWeight: 900 }}>Bloquer un créneau</h2>
+            <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              
+              <div style={{ display: 'flex', gap: 12 }}>
+                <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none' }}>
+                  {EMPLOYES.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
+                </select>
+                <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none' }} />
+              </div>
+
+              <input type="text" placeholder="Nom du client (ou motif)" value={clientName} onChange={e => setClientName(e.target.value)} required style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%', outline: 'none' }} />
+              <input type="text" placeholder="Prestation" value={serviceName} onChange={e => setServiceName(e.target.value)} required style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%', outline: 'none' }} />
+              <input type="number" placeholder="Prix (DA)" value={servicePrice} onChange={e => setServicePrice(e.target.value)} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%', outline: 'none' }} />
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setIsAddModalOpen(false)} style={{ flex: 1, padding: 14, background: '#f5f5f5', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', color: '#666' }}>Annuler</button>
+                <button type="submit" style={{ flex: 1, padding: 14, background: NOIR, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>Ajouter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODALE : MODIFIER UN RDV EXISTANT */}
+      {isEditModalOpen && activeRdv && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ background: '#fff', padding: 32, borderRadius: 12, width: '100%', maxWidth: 450, boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ marginBottom: 8, color: NOIR, fontWeight: 900 }}>Modifier le rendez-vous</h2>
+            <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>Client : <strong style={{ color: NOIR }}>{activeRdv.client_nom}</strong></p>
+            
+            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Déplacer le créneau</label>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none' }}>
+                  {EMPLOYES.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
+                </select>
+                <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6, outline: 'none' }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
+                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ flex: 1, padding: 14, background: '#f5f5f5', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', color: '#666' }}>Annuler</button>
+                <button type="submit" style={{ flex: 1, padding: 14, background: OR, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>Confirmer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{__html: `
+        .agenda-slot:hover { background: #fdfdfd; }
+        .rdv-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+      `}} />
     </div>
-  )
+  );
 }
