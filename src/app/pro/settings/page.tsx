@@ -27,7 +27,7 @@ const DEFAULT_IMAGES: Record<string, string> = {
 const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
 
-type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean }
+type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean; promo_debut: string | null; promo_fin: string | null }
 type Employe = { id: number; nom: string }
 type VentePrivee = { id: number; nom: string; prix: number; duree: number; description: string }
 type Salon = {
@@ -498,6 +498,8 @@ function ServicesTab({
   const [promoId, setPromoId] = useState<number | null>(null)
   const [promoPct, setPromoPct] = useState('')
   const [savingPromo, setSavingPromo] = useState(false)
+  const [promoDebut, setPromoDebut] = useState('')
+  const [promoFin, setPromoFin] = useState('')
 
   // Grouper les services par categorie
   const grouped = services.reduce((acc, s) => {
@@ -534,11 +536,11 @@ function ServicesTab({
       const res = await fetch('/api/pro/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true }),
+       body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null }),
       })
       const data = await res.json()
       if (data.success) {
-        onUpdate({ ...s, promo_pourcentage: pct, promo_active: true })
+      onUpdate({ ...s, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null })
         setPromoId(null)
       }
     } catch (e) {}
@@ -752,6 +754,14 @@ function ServicesTab({
                                   {Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA
                                 </div>
                                 <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block', marginTop: 2 }}>-{s.promo_pourcentage}%</span>
+                                <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block', marginTop: 2 }}>-{s.promo_pourcentage}%</span>
+                    {/* ← ICI, ajoute juste en dessous */}
+                    {s.promo_debut && s.promo_fin && (
+                      <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>
+                        {new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </div>
+                    )}
+                  </div>
                               </div>
                             ) : (
                               <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
@@ -761,7 +771,7 @@ function ServicesTab({
 
                         <div className="responsive-actions">
                           <button
-                            onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : '') }}
+                            onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); setPromoDebut(s.promo_debut || ''); setPromoFin(s.promo_fin || '') }}
                             style={{
                               background: s.promo_active ? '#fff0f0' : 'transparent',
                               border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`,
@@ -801,6 +811,16 @@ function ServicesTab({
                             <span style={{ fontSize: 13, color: '#666' }}>
                               Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong>
                             </span>
+                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%' }}>
+  <div style={{ flex: '1 1 140px' }}>
+    <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Debut de la promo</label>
+    <input type="date" value={promoDebut} onChange={e => setPromoDebut(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif' }} />
+  </div>
+  <div style={{ flex: '1 1 140px' }}>
+    <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Fin de la promo</label>
+    <input type="date" value={promoFin} onChange={e => setPromoFin(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif' }} />
+  </div>
+</div>
                           )}
                           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                             <button onClick={() => handlePromoSave(s)} disabled={savingPromo} style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingPromo ? '...' : 'Activer'}</button>
