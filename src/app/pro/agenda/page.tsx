@@ -13,8 +13,6 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
-// ── Helpers ──────────────────────────────────────────────────────────
-
 function formatDateForUrl(d: Date) {
   return d.toISOString().split('T')[0]
 }
@@ -30,14 +28,11 @@ function getMonday(d: Date) {
 
 const MOIS_NOMS = ['Janvier', 'Fevrier', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Aout', 'Septembre', 'Octobre', 'Novembre', 'Decembre']
 
-// ── Page principale ──────────────────────────────────────────────────
-
 export default async function ProAgendaPage({
   searchParams,
 }: {
   searchParams: { date?: string; view?: string }
 }) {
-  // 1. Auth
   const cookieStore = cookies()
   const token = cookieStore.get('bookme_pro_token')?.value
 
@@ -54,11 +49,9 @@ export default async function ProAgendaPage({
     redirect('/pro/login')
   }
 
-  // 2. Params
   const view = (searchParams.view === 'week' || searchParams.view === 'month') ? searchParams.view : 'day'
   const targetDate = searchParams.date ? new Date(searchParams.date + 'T12:00:00') : new Date()
 
-  // 3. Supabase
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
   const { data: salon } = await supabase
@@ -69,12 +62,10 @@ export default async function ProAgendaPage({
 
   if (!salon) redirect('/pro/dashboard')
 
-  const { data: employes } = await supabase
-    .from('employes')
-    .select('*')
-    .eq('salon_id', salon.id)
+  // Récupération des employés ET des services du salon
+  const { data: employes } = await supabase.from('employes').select('*').eq('salon_id', salon.id)
+  const { data: services } = await supabase.from('services').select('*').eq('salon_id', salon.id).order('nom', { ascending: true })
 
-  // 4. Calcul de la plage de dates selon la vue
   let rangeStart: Date
   let rangeEnd: Date
 
@@ -104,7 +95,6 @@ export default async function ProAgendaPage({
 
   const allReservations = reservations || []
 
-  // 5. Navigation prev/next
   let prevDate: Date
   let nextDate: Date
   let displayTitle: string
@@ -130,71 +120,25 @@ export default async function ProAgendaPage({
     displayTitle = `${MOIS_NOMS[targetDate.getMonth()]} ${targetDate.getFullYear()}`
   }
 
-  // ── Render ────────────────────────────────────────────────────────
-
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
-
-      {/* HEADER */}
       <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          maxWidth: 1200,
-          margin: '0 auto'
-        }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
             Bookme<span style={{ color: OR }}>.dz</span>
             <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
           </div>
-          <nav style={{
-            display: 'flex',
-            gap: 'clamp(8px, 2vw, 20px)',
-            alignItems: 'center'
-          }}>
-            <Link href="/pro/dashboard" style={{
-              color: '#aaa',
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              textDecoration: 'none',
-              fontWeight: 600,
-              whiteSpace: 'nowrap'
-            }}>
-              Dashboard
-            </Link>
-            <Link href="/pro/agenda" style={{
-              color: OR,
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              textDecoration: 'none',
-              fontWeight: 700,
-              whiteSpace: 'nowrap'
-            }}>
-              Agenda
-            </Link>
-            <Link href="/pro/settings" style={{
-              color: '#aaa',
-              fontSize: 'clamp(12px, 2vw, 14px)',
-              textDecoration: 'none',
-              fontWeight: 600,
-              whiteSpace: 'nowrap'
-            }}>
-              Param.
-            </Link>
+          <nav style={{ display: 'flex', gap: 'clamp(8px, 2vw, 20px)', alignItems: 'center' }}>
+            <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600 }}>Dashboard</Link>
+            <Link href="/pro/agenda" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700 }}>Agenda</Link>
+            <Link href="/pro/settings" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600 }}>Param.</Link>
             <LogoutButton />
           </nav>
         </div>
       </header>
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(16px, 4vw, 30px) 16px' }}>
-
-        {/* ONGLETS DE VUE + Aujourd'hui */}
-        <div style={{
-          display: 'flex',
-          gap: 0,
-          marginBottom: 16,
-          flexWrap: 'wrap',
-          alignItems: 'center'
-        }}>
+        <div style={{ display: 'flex', gap: 0, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           {(['day', 'week', 'month'] as const).map((v) => {
             const label = v === 'day' ? 'Jour' : v === 'week' ? 'Semaine' : 'Mois'
             const isActive = view === v
@@ -203,104 +147,30 @@ export default async function ProAgendaPage({
                 key={v}
                 href={`/pro/agenda?view=${v}&date=${formatDateForUrl(targetDate)}`}
                 style={{
-                  padding: 'clamp(8px, 2vw, 10px) clamp(14px, 3vw, 24px)',
-                  fontSize: 'clamp(12px, 2.5vw, 14px)',
-                  fontWeight: isActive ? 800 : 600,
-                  color: isActive ? '#fff' : NOIR,
-                  background: isActive ? NOIR : '#fff',
-                  border: `1px solid ${isActive ? NOIR : '#ddd'}`,
-                  textDecoration: 'none',
-                  borderRadius: v === 'day' ? '6px 0 0 6px' : v === 'month' ? '0 6px 6px 0' : '0',
-                  marginLeft: v === 'day' ? 0 : -1,
-                  whiteSpace: 'nowrap'
+                  padding: 'clamp(8px, 2vw, 10px) clamp(14px, 3vw, 24px)', fontSize: 'clamp(12px, 2.5vw, 14px)', fontWeight: isActive ? 800 : 600,
+                  color: isActive ? '#fff' : NOIR, background: isActive ? NOIR : '#fff', border: `1px solid ${isActive ? NOIR : '#ddd'}`, textDecoration: 'none',
+                  borderRadius: v === 'day' ? '6px 0 0 6px' : v === 'month' ? '0 6px 6px 0' : '0', marginLeft: v === 'day' ? 0 : -1
                 }}
               >
                 {label}
               </Link>
             )
           })}
-
-          <Link
-            href={`/pro/agenda?view=${view}&date=${formatDateForUrl(new Date())}`}
-            style={{
-              padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)',
-              fontSize: 'clamp(11px, 2vw, 13px)',
-              fontWeight: 700,
-              color: OR,
-              background: 'transparent',
-              border: `1px solid ${OR}`,
-              textDecoration: 'none',
-              borderRadius: 6,
-              marginLeft: 'clamp(8px, 2vw, 15px)',
-              whiteSpace: 'nowrap'
-            }}
-          >
+          <Link href={`/pro/agenda?view=${view}&date=${formatDateForUrl(new Date())}`} style={{ padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)', fontSize: 'clamp(11px, 2vw, 13px)', fontWeight: 700, color: OR, background: 'transparent', border: `1px solid ${OR}`, textDecoration: 'none', borderRadius: 6, marginLeft: 'clamp(8px, 2vw, 15px)' }}>
             {"Aujourd'hui"}
           </Link>
         </div>
 
-        {/* NAVIGATION PREV / DATE / NEXT */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 20,
-          background: '#fff',
-          padding: 'clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 20px)',
-          borderRadius: 8,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
-          gap: 8
-        }}>
-          <Link
-            href={`/pro/agenda?view=${view}&date=${formatDateForUrl(prevDate)}`}
-            style={{
-              padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)',
-              border: `1px solid ${NOIR}`,
-              color: NOIR,
-              borderRadius: 4,
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: 'clamp(18px, 3vw, 13px)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}
-          >
-            {'\u2190'}
-          </Link>
-
-          <h2 style={{
-            fontSize: 'clamp(13px, 3vw, 18px)',
-            fontWeight: 800,
-            color: NOIR,
-            textTransform: 'capitalize',
-            margin: 0,
-            textAlign: 'center',
-            lineHeight: 1.3
-          }}>
-            {displayTitle}
-          </h2>
-
-          <Link
-            href={`/pro/agenda?view=${view}&date=${formatDateForUrl(nextDate)}`}
-            style={{
-              padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)',
-              background: NOIR,
-              color: '#fff',
-              borderRadius: 4,
-              textDecoration: 'none',
-              fontWeight: 600,
-              fontSize: 'clamp(18px, 3vw, 13px)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0
-            }}
-          >
-            {'\u2192'}
-          </Link>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, background: '#fff', padding: 'clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 20px)', borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.02)', gap: 8 }}>
+          <Link href={`/pro/agenda?view=${view}&date=${formatDateForUrl(prevDate)}`} style={{ padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)', border: `1px solid ${NOIR}`, color: NOIR, borderRadius: 4, textDecoration: 'none', fontWeight: 600 }}>{'\u2190'}</Link>
+          <h2 style={{ fontSize: 'clamp(13px, 3vw, 18px)', fontWeight: 800, color: NOIR, textTransform: 'capitalize', margin: 0 }}>{displayTitle}</h2>
+          <Link href={`/pro/agenda?view=${view}&date=${formatDateForUrl(nextDate)}`} style={{ padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)', background: NOIR, color: '#fff', borderRadius: 4, textDecoration: 'none', fontWeight: 600 }}>{'\u2192'}</Link>
         </div>
 
-        {/* ────── VUE DYNAMIQUE ────── */}
+        {/* Transmission des services au composant interactif */}
         <InteractiveAgenda 
           employes={employes || []} 
+          services={services || []}
           reservations={allReservations} 
           view={view as 'day' | 'week' | 'month'} 
           targetDateStr={targetDate.toISOString()} 
