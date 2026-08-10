@@ -17,23 +17,20 @@ export async function POST(req: NextRequest) {
     if (!salon) return NextResponse.json({ error: 'Salon introuvable' }, { status: 404 })
 
     const body = await req.json()
-    const { employe_id, service_nom, service_prix, client_nom, date_rdv } = body
 
-    const { data, error } = await supabase
-      .from('reservations')
-      .insert([{
-        salon_id: salon.id,
-        employe_id,
-        service_nom: service_nom || 'Rendez-vous manuel',
-        service_prix: service_prix ? Number(service_prix) : 0,
-        client_nom,
-        date_rdv,
-        statut: 'confirme'
-      }])
-      .select()
+    const { error } = await supabase.from('reservations').insert([{
+      salon_id: salon.id,
+      employe_id: body.employe_id,
+      client_nom: body.client_nom,
+      service_id: body.service_id || null, // Enregistrement de l'ID de la prestation
+      service_nom: body.service_nom,
+      service_prix: body.service_prix ? Number(body.service_prix) : 0,
+      date_rdv: body.date_rdv,
+      statut: 'confirme'
+    }])
 
     if (error) throw error
-    return NextResponse.json({ success: true, data: data[0] })
+    return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
