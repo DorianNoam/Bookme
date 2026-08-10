@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
 
     let query = supabase
       .from('salons')
-      .select('id, nom, adresse, image, type_salon, telephone, description, ville, ouverture, fermeture, jour_off, avis(note)')
+      .select('id, nom, adresse, image, type_salon, telephone, description, ville, ouverture, fermeture, jour_off, latitude, longitude, avis(note)')
 
     if (q) query = query.ilike('type_salon', '%' + q + '%')
     if (loc) query = query.ilike('ville', '%' + loc + '%')
