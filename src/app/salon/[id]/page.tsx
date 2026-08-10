@@ -149,7 +149,7 @@ export default function SalonPage() {
               </button>
             </div>
 
-         <div className="salon-info-bar" style={{ color: '#eee', fontSize: 13, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+            <div className="salon-info-bar" style={{ color: '#eee', fontSize: 13, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
               <span>{'📍'} {salon.ville}</span>
               <span className="hide-mobile">{'📍'} {salon.adresse}</span>
               <span>{'📞'} {salon.telephone}</span>
@@ -173,12 +173,11 @@ export default function SalonPage() {
                   fontSize: '12px',
                   fontWeight: 800,
                   textDecoration: 'none',
-                  marginLeft: 'auto' // Pour pousser le bouton à droite si possible
+                  marginLeft: 'auto'
                 }}
               >
                 🗺️ Y aller
               </a>
-            </div>
             </div>
           </div>
         </div>
@@ -348,15 +347,17 @@ export default function SalonPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {avisList.map(avis => (
-                  <div key={avis.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
-                      <span style={{ fontWeight: 800, color: NOIR, fontSize: 14 }}>{avis.users ? `${avis.users.prenom} ${avis.users.nom}` : 'Client Bookme'}</span>
-                      <span style={{ color: OR, fontWeight: 800, fontSize: 13 }}>{'⭐'.repeat(avis.note)}</span>
+                <div>
+                  {avisList.map(avis => (
+                    <div key={avis.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: '16px', marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
+                        <span style={{ fontWeight: 800, color: NOIR, fontSize: 14 }}>{avis.users ? `${avis.users.prenom} ${avis.users.nom}` : 'Client Bookme'}</span>
+                        <span style={{ color: OR, fontWeight: 800, fontSize: 13 }}>{'⭐'.repeat(avis.note)}</span>
+                      </div>
+                      <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{avis.commentaire}</p>
                     </div>
-                    <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{avis.commentaire}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
