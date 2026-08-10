@@ -16,7 +16,8 @@ type Salon = {
 
 type Service = { 
   id: number; nom: string; prix: number; duree: number; categorie_service: string;
-  promo_pourcentage: number | null; promo_active: boolean
+  promo_pourcentage: number | null; promo_active: boolean;
+  promo_debut: string | null; promo_fin: string | null
 }
 
 type VentePrivee = { id: number; nom: string; prix: number; duree: number; description: string }
@@ -119,7 +120,7 @@ export default function SalonPage() {
       <header style={{ background: '#fff', padding: '12px 0' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>.dz</span></Link>
-          <Link href="/search" style={{ color: '#777', fontSize: 13 }}>{'← Retour'}</Link>
+          <Link href="/search" style={{ color: '#777', fontSize: 13 }}>{'<- Retour'}</Link>
           <div className="hide-mobile" style={{ display: 'flex', gap: 15 }}>
             {isLoggedIn ? (
               <Link href="/dashboard" style={{ color: '#fff', background: NOIR, padding: '6px 16px', borderRadius: 4, fontSize: 14, fontWeight: 600 }}>Mon espace</Link>
@@ -157,26 +158,13 @@ export default function SalonPage() {
               {salon.jour_off !== undefined && salon.jour_off !== null && salon.jour_off > 0 && salon.jour_off <= 7 && (
                 <span style={{ color: '#ffaaaa' }}>Ferme le {jours[salon.jour_off === 7 ? 0 : salon.jour_off]}</span>
               )}
-              
-              {/* BOUTON ITINÉRAIRE GOOGLE MAPS */}
               <a 
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${salon.adresse}, ${salon.ville}, Algérie`)}`}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${salon.adresse}, ${salon.ville}, Algerie`)}`}
                 target="_blank" 
                 rel="noopener noreferrer"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  background: OR,
-                  color: NOIR,
-                  padding: '4px 10px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  textDecoration: 'none',
-                  marginLeft: 'auto'
-                }}
+                style={{ display: 'inline-flex', alignItems: 'center', background: OR, color: NOIR, padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 800, textDecoration: 'none', marginLeft: 'auto' }}
               >
-                🗺️ Y aller
+                {'🗺️'} Y aller
               </a>
             </div>
           </div>
@@ -186,7 +174,7 @@ export default function SalonPage() {
       {/* CONTENU */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 16px', marginTop: 30, display: 'flex', flexDirection: 'column', gap: 30 }}>
         
-        {/* TABS - scrollable on mobile */}
+        {/* TABS */}
         <div className="filters-bar" style={{ borderBottom: '2px solid #E0D8CE', gap: 24, paddingBottom: 0 }}>
           {['Prestations', 'Avis', 'Informations'].map(tab => (
             <button
@@ -260,6 +248,11 @@ export default function SalonPage() {
                               <div>
                                 <span style={{ textDecoration: 'line-through', color: '#999', fontSize: 13 }}>{service.prix.toLocaleString()} DA</span>
                                 <div style={{ fontWeight: 900, fontSize: 18, color: '#d32f2f' }}>{promoPrice.toLocaleString()} DA</div>
+                                {service.promo_debut && service.promo_fin && (
+                                  <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
+                                    Du {new Date(service.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} au {new Date(service.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                                  </div>
+                                )}
                               </div>
                             ) : (
                               <div style={{ fontWeight: 800, fontSize: 17, color: NOIR }}>{service.prix > 0 ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}</div>
@@ -347,24 +340,22 @@ export default function SalonPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div>
-                  {avisList.map(avis => (
-                    <div key={avis.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: '16px', marginBottom: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
-                        <span style={{ fontWeight: 800, color: NOIR, fontSize: 14 }}>{avis.users ? `${avis.users.prenom} ${avis.users.nom}` : 'Client Bookme'}</span>
-                        <span style={{ color: OR, fontWeight: 800, fontSize: 13 }}>{'⭐'.repeat(avis.note)}</span>
-                      </div>
-                      <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{avis.commentaire}</p>
+                {avisList.map(avis => (
+                  <div key={avis.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: '16px', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
+                      <span style={{ fontWeight: 800, color: NOIR, fontSize: 14 }}>{avis.users ? `${avis.users.prenom} ${avis.users.nom}` : 'Client Bookme'}</span>
+                      <span style={{ color: OR, fontWeight: 800, fontSize: 13 }}>{'⭐'.repeat(avis.note)}</span>
                     </div>
-                  ))}
-                </div>
+                    <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{avis.commentaire}</p>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* ══ STYLES RESPONSIVE ══ */}
+      {/* STYLES RESPONSIVE */}
       <style dangerouslySetInnerHTML={{__html: `
         .salon-hero { height: 350px; }
         .salon-hero-title { font-size: 42px; }
