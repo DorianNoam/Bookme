@@ -19,10 +19,12 @@ function fixLeafletIcons() {
 
 // Custom marker icons
 function createIcon(isHovered: boolean) {
+  const BLEU = '#2563EB'; // Bleu électrique pour un contraste maximal avec la carte
+
   const size = isHovered ? 18 : 12
   const border = isHovered ? `3px solid ${OR}` : `2px solid #fff`
-  const bg = isHovered ? NOIR : OR
-  const shadow = isHovered ? '0 0 12px rgba(184,146,42,0.6)' : '0 2px 6px rgba(0,0,0,0.3)'
+  const bg = BLEU // Le marqueur reste bleu dans tous les états pour être visible
+  const shadow = isHovered ? '0 0 12px rgba(37,99,235,0.6)' : '0 2px 6px rgba(0,0,0,0.3)'
   const zIndex = isHovered ? 1000 : 1
 
   return L.divIcon({
