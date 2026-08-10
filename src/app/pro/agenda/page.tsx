@@ -122,23 +122,65 @@ export default async function ProAgendaPage({
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
+      
+      {/* HEADER RESPONSIVE */}
       <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
+        <style dangerouslySetInnerHTML={{__html: `
+          .pro-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+          .pro-header-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+          }
+          /* Masquer la scrollbar proprement */
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          @media (max-width: 768px) {
+            .pro-header-container {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 12px;
+            }
+            .pro-header-nav {
+              width: 100%;
+              overflow-x: auto;
+              padding-bottom: 4px;
+              gap: 24px;
+            }
+          }
+        `}} />
+        
+        <div className="pro-header-container">
           <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
             Bookme<span style={{ color: OR }}>.dz</span>
             <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
           </div>
-          <nav style={{ display: 'flex', gap: 'clamp(8px, 2vw, 20px)', alignItems: 'center' }}>
-            <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600 }}>Dashboard</Link>
-            <Link href="/pro/agenda" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700 }}>Agenda</Link>
-            <Link href="/pro/settings" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600 }}>Param.</Link>
-            <LogoutButton />
+          <nav className="pro-header-nav hide-scrollbar">
+            <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
+            <Link href="/pro/agenda" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Agenda</Link>
+            <Link href="/pro/settings" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Param.</Link>
+            <div style={{ whiteSpace: 'nowrap' }}>
+              <LogoutButton />
+            </div>
           </nav>
         </div>
       </header>
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(16px, 4vw, 30px) 16px' }}>
-        <div style={{ display: 'flex', gap: 0, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        
+        {/* ONGLETS DES VUES (Jour / Semaine / Mois) */}
+        <div className="hide-scrollbar" style={{ display: 'flex', gap: 0, marginBottom: 16, flexWrap: 'nowrap', alignItems: 'center', overflowX: 'auto', paddingBottom: 4 }}>
           {(['day', 'week', 'month'] as const).map((v) => {
             const label = v === 'day' ? 'Jour' : v === 'week' ? 'Semaine' : 'Mois'
             const isActive = view === v
@@ -149,18 +191,19 @@ export default async function ProAgendaPage({
                 style={{
                   padding: 'clamp(8px, 2vw, 10px) clamp(14px, 3vw, 24px)', fontSize: 'clamp(12px, 2.5vw, 14px)', fontWeight: isActive ? 800 : 600,
                   color: isActive ? '#fff' : NOIR, background: isActive ? NOIR : '#fff', border: `1px solid ${isActive ? NOIR : '#ddd'}`, textDecoration: 'none',
-                  borderRadius: v === 'day' ? '6px 0 0 6px' : v === 'month' ? '0 6px 6px 0' : '0', marginLeft: v === 'day' ? 0 : -1
+                  borderRadius: v === 'day' ? '6px 0 0 6px' : v === 'month' ? '0 6px 6px 0' : '0', marginLeft: v === 'day' ? 0 : -1, whiteSpace: 'nowrap'
                 }}
               >
                 {label}
               </Link>
             )
           })}
-          <Link href={`/pro/agenda?view=${view}&date=${formatDateForUrl(new Date())}`} style={{ padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)', fontSize: 'clamp(11px, 2vw, 13px)', fontWeight: 700, color: OR, background: 'transparent', border: `1px solid ${OR}`, textDecoration: 'none', borderRadius: 6, marginLeft: 'clamp(8px, 2vw, 15px)' }}>
+          <Link href={`/pro/agenda?view=${view}&date=${formatDateForUrl(new Date())}`} style={{ padding: 'clamp(8px, 2vw, 10px) clamp(12px, 3vw, 20px)', fontSize: 'clamp(11px, 2vw, 13px)', fontWeight: 700, color: OR, background: 'transparent', border: `1px solid ${OR}`, textDecoration: 'none', borderRadius: 6, marginLeft: 'clamp(8px, 2vw, 15px)', whiteSpace: 'nowrap' }}>
             {"Aujourd'hui"}
           </Link>
         </div>
 
+        {/* NAVIGATION PREV / DATE / NEXT */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, background: '#fff', padding: 'clamp(8px, 2vw, 12px) clamp(10px, 2.5vw, 20px)', borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.02)', gap: 8 }}>
           <Link href={`/pro/agenda?view=${view}&date=${formatDateForUrl(prevDate)}`} style={{ padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)', border: `1px solid ${NOIR}`, color: NOIR, borderRadius: 4, textDecoration: 'none', fontWeight: 600 }}>{'\u2190'}</Link>
           <h2 style={{ fontSize: 'clamp(13px, 3vw, 18px)', fontWeight: 800, color: NOIR, textTransform: 'capitalize', margin: 0 }}>{displayTitle}</h2>
