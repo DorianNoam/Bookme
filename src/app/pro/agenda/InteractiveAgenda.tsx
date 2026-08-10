@@ -9,7 +9,6 @@ const OR = '#B8922A'
 const BG = '#F8F5F0'
 const JOURS_COURTS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
-// ── Helpers
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
@@ -29,12 +28,13 @@ function formatDateForUrl(d: Date) {
 
 type Props = {
   employes: any[];
+  services: any[]; // Nouvel argument
   reservations: any[];
   view: 'day' | 'week' | 'month';
   targetDateStr: string;
 }
 
-export default function InteractiveAgenda({ employes, reservations, view, targetDateStr }: Props) {
+export default function InteractiveAgenda({ employes, services, reservations, view, targetDateStr }: Props) {
   const router = useRouter()
   const targetDate = new Date(targetDateStr)
   
@@ -42,13 +42,16 @@ export default function InteractiveAgenda({ employes, reservations, view, target
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   
-  const [selectedEmploye, setSelectedEmploye] = useState(employes[0]?.id || 1)
+  const [selectedEmploye, setSelectedEmploye] = useState(employes[0]?.id || '')
   const [selectedTime, setSelectedTime] = useState('09:00')
   const [selectedDate, setSelectedDate] = useState(targetDateStr.split('T')[0])
   
   const [clientName, setClientName] = useState('')
-  const [serviceName, setServiceName] = useState('')
-  const [servicePrice, setServicePrice] = useState('')
+  // Nouveaux états pour la liste déroulante des prestations
+  const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id || '')
+  const [serviceName, setServiceName] = useState(services[0]?.nom || '')
+  const [servicePrice, setServicePrice] = useState(services[0]?.prix?.toString() || '0')
+  
   const [activeRdv, setActiveRdv] = useState<any>(null)
 
   const handleSlotClick = (empId: number, heure: string, dateObj: Date) => {
@@ -56,8 +59,10 @@ export default function InteractiveAgenda({ employes, reservations, view, target
     setSelectedTime(heure.length === 4 ? `0${heure}` : heure)
     setSelectedDate(dateObj.toISOString().split('T')[0])
     setClientName('')
-    setServiceName('')
-    setServicePrice('')
+    // Réinitialise avec le premier service de la base
+    setSelectedServiceId(services[0]?.id || '')
+    setServiceName(services[0]?.nom || '')
+    setServicePrice(services[0]?.prix?.toString() || '0')
     setIsAddModalOpen(true)
   }
 
@@ -71,6 +76,17 @@ export default function InteractiveAgenda({ employes, reservations, view, target
     setIsEditModalOpen(true)
   }
 
+  // Gère le changement de prestation dans la modale
+  const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const sId = Number(e.target.value)
+    setSelectedServiceId(sId)
+    const svc = services.find(s => s.id === sId)
+    if (svc) {
+      setServiceName(svc.nom)
+      setServicePrice(svc.prix.toString())
+    }
+  }
+
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -79,7 +95,14 @@ export default function InteractiveAgenda({ employes, reservations, view, target
     await fetch('/api/pro/reservations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ employe_id: selectedEmploye, client_nom: clientName, service_nom: serviceName, service_prix: servicePrice, date_rdv: dateRdv })
+      body: JSON.stringify({ 
+        employe_id: selectedEmploye, 
+        client_nom: clientName, 
+        service_id: selectedServiceId || null, 
+        service_nom: serviceName, 
+        service_prix: servicePrice, 
+        date_rdv: dateRdv 
+      })
     })
     
     setIsAddModalOpen(false)
@@ -103,7 +126,6 @@ export default function InteractiveAgenda({ employes, reservations, view, target
     router.refresh()
   }
 
-  // 1. VUE JOUR
   const renderDayView = () => {
     const hours = Array.from({ length: 11 }, (_, i) => i + 9)
     return (
@@ -143,7 +165,6 @@ export default function InteractiveAgenda({ employes, reservations, view, target
     )
   }
 
-  // 2. VUE SEMAINE
   const renderWeekView = () => {
     const hours = Array.from({ length: 11 }, (_, i) => i + 9)
     const monday = getMonday(targetDate)
@@ -197,7 +218,6 @@ export default function InteractiveAgenda({ employes, reservations, view, target
     )
   }
 
-  // 3. VUE MOIS
   const renderMonthView = () => {
     const year = targetDate.getFullYear()
     const month = targetDate.getMonth()
@@ -265,7 +285,6 @@ export default function InteractiveAgenda({ employes, reservations, view, target
     <>
       <style dangerouslySetInnerHTML={{__html: `.agenda-slot:hover { background: #fdfdfd !important; }`}} />
       
-      {/* AFFICHAGE DES VUES SELON L'URL */}
       {view === 'day' && renderDayView()}
       {view === 'week' && renderWeekView()}
       {view === 'month' && renderMonthView()}
@@ -284,10 +303,23 @@ export default function InteractiveAgenda({ employes, reservations, view, target
                 <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               </div>
               <input type="text" placeholder="Nom du client (ou motif)" value={clientName} onChange={e => setClientName(e.target.value)} required style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+              
               <div style={{ display: 'flex', gap: 12 }}>
-                <input type="text" placeholder="Prestation" value={serviceName} onChange={e => setServiceName(e.target.value)} required style={{ flex: 2, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                {/* MENU DEROULANT DES PRESTATIONS */}
+                <select 
+                  value={selectedServiceId} 
+                  onChange={handleServiceChange} 
+                  required 
+                  style={{ flex: 2, padding: 12, border: '1px solid #ddd', borderRadius: 6 }}
+                >
+                  <option value="" disabled>Prestation</option>
+                  {services.map(svc => (
+                    <option key={svc.id} value={svc.id}>{svc.nom}</option>
+                  ))}
+                </select>
                 <input type="number" placeholder="Prix DA" value={servicePrice} onChange={e => setServicePrice(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               </div>
+
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
                 <button type="button" onClick={() => setIsAddModalOpen(false)} disabled={isLoading} style={{ flex: 1, padding: 14, background: '#f5f5f5', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', color: '#666' }}>Annuler</button>
                 <button type="submit" disabled={isLoading} style={{ flex: 1, padding: 14, background: NOIR, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>{isLoading ? '...' : 'Ajouter'}</button>
