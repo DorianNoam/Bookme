@@ -85,17 +85,69 @@ export default function ProSettingsPage() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
 
-      {/* HEADER */}
-      <header style={{ background: NOIR, color: '#fff', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ fontSize: 20, fontWeight: 900 }}>
-          Bookme<span style={{ color: OR }}>.dz</span> <span style={{ fontWeight: 400, fontSize: 14, color: '#888' }}>| Parametres</span>
+      {/* HEADER RESPONSIVE MOBILE */}
+      <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
+        <style dangerouslySetInnerHTML={{__html: `
+          .pro-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+          }
+          .pro-header-nav {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+          }
+          /* Masquer les barres de defilement horizontales proprement */
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          @media (max-width: 768px) {
+            .pro-header-container {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 12px;
+            }
+            .pro-header-nav {
+              width: 100%;
+              overflow-x: auto;
+              padding-bottom: 4px;
+              gap: 24px;
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+            }
+            .pro-header-nav::-webkit-scrollbar {
+              display: none;
+            }
+          }
+        `}} />
+        
+        <div className="pro-header-container">
+          <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
+            Bookme<span style={{ color: OR }}>.dz</span>
+            <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
+          </div>
+          <nav className="pro-header-nav">
+            <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              Dashboard
+            </Link>
+            <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              Agenda
+            </Link>
+            <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>
+              Parametres
+            </Link>
+            <div style={{ whiteSpace: 'nowrap' }}>
+              <LogoutButton />
+            </div>
+          </nav>
         </div>
-        <nav style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <a href="/pro/dashboard" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Dashboard</a>
-          <a href="/pro/agenda" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>Agenda</a>
-          <a href="/pro/settings" style={{ color: OR, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>Parametres</a>
-          <LogoutButton />
-        </nav>
       </header>
 
       <main style={{ maxWidth: 900, margin: '0 auto', padding: '30px 20px' }}>
@@ -110,8 +162,8 @@ export default function ProSettingsPage() {
           </div>
         )}
 
-        {/* ONGLETS */}
-        <div style={{ display: 'flex', gap: 0, marginBottom: 30, overflowX: 'auto' }}>
+        {/* ONGLETS avec la classe hide-scrollbar */}
+        <div className="hide-scrollbar" style={{ display: 'flex', gap: 0, marginBottom: 30, overflowX: 'auto' }}>
           {tabs.map((t, i) => (
             <button
               key={t.key}
