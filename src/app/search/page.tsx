@@ -33,6 +33,19 @@ const NOIR = '#0A0A0A';
 const OR = '#B8922A';
 const BG = '#F8F5F0';
 
+// Fonction pour calculer la distance en km entre deux points GPS (Formule de Haversine)
+function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -43,10 +56,20 @@ function SearchContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hoveredSalonId, setHoveredSalonId] = useState<number | null>(null);
   
-  // États pour la version Mobile
+  // États pour la version Mobile et la Géolocalisation
   const [showMap, setShowMap] = useState(false);
   const [showMobilePrestations, setShowMobilePrestations] = useState(false);
   const [showMobileFiltres, setShowMobileFiltres] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  // Forcer le redessin de Leaflet lors de l'ouverture de l'onglet Carte
+  useEffect(() => {
+    if (showMap) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+      }, 100);
+    }
+  }, [showMap]);
 
   // Génération des 3 prochains jours
   const nextDays = Array.from({ length: 3 }).map((_, i) => {
@@ -66,6 +89,10 @@ function SearchContent() {
     const l = searchParams.get('loc') || '';
     setQuery(q);
     setLoc(l);
+    
+    // Si une ville est explicitement cherchée, on annule la géolocalisation
+    if (l) setUserLocation(null);
+    
     fetchSalons(q, l);
   }, [searchParams]);
 
@@ -99,6 +126,35 @@ function SearchContent() {
     setShowMobileFiltres(false);
   }
 
+  // Activer la géolocalisation de l'utilisateur
+  function handleAutourDeMoi() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          // On efface la ville dans l'URL pour ne pas filtrer par ville
+          applyFilters(query, ''); 
+        },
+        (error) => {
+          alert("Impossible de récupérer votre position. Veuillez autoriser la géolocalisation.");
+        }
+      );
+    } else {
+      alert("La géolocalisation n'est pas supportée par votre navigateur.");
+    }
+  }
+
+  // Tri des salons : si géolocalisé, on trie par distance
+  const displaySalons = [...salons].sort((a, b) => {
+    if (!userLocation || !a.latitude || !b.latitude) return 0;
+    const distA = getDistanceInKm(userLocation.lat, userLocation.lng, a.latitude, a.longitude!);
+    const distB = getDistanceInKm(userLocation.lat, userLocation.lng, b.latitude, b.longitude!);
+    return distA - distB;
+  });
+
   const hasMappable = salons.some(s => s.latitude && s.longitude);
 
   return (
@@ -131,17 +187,28 @@ function SearchContent() {
         </div>
       )}
 
-      {/* MODALE MOBILE : FILTRES (VILLES) */}
+      {/* MODALE MOBILE : FILTRES (VILLES & AUTOUR DE MOI) */}
       {showMobileFiltres && (
         <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid #EDE5D8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Choisir une ville</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Adresse</h2>
             <button onClick={() => setShowMobileFiltres(false)} style={{ fontSize: 28, background: 'none', border: 'none', color: NOIR, cursor: 'pointer' }}>×</button>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
+            
+            {/* BOUTON AUTOUR DE MOI */}
+            <button 
+              onClick={handleAutourDeMoi} 
+              style={{ padding: '16px', textAlign: 'left', background: userLocation ? BG : '#fff', color: userLocation ? NOIR : OR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: userLocation ? `2px solid ${NOIR}` : `1px solid ${OR}`, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+            >
+              <span style={{ fontSize: 20 }}>📍</span> Autour de moi
+            </button>
+            
+            <hr style={{ border: 'none', borderTop: '1px solid #EDE5D8', margin: '8px 0' }} />
+
             <button 
               onClick={() => applyFilters(query, '')} 
-              style={{ padding: '16px', textAlign: 'left', background: !loc ? NOIR : BG, color: !loc ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: 'none' }}
+              style={{ padding: '16px', textAlign: 'left', background: !loc && !userLocation ? NOIR : BG, color: !loc && !userLocation ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: 'none' }}
             >
               Toute l&apos;Algérie
             </button>
@@ -177,6 +244,11 @@ function SearchContent() {
             </select>
 
             <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '8px 18px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, letterSpacing: 0.5, whiteSpace: 'nowrap', flexShrink: 0 }}>Rechercher</button>
+            
+            {/* Bouton Autour de moi - Desktop */}
+            <button type="button" onClick={handleAutourDeMoi} style={{ background: userLocation ? NOIR : 'transparent', color: userLocation ? '#fff' : OR, border: `1px solid ${userLocation ? NOIR : OR}`, padding: '8px 14px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+              📍 Autour de moi
+            </button>
           </form>
 
           <div style={{ display: 'flex', gap: 10, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto' }}>
@@ -204,7 +276,7 @@ function SearchContent() {
           {showMap ? '☰ Liste' : '🗺️ Carte'}
         </button>
         <button onClick={() => setShowMobileFiltres(true)} style={{ flex: 1, padding: '10px 4px', background: BG, border: '1px solid #E0D8CE', borderRadius: 6, fontSize: 13, fontWeight: 600, color: NOIR, cursor: 'pointer', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-          ⚙️ {loc ? loc : 'Ville'}
+          {userLocation ? '📍 Autour de moi' : (loc ? `⚙️ ${loc}` : '⚙️ Ville')}
         </button>
       </div>
 
@@ -226,13 +298,13 @@ function SearchContent() {
               {query ? query : 'Sélectionnez un établissement'}
             </h1>
             <p style={{ color: '#888', fontSize: 13 }}>
-              {loading ? 'Recherche en cours...' : `Les meilleurs salons et instituts ${loc ? 'à ' + loc : 'en Algérie'} : Réservation en ligne`}
+              {loading ? 'Recherche en cours...' : (userLocation ? `Les meilleurs salons et instituts autour de vous : Réservation en ligne` : `Les meilleurs salons et instituts ${loc ? 'à ' + loc : 'en Algérie'} : Réservation en ligne`)}
             </p>
           </div>
 
           {loading ? (
             <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>Chargement...</div>
-          ) : salons.length === 0 ? (
+          ) : displaySalons.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, background: '#fff', border: '1px dashed #DDD5C8', borderRadius: 4 }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}>{'🔍'}</div>
               <p style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>Aucun établissement ne correspond à votre recherche.</p>
@@ -240,90 +312,103 @@ function SearchContent() {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {salons.map(salon => (
-                <div
-                  key={salon.id}
-                  onMouseEnter={() => setHoveredSalonId(salon.id)}
-                  onMouseLeave={() => setHoveredSalonId(null)}
-                  className="salon-result-card"
-                  style={{
-                    background: '#fff',
-                    borderRadius: 8,
-                    border: hoveredSalonId === salon.id ? `2px solid ${OR}` : '1px solid #EDE5D8',
-                    overflow: 'hidden',
-                    transition: 'border-color 0.2s, box-shadow 0.2s',
-                    boxShadow: hoveredSalonId === salon.id ? '0 4px 20px rgba(184,146,42,0.15)' : 'none',
-                    display: 'flex',
-                    flexDirection: 'column'
-                  }}
-                >
-                  <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                    <div style={{ width: '260px', minHeight: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
-                      <img
-                        src={salon.image}
-                        alt={salon.nom}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                      <button style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>♡</button>
-                    </div>
+              {displaySalons.map(salon => {
+                
+                // Calcul de la distance spécifique à afficher sur la carte si l'utilisateur est géolocalisé
+                let distanceText = '';
+                if (userLocation && salon.latitude && salon.longitude) {
+                  const dist = getDistanceInKm(userLocation.lat, userLocation.lng, salon.latitude, salon.longitude);
+                  distanceText = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
+                }
 
-                    <div style={{ flex: 1, padding: '20px', minWidth: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                          <Link
-                            href={'/salon/' + salon.id}
-                            style={{ fontSize: '20px', fontWeight: 800, color: NOIR, textDecoration: 'none' }}
-                          >
-                            {salon.nom}
-                          </Link>
-                        </div>
-                        <div style={{ color: '#666', fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          📍 {salon.adresse}{salon.ville ? ', ' + salon.ville : ''}
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                          {salon.moy_note ? <span style={{ color: NOIR, fontWeight: 700 }}>★ {salon.moy_note} <span style={{ color: '#888', fontWeight: 400 }}>({salon.nb_avis} avis)</span></span> : <span style={{ color: '#bbb' }}>Nouveau</span>}
-                          <span style={{ color: '#ddd' }}>•</span>
-                          <span style={{ color: '#888' }}>{salon.type_salon}</span>
-                        </div>
-
-                        <div style={{ marginTop: '24px', borderTop: '1px solid #F5F0E6', paddingTop: '20px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
-                            <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>MATIN</span>
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                              {nextDays.map(day => (
-                                <Link key={'m'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}>
-                                  {day}
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                            <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>APRÈS-MIDI</span>
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                              {nextDays.map(day => (
-                                <Link key={'a'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}>
-                                  {day}
-                                </Link>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+                return (
+                  <div
+                    key={salon.id}
+                    onMouseEnter={() => setHoveredSalonId(salon.id)}
+                    onMouseLeave={() => setHoveredSalonId(null)}
+                    className="salon-result-card"
+                    style={{
+                      background: '#fff',
+                      borderRadius: 8,
+                      border: hoveredSalonId === salon.id ? `2px solid ${OR}` : '1px solid #EDE5D8',
+                      overflow: 'hidden',
+                      transition: 'border-color 0.2s, box-shadow 0.2s',
+                      boxShadow: hoveredSalonId === salon.id ? '0 4px 20px rgba(184,146,42,0.15)' : 'none',
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                      <div style={{ width: '260px', minHeight: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
+                        <img
+                          src={salon.image}
+                          alt={salon.nom}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        <button style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>♡</button>
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 }}>
-                        <Link href={'/salon/' + salon.id} style={{ color: '#444', fontSize: 13, fontWeight: 600, textDecoration: 'underline' }}>
-                          Plus d&apos;informations
-                        </Link>
-                        <Link href={'/booking?salon=' + salon.id} className="hide-mobile" style={{ background: NOIR, color: '#fff', padding: '10px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
-                          Prendre RDV
-                        </Link>
+                      <div style={{ flex: 1, padding: '20px', minWidth: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                            <Link
+                              href={'/salon/' + salon.id}
+                              style={{ fontSize: '20px', fontWeight: 800, color: NOIR, textDecoration: 'none' }}
+                            >
+                              {salon.nom}
+                            </Link>
+                          </div>
+                          <div style={{ color: '#666', fontSize: 13, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            📍 {salon.adresse}{salon.ville ? ', ' + salon.ville : ''}
+                            {distanceText && (
+                              <span style={{ color: OR, fontWeight: 700, marginLeft: 6 }}>({distanceText})</span>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+                            {salon.moy_note ? <span style={{ color: NOIR, fontWeight: 700 }}>★ {salon.moy_note} <span style={{ color: '#888', fontWeight: 400 }}>({salon.nb_avis} avis)</span></span> : <span style={{ color: '#bbb' }}>Nouveau</span>}
+                            <span style={{ color: '#ddd' }}>•</span>
+                            <span style={{ color: '#888' }}>{salon.type_salon}</span>
+                          </div>
+
+                          <div style={{ marginTop: '24px', borderTop: '1px solid #F5F0E6', paddingTop: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
+                              <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>MATIN</span>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                {nextDays.map(day => (
+                                  <Link key={'m'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}>
+                                    {day}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                              <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>APRÈS-MIDI</span>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                {nextDays.map(day => (
+                                  <Link key={'a'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}>
+                                    {day}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 }}>
+                          <Link href={'/salon/' + salon.id} style={{ color: '#444', fontSize: 13, fontWeight: 600, textDecoration: 'underline' }}>
+                            Plus d&apos;informations
+                          </Link>
+                          <Link href={'/booking?salon=' + salon.id} className="hide-mobile" style={{ background: NOIR, color: '#fff', padding: '10px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
+                            Prendre RDV
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -331,7 +416,7 @@ function SearchContent() {
         {hasMappable && (
           <div className={`map-col ${showMap ? 'show-on-mobile' : 'hide-on-mobile'}`}>
             <SearchMap
-              salons={salons}
+              salons={displaySalons}
               hoveredSalonId={hoveredSalonId}
               onMarkerClick={(id: number) => router.push('/salon/' + id)}
             />
