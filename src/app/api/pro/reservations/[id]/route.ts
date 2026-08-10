@@ -13,45 +13,26 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-    // Verifier que la reservation appartient au salon du pro
-    const { data: salon } = await supabase
-      .from('salons')
-      .select('id')
-      .eq('pro_id', proId)
-      .single()
-
+    const { data: salon } = await supabase.from('salons').select('id').eq('pro_id', proId).single()
     if (!salon) return NextResponse.json({ error: 'Salon introuvable' }, { status: 404 })
 
-    const { data: resa } = await supabase
-      .from('reservations')
-      .select('salon_id')
-      .eq('id', params.id)
-      .single()
-
+    const { data: resa } = await supabase.from('reservations').select('salon_id').eq('id', params.id).single()
     if (!resa || resa.salon_id !== salon.id) {
       return NextResponse.json({ error: 'Reservation introuvable' }, { status: 403 })
     }
 
-    // Récupérer les nouvelles données envoyées par le frontend
+    // Récupérer les nouvelles données du frontend (s'il y en a)
     const body = await req.json().catch(() => ({}));
     
-    // On prépare l'objet de mise à jour. Si une donnée est fournie, on l'utilise.
-    // Sinon, on garde le statut 'annule' par défaut si c'est une simple annulation.
     const updateData: any = {};
     if (body.statut) updateData.statut = body.statut;
     if (body.date_rdv) updateData.date_rdv = body.date_rdv;
     if (body.employe_id) updateData.employe_id = body.employe_id;
 
-    // Si le body est vide (ancien comportement), on force l'annulation
-    if (Object.keys(updateData).length === 0) {
-      updateData.statut = 'annule';
-    }
+    // Si aucune donnée n'est passée, on garde ton comportement d'annulation par défaut
+    if (Object.keys(updateData).length === 0) updateData.statut = 'annule';
 
-    const { error } = await supabase
-      .from('reservations')
-      .update(updateData)
-      .eq('id', params.id)
-
+    const { error } = await supabase.from('reservations').update(updateData).eq('id', params.id)
     if (error) throw error
 
     return NextResponse.json({ success: true })
