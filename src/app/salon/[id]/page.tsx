@@ -241,24 +241,24 @@ export default function SalonPage() {
               </div>
             )}
 
-            {/* PROMOTIONS EN COURS (DESIGN OR) */}
+            {/* PROMOTIONS EN COURS (ROUGE AVEC BOUTON OR) */}
             {specialPromos.length > 0 && (
               <div style={{ marginBottom: 40 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 900, color: OR, textTransform: 'uppercase', letterSpacing: 1, borderBottom: `2px solid ${OR}`, paddingBottom: 10, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 24 }}>✨</span> Offres Spéciales
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: '#d32f2f', textTransform: 'uppercase', letterSpacing: 1, borderBottom: '2px solid #ffcccb', paddingBottom: 10, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>🎉</span> Offres Spéciales
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {specialPromos.map(service => {
                     const promoPrice = Math.round(service.prix - (service.prix * service.promo_pourcentage! / 100))
                     return (
-                      <div key={service.id} className="service-card" style={{ background: '#fff', border: `2px solid ${OR}`, borderRadius: 8, position: 'relative', overflow: 'hidden', padding: 20, boxShadow: '0 4px 15px rgba(184, 146, 42, 0.15)' }}>
-                        <div style={{ position: 'absolute', top: 0, right: 0, background: OR, color: NOIR, fontSize: 12, fontWeight: 900, padding: '6px 16px', borderRadius: '0 0 0 8px', letterSpacing: 0.5 }}>
+                      <div key={service.id} className="service-card" style={{ background: '#FFF8F8', border: '2px solid #ffcccb', borderRadius: 8, position: 'relative', overflow: 'hidden', padding: 20, boxShadow: '0 4px 15px rgba(211, 47, 47, 0.05)' }}>
+                        <div style={{ position: 'absolute', top: 0, right: 0, background: '#d32f2f', color: '#fff', fontSize: 12, fontWeight: 900, padding: '6px 16px', borderRadius: '0 0 0 8px', letterSpacing: 0.5 }}>
                           PROMO -{service.promo_pourcentage}%
                         </div>
                         <div style={{ paddingRight: 100 }}>
                           <div style={{ fontWeight: 900, fontSize: 18, color: NOIR, marginBottom: 4 }}>{service.nom}</div>
                           
-                          {/* AFFICHAGE DU NOM DE LA PROMOTION */}
+                          {/* AFFICHAGE DU NOM DE LA PROMOTION EN OR */}
                           {service.promo_nom && (
                             <div style={{ fontSize: 13, fontWeight: 800, color: OR, marginBottom: 6 }}>
                               ✨ {service.promo_nom}
@@ -269,7 +269,7 @@ export default function SalonPage() {
                           
                           {/* Affichage des dates si configurées */}
                           {(service.promo_debut || service.promo_fin) && (
-                            <div style={{ display: 'inline-block', background: '#F8F5F0', color: OR, border: `1px solid ${OR}`, fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 4 }}>
+                            <div style={{ display: 'inline-block', background: '#ffeded', color: '#d32f2f', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 4 }}>
                               ⏳ {service.promo_debut ? `Du ${new Date(service.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} ` : ''}
                               {service.promo_fin ? `${service.promo_debut ? 'au' : "Jusqu'au"} ${new Date(service.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : ''}
                             </div>
@@ -278,8 +278,9 @@ export default function SalonPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, flexWrap: 'wrap', gap: 12 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <span style={{ textDecoration: 'line-through', color: '#aaa', fontSize: 15, fontWeight: 600 }}>{service.prix.toLocaleString()} DA</span>
-                            <span style={{ fontWeight: 900, fontSize: 24, color: OR }}>{promoPrice.toLocaleString()} DA</span>
+                            <span style={{ fontWeight: 900, fontSize: 24, color: '#d32f2f' }}>{promoPrice.toLocaleString()} DA</span>
                           </div>
+                          {/* BOUTON EN OR AU LIEU DE ROUGE */}
                           <Link href={`/booking?salon=${salon.id}&service=${service.id}`} style={{ background: OR, color: NOIR, padding: '12px 28px', borderRadius: 6, fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', textDecoration: 'none', transition: 'transform 0.2s' }}>
                             Réserver l'offre
                           </Link>
