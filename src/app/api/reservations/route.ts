@@ -100,3 +100,36 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
+
+// 4. Gérer l'annulation du côté du client
+export async function PATCH(req: NextRequest) {
+  try {
+    const token = req.cookies.get('bookme_token')?.value
+    if (!token) return NextResponse.json({ error: 'Non connecte' }, { status: 401 })
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
+    const { payload } = await jwtVerify(token, secret)
+    
+    const body = await req.json()
+    const { id, action } = body
+
+    if (action === 'cancel' && id) {
+      const supabase = createAdminClient()
+      
+      // Sécurité : On s'assure de n'annuler que si le user_id correspond bien à l'utilisateur connecté
+      const { error } = await supabase
+        .from('reservations')
+        .update({ statut: 'annule' })
+        .eq('id', id)
+        .eq('user_id', payload.id)
+
+      if (error) throw error
+
+      return NextResponse.json({ success: true })
+    }
+
+    return NextResponse.json({ error: 'Action invalide' }, { status: 400 })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}
