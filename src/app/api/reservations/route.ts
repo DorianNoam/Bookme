@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Recuperer le service pour le nom et le prix
+    // 1. Recuperer le service AVEC les infos de promotion
     const { data: service } = await supabase
       .from('services')
-      .select('nom, prix')
+      .select('nom, prix, promo_active, promo_pourcentage, promo_nom')
       .eq('id', service_id)
       .single()
 
@@ -35,7 +35,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Service introuvable' }, { status: 404 })
     }
 
-    // Creer la reservation avec toutes les infos client
+    // 2. Calculer le prix final et le nom final a enregistrer
+    let finalPrice = service.prix
+    let finalName = service.nom
+
+    if (service.promo_active && service.promo_pourcentage && service.promo_pourcentage > 0) {
+      finalPrice = Math.round(service.prix - (service.prix * service.promo_pourcentage / 100))
+      
+      // Ajouter le badge promo directement dans le nom du service pour le Dashboard
+      if (service.promo_nom) {
+        finalName = `${service.nom} (✨ ${service.promo_nom})`
+      } else {
+        finalName = `${service.nom} (PROMO -${service.promo_pourcentage}%)`
+      }
+    }
+
+    // 3. Creer la reservation avec les informations remisées
     const { data, error } = await supabase
       .from('reservations')
       .insert({
@@ -43,8 +58,8 @@ export async function POST(req: NextRequest) {
         user_id,
         service_id,
         employe_id: employe_id || null,
-        service_nom: service.nom,
-        service_prix: service.prix,
+        service_nom: finalName,
+        service_prix: finalPrice,
         client_nom,
         client_prenom: client_prenom || null,
         client_email: client_email || null,
