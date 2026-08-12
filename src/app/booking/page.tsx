@@ -8,7 +8,11 @@ const OR = '#B8922A'
 const BG = '#F8F5F0'
 
 type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number; ouverture?: string; fermeture?: string }
-type Service = { id: number; nom: string; prix: number; duree: number }
+// Mise à jour du type Service pour inclure les champs de promotion
+type Service = { 
+  id: number; nom: string; prix: number; duree: number;
+  promo_active?: boolean; promo_pourcentage?: number | null; promo_nom?: string | null;
+}
 type Creneau = { heure: string; emp_id: number }
 type UserInfo = { id: number; prenom: string; nom: string; email: string; telephone: string }
 
@@ -143,6 +147,10 @@ function BookingContent() {
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'Inter, sans-serif', color: '#999' }}>Chargement...</div>
 
+  // CALCUL DE LA PROMOTION
+  const hasPromo = service?.promo_active && service?.promo_pourcentage && service?.promo_pourcentage > 0
+  const promoPrice = hasPromo && service?.prix ? Math.round(service.prix - (service.prix * service.promo_pourcentage! / 100)) : service?.prix
+
   // ── Succes ──
   if (success) return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
@@ -155,7 +163,7 @@ function BookingContent() {
           </p>
           <p style={{ color: '#666', fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
             <strong>{formatDateFr(date)}</strong> a <strong>{selectedCreneau?.heure.substring(0, 5)}</strong>
-            <br />{service?.nom} — {service?.prix?.toLocaleString()} DA
+            <br />{service?.nom} — {promoPrice?.toLocaleString()} DA
           </p>
           <p style={{ color: '#999', fontSize: 12, marginBottom: 24 }}>Paiement sur place. Presentez-vous 5 min avant.</p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -182,15 +190,23 @@ function BookingContent() {
       <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px' }}>
 
         {/* Resume salon + service */}
-        <div className="service-card" style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, marginBottom: 20 }}>
+        <div className="service-card" style={{ background: '#fff', border: hasPromo ? '2px solid #ffcccb' : '1px solid #EDE5D8', borderRadius: 6, marginBottom: 20, padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div style={{ fontWeight: 800, fontSize: 15, color: NOIR }}>{salon?.nom}</div>
-            <div style={{ color: '#999', fontSize: 12, marginTop: 2 }}>{'📍'} {salon?.ville}</div>
+            <div style={{ color: '#999', fontSize: 12, marginTop: 4 }}>{'📍'} {salon?.ville}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 700, fontSize: 13, color: NOIR }}>{service?.nom}</div>
-            <div style={{ color: '#999', fontSize: 11, marginTop: 2 }}>{service?.duree} min</div>
-            <div style={{ fontWeight: 800, fontSize: 17, color: OR, marginTop: 2 }}>{service?.prix ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}</div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: NOIR }}>{service?.nom}</div>
+            <div style={{ color: '#999', fontSize: 12, marginTop: 2, marginBottom: 4 }}>{service?.duree} min</div>
+            {hasPromo ? (
+              <div>
+                <span style={{ textDecoration: 'line-through', color: '#aaa', fontSize: 13, marginRight: 8 }}>{service?.prix?.toLocaleString()} DA</span>
+                <span style={{ fontWeight: 900, fontSize: 18, color: '#d32f2f' }}>{promoPrice?.toLocaleString()} DA</span>
+                {service?.promo_nom && <div style={{ fontSize: 11, fontWeight: 800, color: OR, marginTop: 2 }}>✨ {service.promo_nom}</div>}
+              </div>
+            ) : (
+              <div style={{ fontWeight: 800, fontSize: 17, color: OR }}>{service?.prix ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}</div>
+            )}
           </div>
         </div>
 
@@ -288,7 +304,16 @@ function BookingContent() {
               </div>
               <div style={{ marginTop: 10 }}>
                 <div style={{ fontSize: 11, color: '#888', marginBottom: 3 }}>Prestation</div>
-                <div style={{ fontWeight: 700, color: OR, fontSize: 14 }}>{service?.nom} — {service?.prix?.toLocaleString()} DA</div>
+                <div style={{ fontWeight: 700, color: OR, fontSize: 14 }}>
+                  {service?.nom} — {hasPromo ? (
+                    <>
+                      <span style={{ textDecoration: 'line-through', color: '#999', marginRight: 6, fontSize: 12 }}>{service?.prix?.toLocaleString()}</span>
+                      <span style={{ color: '#d32f2f', fontWeight: 900 }}>{promoPrice?.toLocaleString()} DA</span>
+                    </>
+                  ) : (
+                    `${service?.prix?.toLocaleString()} DA`
+                  )}
+                </div>
               </div>
             </div>
 
