@@ -96,7 +96,7 @@ export default function SalonPage() {
     } catch {}
   }
 
-  // SÉPARATION DES SERVICES : Promos Événementielles vs Prestations Classiques
+  // SÉPARATION DES SERVICES : TOUTES les promos en haut
   const specialPromos = services.filter(s => s.promo_active && s.promo_pourcentage && s.promo_pourcentage > 0)
   const regularServices = services.filter(s => !(s.promo_active && s.promo_pourcentage && s.promo_pourcentage > 0))
 
@@ -190,7 +190,7 @@ export default function SalonPage() {
       {/* CONTENU */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 16px', marginTop: 30, display: 'flex', flexDirection: 'column', gap: 30 }}>
         
-        {/* TABS - scrollable on mobile */}
+        {/* TABS */}
         <div className="filters-bar" style={{ borderBottom: '2px solid #E0D8CE', gap: 24, paddingBottom: 0 }}>
           {['Prestations', 'Avis', 'Informations'].map(tab => (
             <button
@@ -241,18 +241,18 @@ export default function SalonPage() {
               </div>
             )}
 
-            {/* NOUVEAU : PROMOTIONS ÉVÉNEMENTIELLES */}
+            {/* PROMOTIONS EN COURS (DESIGN OR) */}
             {specialPromos.length > 0 && (
               <div style={{ marginBottom: 40 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 900, color: '#d32f2f', textTransform: 'uppercase', letterSpacing: 1, borderBottom: '2px solid #ffcccb', paddingBottom: 10, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 24 }}>🎉</span> Offres Spéciales
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: OR, textTransform: 'uppercase', letterSpacing: 1, borderBottom: `2px solid ${OR}`, paddingBottom: 10, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>✨</span> Offres Spéciales
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {specialPromos.map(service => {
                     const promoPrice = Math.round(service.prix - (service.prix * service.promo_pourcentage! / 100))
                     return (
-                      <div key={service.id} className="service-card" style={{ background: '#FFF8F8', border: '2px solid #ffcccb', borderRadius: 8, position: 'relative', overflow: 'hidden', padding: 20, boxShadow: '0 4px 15px rgba(211, 47, 47, 0.05)' }}>
-                        <div style={{ position: 'absolute', top: 0, right: 0, background: '#d32f2f', color: '#fff', fontSize: 12, fontWeight: 900, padding: '6px 16px', borderRadius: '0 0 0 8px', letterSpacing: 0.5 }}>
+                      <div key={service.id} className="service-card" style={{ background: '#fff', border: `2px solid ${OR}`, borderRadius: 8, position: 'relative', overflow: 'hidden', padding: 20, boxShadow: '0 4px 15px rgba(184, 146, 42, 0.15)' }}>
+                        <div style={{ position: 'absolute', top: 0, right: 0, background: OR, color: NOIR, fontSize: 12, fontWeight: 900, padding: '6px 16px', borderRadius: '0 0 0 8px', letterSpacing: 0.5 }}>
                           PROMO -{service.promo_pourcentage}%
                         </div>
                         <div style={{ paddingRight: 100 }}>
@@ -269,7 +269,7 @@ export default function SalonPage() {
                           
                           {/* Affichage des dates si configurées */}
                           {(service.promo_debut || service.promo_fin) && (
-                            <div style={{ display: 'inline-block', background: '#ffeded', color: '#d32f2f', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 4 }}>
+                            <div style={{ display: 'inline-block', background: '#F8F5F0', color: OR, border: `1px solid ${OR}`, fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 4 }}>
                               ⏳ {service.promo_debut ? `Du ${new Date(service.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} ` : ''}
                               {service.promo_fin ? `${service.promo_debut ? 'au' : "Jusqu'au"} ${new Date(service.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}` : ''}
                             </div>
@@ -278,9 +278,9 @@ export default function SalonPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, flexWrap: 'wrap', gap: 12 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                             <span style={{ textDecoration: 'line-through', color: '#aaa', fontSize: 15, fontWeight: 600 }}>{service.prix.toLocaleString()} DA</span>
-                            <span style={{ fontWeight: 900, fontSize: 24, color: '#d32f2f' }}>{promoPrice.toLocaleString()} DA</span>
+                            <span style={{ fontWeight: 900, fontSize: 24, color: OR }}>{promoPrice.toLocaleString()} DA</span>
                           </div>
-                          <Link href={`/booking?salon=${salon.id}&service=${service.id}`} style={{ background: '#d32f2f', color: '#fff', padding: '12px 28px', borderRadius: 6, fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', textDecoration: 'none', transition: 'transform 0.2s' }}>
+                          <Link href={`/booking?salon=${salon.id}&service=${service.id}`} style={{ background: OR, color: NOIR, padding: '12px 28px', borderRadius: 6, fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', textDecoration: 'none', transition: 'transform 0.2s' }}>
                             Réserver l'offre
                           </Link>
                         </div>
@@ -296,34 +296,20 @@ export default function SalonPage() {
               <div key={categorie} style={{ marginBottom: 30 }}>
                 <h3 style={{ fontSize: 12, fontWeight: 800, color: OR, textTransform: 'uppercase', letterSpacing: 2, borderBottom: '1px solid #E0D8CE', paddingBottom: 8, marginBottom: 14 }}>{categorie}</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {items.map(service => {
-                    const hasPromo = service.promo_active && service.promo_pourcentage && service.promo_pourcentage > 0
-                    const promoPrice = hasPromo ? Math.round(service.prix - (service.prix * service.promo_pourcentage! / 100)) : service.prix
-                    return (
-                      <div key={service.id} className="service-card" style={{ background: '#fff', border: hasPromo ? '1px solid #ffcccb' : '1px solid #EDE5D8', borderRadius: 6, position: 'relative', overflow: 'hidden' }}>
-                        {hasPromo && (
-                          <div style={{ position: 'absolute', top: 0, right: 0, background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '3px 10px', borderRadius: '0 0 0 6px' }}>-{service.promo_pourcentage}%</div>
-                        )}
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: NOIR, marginBottom: 3 }}>{service.nom}</div>
-                          <div style={{ color: '#888', fontSize: 12 }}>{service.duree} min</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                          <div style={{ textAlign: 'right' }}>
-                            {hasPromo ? (
-                              <div>
-                                <span style={{ textDecoration: 'line-through', color: '#999', fontSize: 13 }}>{service.prix.toLocaleString()} DA</span>
-                                <div style={{ fontWeight: 900, fontSize: 18, color: '#d32f2f' }}>{promoPrice.toLocaleString()} DA</div>
-                              </div>
-                            ) : (
-                              <div style={{ fontWeight: 800, fontSize: 17, color: NOIR }}>{service.prix > 0 ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}</div>
-                            )}
-                          </div>
-                          <Link href={`/booking?salon=${salon.id}&service=${service.id}`} style={{ background: hasPromo ? '#d32f2f' : NOIR, color: '#fff', padding: '10px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}>Reserver</Link>
-                        </div>
+                  {items.map(service => (
+                    <div key={service.id} className="service-card" style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, position: 'relative', overflow: 'hidden' }}>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 15, color: NOIR, marginBottom: 3 }}>{service.nom}</div>
+                        <div style={{ color: '#888', fontSize: 12 }}>{service.duree} min</div>
                       </div>
-                    )
-                  })}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontWeight: 800, fontSize: 17, color: NOIR }}>{service.prix > 0 ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}</div>
+                        </div>
+                        <Link href={`/booking?salon=${salon.id}&service=${service.id}`} style={{ background: NOIR, color: '#fff', padding: '10px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13, whiteSpace: 'nowrap' }}>Reserver</Link>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
