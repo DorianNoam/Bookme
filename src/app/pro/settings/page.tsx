@@ -47,7 +47,17 @@ export default function ProSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
 
+  // Charger les donnees & verifier l'acces employe
   useEffect(() => {
+    fetch('/api/pro/auth/me')
+      .then(r => r.json())
+      .then(data => {
+        if (data.role === 'employe') {
+          window.location.href = '/pro/agenda'
+          return
+        }
+      })
+
     fetch('/api/pro/settings')
       .then(r => r.json())
       .then(data => {
@@ -106,7 +116,7 @@ export default function ProSettingsPage() {
             Bookme<span style={{ color: OR }}>.dz</span>
             <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
           </div>
-          <nav className="pro-header-nav" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+          <nav className="pro-header-nav hide-scrollbar" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
             <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
             <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Agenda</Link>
             <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Parametres</Link>
@@ -436,8 +446,19 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Mettre en promotion :</span>
                           
                           <div>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l'événement (ex: Spécial Aïd)</label>
-                            <input type="text" value={promoNom} onChange={e => setPromoNom(e.target.value)} placeholder="Optionnel" style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Événement</label>
+                            {/* MENU DÉROULANT POUR LES PROMOS */}
+                            <select value={promoNom} onChange={e => setPromoNom(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', background: '#fff' }}>
+                              <option value="">Sélectionner un événement (Optionnel)</option>
+                              <option value="Spécial Aïd El Fitr">Spécial Aïd El Fitr</option>
+                              <option value="Spécial Aïd El Adha">Spécial Aïd El Adha</option>
+                              <option value="Promo Ramadan">Promo Ramadan</option>
+                              <option value="Spécial 8 Mars">Spécial 8 Mars (Journée de la Femme)</option>
+                              <option value="Promo Fin d'année">Promo Fin d'année</option>
+                              <option value="Promo Rentrée">Promo Rentrée</option>
+                              <option value="Black Friday">Black Friday</option>
+                              <option value="Offre Flash">Offre Flash</option>
+                            </select>
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -509,7 +530,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Supprimer cet employe ?')) return
+    if (!confirm('Supprimer cet employe ? Les reservations existantes ne seront pas affectees.')) return
     try {
       const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_employe', id }) })
       const data = await res.json()
@@ -563,28 +584,26 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
       ) : (
         <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
           {localEmployes.map((emp, i) => (
-            <div key={emp.id} style={{ borderBottom: i < localEmployes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: NOIR, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{emp.nom.charAt(0).toUpperCase()}</div>
-                  <div>
-                    <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block' }}>{emp.nom}</span>
-                    {emp.acces_agenda && emp.email && (<span style={{ fontSize: 12, color: '#888' }}>{emp.email}</span>)}
-                  </div>
-                  {emp.acces_agenda && (<span style={{ background: '#d4edda', color: '#155724', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 3, textTransform: 'uppercase' }}>Acces agenda</span>)}
+            <div key={emp.id} className="responsive-row" style={{ padding: '16px 20px', borderBottom: i < employes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', background: NOIR, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{emp.nom.charAt(0).toUpperCase()}</div>
+                <div>
+                  <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block' }}>{emp.nom}</span>
+                  {emp.acces_agenda && emp.email && (<span style={{ fontSize: 12, color: '#888' }}>{emp.email}</span>)}
                 </div>
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  {emp.acces_agenda ? (
-                    <button onClick={() => handleDisableAccess(emp.id)} disabled={accessSaving} style={{ background: '#fff0f0', border: '1px solid #ffcccb', color: '#d32f2f', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Retirer acces</button>
-                  ) : (
-                    <button onClick={() => openAccessForm(emp)} style={{ background: 'transparent', border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Donner acces</button>
-                  )}
-                  <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
-                </div>
+                {emp.acces_agenda && (<span style={{ background: '#d4edda', color: '#155724', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 3, textTransform: 'uppercase' }}>Acces agenda</span>)}
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
+                {emp.acces_agenda ? (
+                  <button onClick={() => handleDisableAccess(emp.id)} disabled={accessSaving} style={{ background: '#fff0f0', border: '1px solid #ffcccb', color: '#d32f2f', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Retirer acces</button>
+                ) : (
+                  <button onClick={() => openAccessForm(emp)} style={{ background: 'transparent', border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Donner acces</button>
+                )}
+                <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
               </div>
 
               {accessFormId === emp.id && !emp.acces_agenda && (
-                <div style={{ padding: '16px 20px', background: '#FAFAF5', borderTop: `1px dashed ${OR}` }}>
+                <div style={{ width: '100%', padding: '16px 20px', background: '#FAFAF5', borderTop: `1px dashed ${OR}`, marginTop: 12 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: NOIR, marginBottom: 12 }}>Creer un acces agenda pour {emp.nom}</div>
                   <p style={{ fontSize: 12, color: '#888', marginBottom: 14, lineHeight: 1.5 }}>Le collaborateur pourra se connecter sur la page Pro pour voir et gerer l'agenda, annuler ou modifier des RDV. Il ne pourra pas modifier les tarifs, promos ni les parametres du salon.</p>
                   {accessError && (<div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#b91c1c' }}>{accessError}</div>)}
