@@ -158,6 +158,18 @@ export default function SalonPage() {
               {salon.jour_off !== undefined && salon.jour_off !== null && salon.jour_off > 0 && salon.jour_off <= 7 && (
                 <span style={{ color: '#ffaaaa' }}>Ferme le {jours[salon.jour_off === 7 ? 0 : salon.jour_off]}</span>
               )}
+
+{salon.instagram && (
+  
+    href={`https://instagram.com/${salon.instagram}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#fff', fontSize: 13, textDecoration: 'none' }}
+  >
+    {'📸'} @{salon.instagram}
+  </a>
+)}
+              
               <a 
                 href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${salon.adresse}, ${salon.ville}, Algerie`)}`}
                 target="_blank" 
