@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { jwtVerify } from 'jose'
+import { Resend } from 'resend'
+import BookingConfirmation from '@/emails/BookingConfirmation'
+
+// Initialisation de Resend
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Donnees manquantes' }, { status: 400 })
     }
 
-    // Recuperer le user_id si le client est connecte
+    // Récupérer le user_id si le client est connecté
     let user_id: number | null = null
     const token = req.cookies.get('bookme_token')?.value
     if (token) {
@@ -24,25 +29,22 @@ export async function POST(req: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // 1. Recuperer le service AVEC les infos de promotion
-    const { data: service } = await supabase
-      .from('services')
-      .select('nom, prix, promo_active, promo_pourcentage, promo_nom')
-      .eq('id', service_id)
-      .single()
+    // 1. Récupérer le service AVEC les infos de promotion et le salon
+    const [{ data: service }, { data: salon }] = await Promise.all([
+      supabase.from('services').select('nom, prix, promo_active, promo_pourcentage, promo_nom').eq('id', service_id).single(),
+      supabase.from('salons').select('nom').eq('id', salon_id).single()
+    ])
 
     if (!service) {
       return NextResponse.json({ error: 'Service introuvable' }, { status: 404 })
     }
 
-    // 2. Calculer le prix final et le nom final a enregistrer
+    // 2. Calculer le prix final et le nom final à enregistrer
     let finalPrice = service.prix
     let finalName = service.nom
 
     if (service.promo_active && service.promo_pourcentage && service.promo_pourcentage > 0) {
       finalPrice = Math.round(service.prix - (service.prix * service.promo_pourcentage / 100))
-      
-      // Ajouter le badge promo directement dans le nom du service pour le Dashboard
       if (service.promo_nom) {
         finalName = `${service.nom} (✨ ${service.promo_nom})`
       } else {
@@ -50,8 +52,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Creer la reservation avec les informations remisées
-    const { data, error } = await supabase
+    // 3. Créer la réservation dans Supabase
+    const { data: reservation, error } = await supabase
       .from('reservations')
       .insert({
         salon_id,
@@ -72,7 +74,33 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
-    return NextResponse.json({ success: true, reservation: data }, { status: 201 })
+    // 4. Envoi de l'email de confirmation via Resend
+    if (client_email) {
+      try {
+        const dateObj = new Date(date_rdv)
+        const dateFormatted = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+        const timeFormatted = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')
+
+        await resend.emails.send({
+          from: 'Bookme.dz <onboarding@resend.dev>', // L'adresse de test Resend
+          to: [client_email], // Attention: en Sandbox, cet email DOIT être celui de ton compte Resend !
+          subject: `Confirmation de votre rendez-vous au ${salon?.nom || 'Salon'}`,
+          react: BookingConfirmation({
+            clientName: client_prenom ? `${client_prenom} ${client_nom}` : client_nom,
+            salonName: salon?.nom || 'votre salon',
+            serviceName: finalName,
+            date: dateFormatted,
+            time: timeFormatted,
+            price: finalPrice,
+          }),
+        })
+      } catch (emailErr) {
+        // En cas d'erreur Resend, on ne bloque pas la réservation pour l'utilisateur
+        console.error("Erreur lors de l'envoi de l'email:", emailErr)
+      }
+    }
+
+    return NextResponse.json({ success: true, reservation }, { status: 201 })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
@@ -101,7 +129,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 4. Gérer l'annulation du côté du client
 export async function PATCH(req: NextRequest) {
   try {
     const token = req.cookies.get('bookme_token')?.value
@@ -115,8 +142,6 @@ export async function PATCH(req: NextRequest) {
 
     if (action === 'cancel' && id) {
       const supabase = createAdminClient()
-      
-      // Sécurité : On s'assure de n'annuler que si le user_id correspond bien à l'utilisateur connecté
       const { error } = await supabase
         .from('reservations')
         .update({ statut: 'annule' })
