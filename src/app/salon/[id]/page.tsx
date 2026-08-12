@@ -11,14 +11,14 @@ const BG = '#F8F5F0'
 type Salon = { 
   id: number; nom: string; adresse: string; ville: string; image: string; 
   type_salon: string; telephone: string; description: string; 
-  ouverture: string; fermeture: string; jour_off: number;
-  instagram: string | null
+  ouverture: string; fermeture: string; jour_off: number 
 }
 
+// Mise à jour du type Service pour inclure les nouveaux champs de promotion
 type Service = { 
   id: number; nom: string; prix: number; duree: number; categorie_service: string;
   promo_pourcentage: number | null; promo_active: boolean;
-  promo_debut: string | null; promo_fin: string | null
+  promo_nom?: string | null; promo_debut?: string | null; promo_fin?: string | null;
 }
 
 type VentePrivee = { id: number; nom: string; prix: number; duree: number; description: string }
@@ -97,7 +97,11 @@ export default function SalonPage() {
     } catch {}
   }
 
-  const servicesParCategorie = services.reduce((acc, service) => {
+  // SÉPARATION DES SERVICES : Promos Événementielles vs Prestations Classiques
+  const specialPromos = services.filter(s => s.promo_active && s.promo_pourcentage && s.promo_nom)
+  const regularServices = services.filter(s => !(s.promo_active && s.promo_pourcentage && s.promo_nom))
+
+  const servicesParCategorie = regularServices.reduce((acc, service) => {
     const cat = service.categorie_service || 'Autres'
     if (!acc[cat]) acc[cat] = []
     acc[cat].push(service)
@@ -121,7 +125,7 @@ export default function SalonPage() {
       <header style={{ background: '#fff', padding: '12px 0' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>.dz</span></Link>
-          <Link href="/search" style={{ color: '#777', fontSize: 13 }}>{'<- Retour'}</Link>
+          <Link href="/search" style={{ color: '#777', fontSize: 13 }}>{'← Retour'}</Link>
           <div className="hide-mobile" style={{ display: 'flex', gap: 15 }}>
             {isLoggedIn ? (
               <Link href="/dashboard" style={{ color: '#fff', background: NOIR, padding: '6px 16px', borderRadius: 4, fontSize: 14, fontWeight: 600 }}>Mon espace</Link>
@@ -159,23 +163,25 @@ export default function SalonPage() {
               {salon.jour_off !== undefined && salon.jour_off !== null && salon.jour_off > 0 && salon.jour_off <= 7 && (
                 <span style={{ color: '#ffaaaa' }}>Ferme le {jours[salon.jour_off === 7 ? 0 : salon.jour_off]}</span>
               )}
-              {salon.instagram && (
-                <a
-                  href={`https://instagram.com/${salon.instagram}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#fff', fontSize: 13, textDecoration: 'none' }}
-                >
-                  {'📸'} @{salon.instagram}
-                </a>
-              )}
+              
               <a 
-                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${salon.adresse}, ${salon.ville}, Algerie`)}`}
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${salon.adresse}, ${salon.ville}, Algérie`)}`}
                 target="_blank" 
                 rel="noopener noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', background: OR, color: NOIR, padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 800, textDecoration: 'none', marginLeft: 'auto' }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  background: OR,
+                  color: NOIR,
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  marginLeft: 'auto'
+                }}
               >
-                {'🗺️'} Y aller
+                🗺️ Y aller
               </a>
             </div>
           </div>
@@ -185,7 +191,7 @@ export default function SalonPage() {
       {/* CONTENU */}
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 16px', marginTop: 30, display: 'flex', flexDirection: 'column', gap: 30 }}>
         
-        {/* TABS */}
+        {/* TABS - scrollable on mobile */}
         <div className="filters-bar" style={{ borderBottom: '2px solid #E0D8CE', gap: 24, paddingBottom: 0 }}>
           {['Prestations', 'Avis', 'Informations'].map(tab => (
             <button
@@ -203,7 +209,7 @@ export default function SalonPage() {
           ))}
         </div>
 
-        {/* TAB PRESTATIONS */}
+        {/* ════ TAB PRESTATIONS ════ */}
         {activeTab === 'prestations' && (
           <div>
             <p style={{ color: '#666', fontSize: 14, lineHeight: 1.6, marginBottom: 30 }}>{salon.description}</p>
@@ -235,8 +241,47 @@ export default function SalonPage() {
                 </div>
               </div>
             )}
+
+            {/* NOUVEAU : PROMOTIONS ÉVÉNEMENTIELLES */}
+            {specialPromos.length > 0 && (
+              <div style={{ marginBottom: 40 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 900, color: '#d32f2f', textTransform: 'uppercase', letterSpacing: 1, borderBottom: '2px solid #ffcccb', paddingBottom: 10, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 24 }}>🎉</span> Offres Spéciales
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {specialPromos.map(service => {
+                    const promoPrice = Math.round(service.prix - (service.prix * service.promo_pourcentage! / 100))
+                    return (
+                      <div key={service.id} className="service-card" style={{ background: '#FFF8F8', border: '2px solid #ffcccb', borderRadius: 8, position: 'relative', overflow: 'hidden', padding: 20, boxShadow: '0 4px 15px rgba(211, 47, 47, 0.05)' }}>
+                        <div style={{ position: 'absolute', top: 0, right: 0, background: '#d32f2f', color: '#fff', fontSize: 12, fontWeight: 900, padding: '6px 16px', borderRadius: '0 0 0 8px', letterSpacing: 0.5 }}>
+                          {service.promo_nom} : -{service.promo_pourcentage}%
+                        </div>
+                        <div style={{ paddingRight: 120 }}>
+                          <div style={{ fontWeight: 900, fontSize: 18, color: NOIR, marginBottom: 6 }}>{service.nom}</div>
+                          <div style={{ color: '#888', fontSize: 13, marginBottom: 8 }}>{'⏱'} {service.duree} min</div>
+                          {service.promo_fin && (
+                            <div style={{ display: 'inline-block', background: '#ffeded', color: '#d32f2f', fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 4 }}>
+                              ⏳ Expire le {new Date(service.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, flexWrap: 'wrap', gap: 12 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ textDecoration: 'line-through', color: '#aaa', fontSize: 15, fontWeight: 600 }}>{service.prix.toLocaleString()} DA</span>
+                            <span style={{ fontWeight: 900, fontSize: 24, color: '#d32f2f' }}>{promoPrice.toLocaleString()} DA</span>
+                          </div>
+                          <Link href={`/booking?salon=${salon.id}&service=${service.id}`} style={{ background: '#d32f2f', color: '#fff', padding: '12px 28px', borderRadius: 6, fontWeight: 800, fontSize: 14, whiteSpace: 'nowrap', textDecoration: 'none', transition: 'transform 0.2s' }}>
+                            Réserver l'offre
+                          </Link>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             
-            {/* PRESTATIONS */}
+            {/* PRESTATIONS CLASSIQUES */}
             {Object.entries(servicesParCategorie).map(([categorie, items]) => (
               <div key={categorie} style={{ marginBottom: 30 }}>
                 <h3 style={{ fontSize: 12, fontWeight: 800, color: OR, textTransform: 'uppercase', letterSpacing: 2, borderBottom: '1px solid #E0D8CE', paddingBottom: 8, marginBottom: 14 }}>{categorie}</h3>
@@ -259,11 +304,6 @@ export default function SalonPage() {
                               <div>
                                 <span style={{ textDecoration: 'line-through', color: '#999', fontSize: 13 }}>{service.prix.toLocaleString()} DA</span>
                                 <div style={{ fontWeight: 900, fontSize: 18, color: '#d32f2f' }}>{promoPrice.toLocaleString()} DA</div>
-                                {service.promo_debut && service.promo_fin && (
-                                  <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>
-                                    Du {new Date(service.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} au {new Date(service.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                                  </div>
-                                )}
                               </div>
                             ) : (
                               <div style={{ fontWeight: 800, fontSize: 17, color: NOIR }}>{service.prix > 0 ? service.prix.toLocaleString() + ' DA' : 'Sur devis'}</div>
@@ -280,7 +320,7 @@ export default function SalonPage() {
           </div>
         )}
 
-        {/* TAB INFORMATIONS */}
+        {/* ════ TAB INFORMATIONS ════ */}
         {activeTab === 'informations' && (
           <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: '20px' }}>
             <h3 style={{ fontSize: 17, fontWeight: 800, color: NOIR, marginBottom: 16 }}>A propos</h3>
@@ -297,7 +337,7 @@ export default function SalonPage() {
           </div>
         )}
 
-        {/* TAB AVIS */}
+        {/* ════ TAB AVIS ════ */}
         {activeTab === 'avis' && (
           <div>
             {canReview ? (
@@ -351,22 +391,24 @@ export default function SalonPage() {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {avisList.map(avis => (
-                  <div key={avis.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: '16px', marginBottom: 12 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
-                      <span style={{ fontWeight: 800, color: NOIR, fontSize: 14 }}>{avis.users ? `${avis.users.prenom} ${avis.users.nom}` : 'Client Bookme'}</span>
-                      <span style={{ color: OR, fontWeight: 800, fontSize: 13 }}>{'⭐'.repeat(avis.note)}</span>
+                <div>
+                  {avisList.map(avis => (
+                    <div key={avis.id} style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 8, padding: '16px', marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
+                        <span style={{ fontWeight: 800, color: NOIR, fontSize: 14 }}>{avis.users ? `${avis.users.prenom} ${avis.users.nom}` : 'Client Bookme'}</span>
+                        <span style={{ color: OR, fontWeight: 800, fontSize: 13 }}>{'⭐'.repeat(avis.note)}</span>
+                      </div>
+                      <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{avis.commentaire}</p>
                     </div>
-                    <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.5 }}>{avis.commentaire}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* STYLES RESPONSIVE */}
+      {/* ══ STYLES RESPONSIVE ══ */}
       <style dangerouslySetInnerHTML={{__html: `
         .salon-hero { height: 350px; }
         .salon-hero-title { font-size: 42px; }
