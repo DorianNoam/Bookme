@@ -7,13 +7,23 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 export async function POST(req: NextRequest) {
   try {
-    const { prenom, nom, email, password, telephone } = await req.json()
+    const {
+      prenom, nom, email, password, telephone,
+      salon_nom, type_salon, ville, adresse, instagram
+    } = await req.json()
 
     if (!prenom || !nom || !email || !password || !telephone) {
-      return NextResponse.json({ success: false, error: 'Tous les champs sont requis.' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Tous les champs personnels sont requis.' }, { status: 400 })
     }
 
-    // 1. Vérifier si l'email existe déjà
+    if (!salon_nom || !ville) {
+      return NextResponse.json({ success: false, error: 'Le nom du salon et la ville sont requis.' }, { status: 400 })
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json({ success: false, error: 'Le mot de passe doit contenir au moins 6 caracteres.' }, { status: 400 })
+    }
+
     const { data: existingPro } = await supabase
       .from('pros')
       .select('id')
@@ -21,37 +31,54 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (existingPro) {
-      return NextResponse.json({ success: false, error: 'Cet email est déjà utilisé.' }, { status: 400 })
+      return NextResponse.json({ success: false, error: 'Cet email est deja utilise.' }, { status: 400 })
     }
 
-    // 2. Hacher le mot de passe avec bcryptjs
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // 3. Insérer le nouveau professionnel (a_paye: 1 pour contourner temporairement un système de paiement)
-    const { data: newPro, error } = await supabase
+    const { data: newPro, error: proError } = await supabase
       .from('pros')
-      .insert([{ 
-        prenom, 
-        nom, 
-        email, 
-        password: hashedPassword, 
-        telephone, 
-        a_paye: 1 
+      .insert([{
+        prenom,
+        nom,
+        email,
+        password: hashedPassword,
+        telephone,
+        a_paye: 1
       }])
       .select()
       .single()
 
-    if (error || !newPro) {
-      return NextResponse.json({ success: false, error: 'Erreur lors de la création du compte.' }, { status: 500 })
+    if (proError || !newPro) {
+      return NextResponse.json({ success: false, error: 'Erreur lors de la creation du compte.' }, { status: 500 })
     }
 
-    // 4. Créer le token JWT
+    const { error: salonError } = await supabase
+      .from('salons')
+      .insert([{
+        pro_id: newPro.id,
+        nom: salon_nom,
+        type_salon: type_salon || 'Coiffure',
+        ville,
+        adresse: adresse || '',
+        telephone,
+        instagram: instagram || '',
+        description: '',
+        image: '',
+        ouverture: '09:00',
+        fermeture: '19:00',
+        jour_off: 5
+      }])
+
+    if (salonError) {
+      console.error('Erreur creation salon:', salonError.message)
+    }
+
     const token = await new SignJWT({ id: newPro.id, role: 'pro' })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('7d')
       .sign(new TextEncoder().encode(process.env.JWT_SECRET!))
 
-    // 5. Connecter l'utilisateur via cookie
     const response = NextResponse.json({ success: true })
     response.cookies.set({
       name: 'bookme_pro_token',
@@ -60,6 +87,7 @@ export async function POST(req: NextRequest) {
       path: '/',
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7,
+      sameSite: 'lax'
     })
 
     return response
