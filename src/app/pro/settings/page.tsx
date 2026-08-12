@@ -28,7 +28,7 @@ const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'S
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
 
 type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean; promo_debut: string | null; promo_fin: string | null }
-type Employe = { id: number; nom: string }
+type Employe = { id: number; nom: string; email: string | null; acces_agenda: boolean }
 type VentePrivee = { id: number; nom: string; prix: number; duree: number; description: string }
 type Salon = {
   id: number; nom: string; adresse: string; ville: string; telephone: string;
@@ -100,7 +100,6 @@ export default function ProSettingsPage() {
         }
       `}} />
 
-      {/* HEADER */}
       <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
         <div className="pro-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
@@ -389,10 +388,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                     <div>
                       <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, marginBottom: 10, display: 'block' }}>{s.nom}</span>
                       <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <input type="number" value={editPrix} onChange={(e) => setEditPrix(e.target.value)} style={{ ...inputStyle, textAlign: 'right' }} />
-                          <span style={{ fontSize: 13, color: '#888' }}>DA</span>
-                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="number" value={editPrix} onChange={(e) => setEditPrix(e.target.value)} style={{ ...inputStyle, textAlign: 'right' }} /><span style={{ fontSize: 13, color: '#888' }}>DA</span></div>
                         <select value={editDuree} onChange={(e) => setEditDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option></select>
                         <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
                           <button onClick={() => handleSaveEdit(s)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button>
@@ -415,9 +411,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                                 <div style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</div>
                                 <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block', marginTop: 2 }}>-{s.promo_pourcentage}%</span>
                                 {s.promo_debut && s.promo_fin && (
-                                  <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>
-                                    {new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                                  </div>
+                                  <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>{new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
                                 )}
                               </div>
                             ) : (
@@ -431,7 +425,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Supprimer</button>
                         </div>
                       </div>
-
                       {promoId === s.id && (
                         <div style={{ marginTop: 15, padding: '14px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Mettre en promotion :</span>
@@ -441,9 +434,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                             <span style={{ fontSize: 13, fontWeight: 700 }}>% de reduction</span>
                           </div>
                           {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (
-                            <span style={{ fontSize: 13, color: '#666' }}>
-                              Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong>
-                            </span>
+                            <span style={{ fontSize: 13, color: '#666' }}>Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong></span>
                           )}
                           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%' }}>
                             <div style={{ flex: '1 1 140px' }}>
@@ -457,9 +448,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           </div>
                           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                             <button onClick={() => handlePromoSave(s)} disabled={savingPromo} style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingPromo ? '...' : 'Activer'}</button>
-                            {s.promo_active && (
-                              <button onClick={() => handlePromoRemove(s)} disabled={savingPromo} style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>Retirer</button>
-                            )}
+                            {s.promo_active && (<button onClick={() => handlePromoRemove(s)} disabled={savingPromo} style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>Retirer</button>)}
                             <button onClick={() => setPromoId(null)} style={{ background: '#eee', color: '#666', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Fermer</button>
                           </div>
                         </div>
@@ -477,12 +466,21 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Employes
+// COMPOSANT : Employes (avec gestion acces agenda)
 // ═══════════════════════════════════════════════════════════════════
 
 function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd: (e: Employe) => void; onDelete: (id: number) => void }) {
   const [nom, setNom] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [accessFormId, setAccessFormId] = useState<number | null>(null)
+  const [accessEmail, setAccessEmail] = useState('')
+  const [accessPassword, setAccessPassword] = useState('')
+  const [accessSaving, setAccessSaving] = useState(false)
+  const [accessError, setAccessError] = useState('')
+  const [accessSuccess, setAccessSuccess] = useState('')
+  const [localEmployes, setLocalEmployes] = useState(employes)
+
+  useEffect(() => { setLocalEmployes(employes) }, [employes])
 
   async function handleAdd() {
     if (!nom.trim()) return
@@ -504,24 +502,94 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
     } catch (e) {}
   }
 
+  function openAccessForm(emp: Employe) {
+    setAccessFormId(emp.id); setAccessEmail(emp.email || ''); setAccessPassword(''); setAccessError(''); setAccessSuccess('')
+  }
+
+  async function handleEnableAccess(empId: number) {
+    if (!accessEmail || !accessPassword) { setAccessError('Email et mot de passe requis.'); return }
+    if (accessPassword.length < 6) { setAccessError('Mot de passe : 6 caracteres minimum.'); return }
+    setAccessSaving(true); setAccessError('')
+    try {
+      const res = await fetch('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'enable_access', employe_id: empId, email: accessEmail, password: accessPassword }) })
+      const data = await res.json()
+      if (data.success) {
+        setLocalEmployes(prev => prev.map(e => e.id === empId ? { ...e, email: accessEmail, acces_agenda: true } : e))
+        setAccessSuccess('Acces active ! Le collaborateur peut maintenant se connecter.')
+        setTimeout(() => { setAccessFormId(null); setAccessSuccess('') }, 2000)
+      } else { setAccessError(data.error || 'Erreur.') }
+    } catch { setAccessError('Erreur reseau.') }
+    setAccessSaving(false)
+  }
+
+  async function handleDisableAccess(empId: number) {
+    if (!confirm('Retirer l\'acces agenda de ce collaborateur ?')) return
+    setAccessSaving(true)
+    try {
+      const res = await fetch('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'disable_access', employe_id: empId }) })
+      const data = await res.json()
+      if (data.success) { setLocalEmployes(prev => prev.map(e => e.id === empId ? { ...e, email: null, acces_agenda: false } : e)) }
+    } catch {}
+    setAccessSaving(false)
+  }
+
   return (
     <div>
-      <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Votre equipe</h3>
-      <div style={{ display: 'flex', gap: 10, marginBottom: 25 }}>
-        <input type="text" placeholder="Nom du collaborateur" value={nom} onChange={(e) => setNom(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdd()} style={{ ...inputStyle, flex: 1 }} />
-        <button onClick={handleAdd} disabled={submitting || !nom.trim()} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom.trim() ? 0.5 : 1, whiteSpace: 'nowrap' }}>{submitting ? '...' : '+ Ajouter'}</button>
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 8 }}>Votre equipe</h3>
+      <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Gerez vos collaborateurs et donnez-leur acces a l'agenda pour gerer les RDV.</p>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 25, flexWrap: 'wrap' }}>
+        <input type="text" placeholder="Nom du collaborateur" value={nom} onChange={(e) => setNom(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdd()} style={{ ...inputStyle, flex: '1 1 200px' }} />
+        <button onClick={handleAdd} disabled={submitting || !nom.trim()} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom.trim() ? 0.5 : 1, whiteSpace: 'nowrap', flexShrink: 0 }}>{submitting ? '...' : '+ Ajouter'}</button>
       </div>
-      {employes.length === 0 ? (
-        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888' }}>Aucun collaborateur.</div>
+
+      {localEmployes.length === 0 ? (
+        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888', fontSize: 14 }}>Aucun collaborateur. Ajoutez votre equipe pour assigner les rendez-vous.</div>
       ) : (
         <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-          {employes.map((emp, i) => (
-            <div key={emp.id} className="responsive-row" style={{ padding: '16px 20px', borderBottom: i < employes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: NOIR, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14 }}>{emp.nom.charAt(0).toUpperCase()}</div>
-                <span style={{ fontWeight: 700, color: NOIR, fontSize: 15 }}>{emp.nom}</span>
+          {localEmployes.map((emp, i) => (
+            <div key={emp.id} style={{ borderBottom: i < localEmployes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: NOIR, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{emp.nom.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block' }}>{emp.nom}</span>
+                    {emp.acces_agenda && emp.email && (<span style={{ fontSize: 12, color: '#888' }}>{emp.email}</span>)}
+                  </div>
+                  {emp.acces_agenda && (<span style={{ background: '#d4edda', color: '#155724', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 3, textTransform: 'uppercase' }}>Acces agenda</span>)}
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  {emp.acces_agenda ? (
+                    <button onClick={() => handleDisableAccess(emp.id)} disabled={accessSaving} style={{ background: '#fff0f0', border: '1px solid #ffcccb', color: '#d32f2f', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Retirer acces</button>
+                  ) : (
+                    <button onClick={() => openAccessForm(emp)} style={{ background: 'transparent', border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Donner acces</button>
+                  )}
+                  <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
+                </div>
               </div>
-              <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
+
+              {accessFormId === emp.id && !emp.acces_agenda && (
+                <div style={{ padding: '16px 20px', background: '#FAFAF5', borderTop: `1px dashed ${OR}` }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: NOIR, marginBottom: 12 }}>Creer un acces agenda pour {emp.nom}</div>
+                  <p style={{ fontSize: 12, color: '#888', marginBottom: 14, lineHeight: 1.5 }}>Le collaborateur pourra se connecter sur la page Pro pour voir et gerer l'agenda, annuler ou modifier des RDV. Il ne pourra pas modifier les tarifs, promos ni les parametres du salon.</p>
+                  {accessError && (<div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#b91c1c' }}>{accessError}</div>)}
+                  {accessSuccess && (<div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#166534' }}>{accessSuccess}</div>)}
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Email du collaborateur</label>
+                      <input type="email" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder="collaborateur@email.dz" style={{ ...inputStyle, fontSize: 14 }} />
+                    </div>
+                    <div style={{ flex: '1 1 200px' }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Mot de passe</label>
+                      <input type="text" value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Min. 6 caracteres" style={{ ...inputStyle, fontSize: 14 }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleEnableAccess(emp.id)} disabled={accessSaving || !accessEmail || !accessPassword} style={{ background: OR, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: accessSaving || !accessEmail || !accessPassword ? 0.5 : 1 }}>{accessSaving ? 'Activation...' : "Activer l'acces"}</button>
+                    <button onClick={() => { setAccessFormId(null); setAccessError('') }} style={{ background: '#eee', color: '#666', border: 'none', padding: '10px 16px', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Annuler</button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
