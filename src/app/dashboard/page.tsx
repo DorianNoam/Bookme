@@ -24,6 +24,7 @@ export default function DashboardPage() {
   
   const [activeTab, setActiveTab] = useState('rdv')
   const [loading, setLoading] = useState(true)
+  const [cancelingId, setCancelingId] = useState<number | null>(null) // État pour gérer le chargement lors de l'annulation
   
   const [user, setUser] = useState<User | null>(null)
   const [reservations, setReservations] = useState<Reservation[]>([])
@@ -52,6 +53,31 @@ export default function DashboardPage() {
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
+  }
+
+  // Fonction pour annuler la réservation
+  async function handleCancel(id: number) {
+    if (!confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?')) return
+    
+    setCancelingId(id)
+    try {
+      const res = await fetch('/api/reservations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, action: 'cancel' })
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        // Met à jour l'état local : la réservation passe au statut 'annule', elle glissera automatiquement dans l'onglet "Passés"
+        setReservations(prev => prev.map(r => r.id === id ? { ...r, statut: 'annule' } : r))
+      } else {
+        alert(data.error || 'Erreur lors de l\'annulation')
+      }
+    } catch (e) {
+      alert('Erreur réseau lors de l\'annulation')
+    }
+    setCancelingId(null)
   }
 
   function formatDate(d: string) {
@@ -301,18 +327,39 @@ export default function DashboardPage() {
                         }}>
                           {formatDate(rdv.date_rdv)}
                         </div>
-                        <div style={{
-                          display: 'inline-block',
-                          marginTop: 8,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          padding: '3px 10px',
-                          borderRadius: 20,
-                          background: '#f0fdf4',
-                          color: '#166534',
-                          textTransform: 'uppercase'
-                        }}>
-                          {rdv.statut}
+
+                        {/* Conteneur avec statut et bouton d'annulation */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+                          <div style={{
+                            display: 'inline-block',
+                            fontSize: 11,
+                            fontWeight: 700,
+                            padding: '4px 12px',
+                            borderRadius: 20,
+                            background: '#f0fdf4',
+                            color: '#166534',
+                            textTransform: 'uppercase'
+                          }}>
+                            {rdv.statut}
+                          </div>
+                          
+                          <button 
+                            onClick={() => handleCancel(rdv.id)}
+                            disabled={cancelingId === rdv.id}
+                            style={{
+                              background: 'transparent',
+                              border: '1px solid #ffcccb',
+                              color: '#d32f2f',
+                              padding: '6px 12px',
+                              borderRadius: 4,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              cursor: cancelingId === rdv.id ? 'not-allowed' : 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {cancelingId === rdv.id ? 'Annulation...' : 'Annuler'}
+                          </button>
                         </div>
                       </div>
                     </div>
