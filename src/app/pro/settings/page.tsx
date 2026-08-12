@@ -27,7 +27,7 @@ const DEFAULT_IMAGES: Record<string, string> = {
 const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
 
-type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean; promo_debut: string | null; promo_fin: string | null; promo_nom: string | null }
+type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean; promo_debut: string | null; promo_fin: string | null }
 type Employe = { id: number; nom: string; email: string | null; acces_agenda: boolean }
 type VentePrivee = { id: number; nom: string; prix: number; duree: number; description: string }
 type Salon = {
@@ -46,22 +46,14 @@ export default function ProSettingsPage() {
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [proEmail, setProEmail] = useState('')
 
-  // Charger les donnees & verifier l'acces employe
   useEffect(() => {
-    fetch('/api/pro/auth/me')
-      .then(r => r.json())
-      .then(data => {
-        if (data.role === 'employe') {
-          window.location.href = '/pro/agenda'
-          return
-        }
-      })
-
     fetch('/api/pro/settings')
       .then(r => r.json())
       .then(data => {
         setSalon(data.salon)
+        setProEmail(data.pro_email || '')
         setServices(data.services || [])
         setVentesPrivees(data.ventes_privees || [])
         setEmployes(data.employes || [])
@@ -116,7 +108,7 @@ export default function ProSettingsPage() {
             Bookme<span style={{ color: OR }}>.dz</span>
             <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
           </div>
-          <nav className="pro-header-nav hide-scrollbar" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+          <nav className="pro-header-nav" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
             <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
             <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Agenda</Link>
             <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Parametres</Link>
@@ -151,7 +143,7 @@ export default function ProSettingsPage() {
         {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
         {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
         {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
-        {tab === 'salon' && salon && <SalonTab salon={salon} onUpdate={(s) => { setSalon(s); showMessage('Salon mis a jour') }} />}
+        {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} />}
       </main>
     </div>
   )
@@ -294,7 +286,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   const [savingEdit, setSavingEdit] = useState(false)
   const [promoId, setPromoId] = useState<number | null>(null)
   const [promoPct, setPromoPct] = useState('')
-  const [promoNom, setPromoNom] = useState('')
   const [savingPromo, setSavingPromo] = useState(false)
   const [promoDebut, setPromoDebut] = useState('')
   const [promoFin, setPromoFin] = useState('')
@@ -310,9 +301,9 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
     if (isNaN(pct) || pct < 1 || pct > 99) return
     setSavingPromo(true)
     try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null, promo_nom: promoNom || null }) })
+      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null }) })
       const data = await res.json()
-      if (data.success) { onUpdate({ ...s, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null, promo_nom: promoNom || null }); setPromoId(null) }
+      if (data.success) { onUpdate({ ...s, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null }); setPromoId(null) }
     } catch (e) {}
     setSavingPromo(false)
   }
@@ -320,9 +311,9 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   async function handlePromoRemove(s: Service) {
     setSavingPromo(true)
     try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: null, promo_active: false, promo_debut: null, promo_fin: null, promo_nom: null }) })
+      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: null, promo_active: false, promo_debut: null, promo_fin: null }) })
       const data = await res.json()
-      if (data.success) { onUpdate({ ...s, promo_pourcentage: null, promo_active: false, promo_debut: null, promo_fin: null, promo_nom: null }); setPromoId(null) }
+      if (data.success) { onUpdate({ ...s, promo_pourcentage: null, promo_active: false, promo_debut: null, promo_fin: null }); setPromoId(null) }
     } catch (e) {}
     setSavingPromo(false)
   }
@@ -421,9 +412,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                                 <span style={{ fontSize: 12, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
                                 <div style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</div>
                                 <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block', marginTop: 2 }}>-{s.promo_pourcentage}%</span>
-                                {s.promo_nom && (
-                                  <div style={{ fontSize: 11, fontWeight: 800, color: OR, marginTop: 4 }}>✨ {s.promo_nom}</div>
-                                )}
                                 {s.promo_debut && s.promo_fin && (
                                   <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>{new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
                                 )}
@@ -433,44 +421,23 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                             )}
                           </div>
                         </div>
-
                         <div className="responsive-actions">
-                          <button onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); setPromoDebut(s.promo_debut || ''); setPromoFin(s.promo_fin || ''); setPromoNom(s.promo_nom || '') }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>{s.promo_active ? '% Promo' : '+ Promo'}</button>
+                          <button onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); setPromoDebut(s.promo_debut || ''); setPromoFin(s.promo_fin || '') }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>{s.promo_active ? '% Promo' : '+ Promo'}</button>
                           <button onClick={() => startEdit(s)} style={{ background: 'transparent', border: '1px solid #ddd', color: '#444', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Modifier</button>
                           <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Supprimer</button>
                         </div>
                       </div>
-
                       {promoId === s.id && (
                         <div style={{ marginTop: 15, padding: '14px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Mettre en promotion :</span>
-                          
-                          <div>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Événement</label>
-                            {/* MENU DÉROULANT POUR LES PROMOS */}
-                            <select value={promoNom} onChange={e => setPromoNom(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box', background: '#fff' }}>
-                              <option value="">Sélectionner un événement (Optionnel)</option>
-                              <option value="Spécial Aïd El Fitr">Spécial Aïd El Fitr</option>
-                              <option value="Spécial Aïd El Adha">Spécial Aïd El Adha</option>
-                              <option value="Promo Ramadan">Promo Ramadan</option>
-                              <option value="Spécial 8 Mars">Spécial 8 Mars (Journée de la Femme)</option>
-                              <option value="Promo Fin d'année">Promo Fin d'année</option>
-                              <option value="Promo Rentrée">Promo Rentrée</option>
-                              <option value="Black Friday">Black Friday</option>
-                              <option value="Offre Flash">Offre Flash</option>
-                            </select>
-                          </div>
-
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 13, color: '#888' }}>-</span>
                             <input type="number" value={promoPct} onChange={(e) => setPromoPct(e.target.value)} placeholder="20" min="1" max="99" style={{ width: 80, padding: '8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }} />
                             <span style={{ fontSize: 13, fontWeight: 700 }}>% de reduction</span>
                           </div>
-                          
                           {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (
                             <span style={{ fontSize: 13, color: '#666' }}>Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong></span>
                           )}
-                          
                           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%' }}>
                             <div style={{ flex: '1 1 140px' }}>
                               <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Debut de la promo</label>
@@ -481,7 +448,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                               <input type="date" value={promoFin} onChange={e => setPromoFin(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
                             </div>
                           </div>
-                          
                           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                             <button onClick={() => handlePromoSave(s)} disabled={savingPromo} style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingPromo ? '...' : 'Activer'}</button>
                             {s.promo_active && (<button onClick={() => handlePromoRemove(s)} disabled={savingPromo} style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>Retirer</button>)}
@@ -530,7 +496,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Supprimer cet employe ? Les reservations existantes ne seront pas affectees.')) return
+    if (!confirm('Supprimer cet employe ?')) return
     try {
       const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_employe', id }) })
       const data = await res.json()
@@ -584,26 +550,28 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
       ) : (
         <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
           {localEmployes.map((emp, i) => (
-            <div key={emp.id} className="responsive-row" style={{ padding: '16px 20px', borderBottom: i < employes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 36, height: 36, borderRadius: '50%', background: NOIR, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{emp.nom.charAt(0).toUpperCase()}</div>
-                <div>
-                  <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block' }}>{emp.nom}</span>
-                  {emp.acces_agenda && emp.email && (<span style={{ fontSize: 12, color: '#888' }}>{emp.email}</span>)}
+            <div key={emp.id} style={{ borderBottom: i < localEmployes.length - 1 ? '1px solid #f0f0f0' : 'none' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: NOIR, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{emp.nom.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block' }}>{emp.nom}</span>
+                    {emp.acces_agenda && emp.email && (<span style={{ fontSize: 12, color: '#888' }}>{emp.email}</span>)}
+                  </div>
+                  {emp.acces_agenda && (<span style={{ background: '#d4edda', color: '#155724', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 3, textTransform: 'uppercase' }}>Acces agenda</span>)}
                 </div>
-                {emp.acces_agenda && (<span style={{ background: '#d4edda', color: '#155724', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 3, textTransform: 'uppercase' }}>Acces agenda</span>)}
-              </div>
-              <div style={{ display: 'flex', gap: 6, flexShrink: 0, flexWrap: 'wrap' }}>
-                {emp.acces_agenda ? (
-                  <button onClick={() => handleDisableAccess(emp.id)} disabled={accessSaving} style={{ background: '#fff0f0', border: '1px solid #ffcccb', color: '#d32f2f', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Retirer acces</button>
-                ) : (
-                  <button onClick={() => openAccessForm(emp)} style={{ background: 'transparent', border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Donner acces</button>
-                )}
-                <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  {emp.acces_agenda ? (
+                    <button onClick={() => handleDisableAccess(emp.id)} disabled={accessSaving} style={{ background: '#fff0f0', border: '1px solid #ffcccb', color: '#d32f2f', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Retirer acces</button>
+                  ) : (
+                    <button onClick={() => openAccessForm(emp)} style={{ background: 'transparent', border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Donner acces</button>
+                  )}
+                  <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
+                </div>
               </div>
 
               {accessFormId === emp.id && !emp.acces_agenda && (
-                <div style={{ width: '100%', padding: '16px 20px', background: '#FAFAF5', borderTop: `1px dashed ${OR}`, marginTop: 12 }}>
+                <div style={{ padding: '16px 20px', background: '#FAFAF5', borderTop: `1px dashed ${OR}` }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: NOIR, marginBottom: 12 }}>Creer un acces agenda pour {emp.nom}</div>
                   <p style={{ fontSize: 12, color: '#888', marginBottom: 14, lineHeight: 1.5 }}>Le collaborateur pourra se connecter sur la page Pro pour voir et gerer l'agenda, annuler ou modifier des RDV. Il ne pourra pas modifier les tarifs, promos ni les parametres du salon.</p>
                   {accessError && (<div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#b91c1c' }}>{accessError}</div>)}
@@ -636,8 +604,9 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 // COMPOSANT : Infos salon
 // ═══════════════════════════════════════════════════════════════════
 
-function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => void }) {
+function SalonTab({ salon, proEmail, onUpdate }: { salon: Salon; proEmail: string; onUpdate: (s: Salon, email?: string) => void }) {
   const [form, setForm] = useState({ ...salon })
+  const [emailValue, setEmailValue] = useState(proEmail)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadMsg, setUploadMsg] = useState('')
@@ -683,9 +652,9 @@ function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => v
   async function handleSave() {
     setSaving(true)
     try {
-      const res = await fetch('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const res = await fetch('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, pro_email: emailValue }) })
       const data = await res.json()
-      if (data.success) onUpdate(form)
+      if (data.success) onUpdate(form, emailValue)
     } catch (e) {}
     setSaving(false)
   }
@@ -719,6 +688,11 @@ function SalonTab({ salon, onUpdate }: { salon: Salon; onUpdate: (s: Salon) => v
           <div><label style={labelStyle}>Heure ouverture</label><input name="ouverture" type="time" value={form.ouverture} onChange={handleChange} style={inputStyle} /></div>
           <div><label style={labelStyle}>Heure fermeture</label><input name="fermeture" type="time" value={form.fermeture} onChange={handleChange} style={inputStyle} /></div>
           <div><label style={labelStyle}>Seuil de fidelite (RDV requis)</label><select name="seuil_fidelite" value={form.seuil_fidelite || 4} onChange={handleChange} style={inputStyle}><option value={5}>5 rendez-vous</option><option value={10}>10 rendez-vous</option><option value={15}>15 rendez-vous</option><option value={20}>20 rendez-vous</option></select></div>
+          <div style={{ gridColumn: '1 / -1', background: '#FAFAF5', padding: 16, borderRadius: 6, border: `1px dashed ${OR}` }}>
+            <label style={{ ...labelStyle, color: OR }}>Email du compte pro (pour recevoir les notifications)</label>
+            <input type="email" value={emailValue} onChange={e => setEmailValue(e.target.value)} placeholder="contact@votre-salon.dz" style={inputStyle} />
+            <p style={{ fontSize: 11, color: '#888', marginTop: 6, margin: 0 }}>C'est sur cette adresse que vous recevrez les confirmations de RDV.</p>
+          </div>
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description</label><textarea name="description" value={form.description || ''} onChange={handleChange} rows={4} style={{ ...inputStyle, resize: 'vertical' }} /></div>
         </div>
         <div style={{ marginTop: 25, display: 'flex', justifyContent: 'flex-end' }}>
