@@ -38,5 +38,9 @@
     "@types/nodemailer": "^6.4.14",
     "eslint": "^8",
     "eslint-config-next": "14.2.29"
+  },
+  "overrides": {
+    "react": "$react",
+    "react-dom": "$react-dom"
   }
 }
