@@ -11,7 +11,8 @@ const BG = '#F8F5F0'
 type Salon = { 
   id: number; nom: string; adresse: string; ville: string; image: string; 
   type_salon: string; telephone: string; description: string; 
-  ouverture: string; fermeture: string; jour_off: number 
+  ouverture: string; fermeture: string; jour_off: number;
+  instagram: string | null
 }
 
 type Service = { 
@@ -158,18 +159,16 @@ export default function SalonPage() {
               {salon.jour_off !== undefined && salon.jour_off !== null && salon.jour_off > 0 && salon.jour_off <= 7 && (
                 <span style={{ color: '#ffaaaa' }}>Ferme le {jours[salon.jour_off === 7 ? 0 : salon.jour_off]}</span>
               )}
-
-{salon.instagram && (
-  
-    href={`https://instagram.com/${salon.instagram}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#fff', fontSize: 13, textDecoration: 'none' }}
-  >
-    {'📸'} @{salon.instagram}
-  </a>
-)}
-              
+              {salon.instagram && (
+                <a
+                  href={`https://instagram.com/${salon.instagram}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#fff', fontSize: 13, textDecoration: 'none' }}
+                >
+                  {'📸'} @{salon.instagram}
+                </a>
+              )}
               <a 
                 href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${salon.adresse}, ${salon.ville}, Algerie`)}`}
                 target="_blank" 
@@ -204,7 +203,7 @@ export default function SalonPage() {
           ))}
         </div>
 
-        {/* ════ TAB PRESTATIONS ════ */}
+        {/* TAB PRESTATIONS */}
         {activeTab === 'prestations' && (
           <div>
             <p style={{ color: '#666', fontSize: 14, lineHeight: 1.6, marginBottom: 30 }}>{salon.description}</p>
@@ -281,7 +280,7 @@ export default function SalonPage() {
           </div>
         )}
 
-        {/* ════ TAB INFORMATIONS ════ */}
+        {/* TAB INFORMATIONS */}
         {activeTab === 'informations' && (
           <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: '20px' }}>
             <h3 style={{ fontSize: 17, fontWeight: 800, color: NOIR, marginBottom: 16 }}>A propos</h3>
@@ -298,7 +297,7 @@ export default function SalonPage() {
           </div>
         )}
 
-        {/* ════ TAB AVIS ════ */}
+        {/* TAB AVIS */}
         {activeTab === 'avis' && (
           <div>
             {canReview ? (
