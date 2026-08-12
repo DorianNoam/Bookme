@@ -44,7 +44,16 @@ export default async function ProAgendaPage({
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
     const { payload } = await jwtVerify(token, secret)
-    proId = payload.id as number
+    const role = payload.role as string || 'pro'
+  
+  if (role === 'employe') {
+    // Employe : utiliser le salon_id du token directement
+    const salonIdFromToken = payload.salon_id as number
+    if (!salonIdFromToken) redirect('/pro/login')
+    // On continue avec ce salon_id (voir ci-dessous)
+  }
+  
+  proId = payload.id as number
   } catch {
     redirect('/pro/login')
   }
