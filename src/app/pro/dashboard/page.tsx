@@ -24,6 +24,7 @@ export default async function ProDashboardPage() {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
     const { payload } = await jwtVerify(token, secret)
     proId = payload.id as number
+    if (payload.role === 'employe') redirect('/pro/agenda')
   } catch {
     redirect('/pro/login')
   }
