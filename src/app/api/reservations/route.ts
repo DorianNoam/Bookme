@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 import { jwtVerify } from 'jose'
-import { Resend } from 'resend'
-import BookingConfirmation from '@/emails/BookingConfirmation'
+import { sendBookingConfirmation, sendProNotification } from '@/lib/email'
 
-// Initialisation de Resend
-const resend = new Resend(process.env.RESEND_API_KEY)
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +14,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Donnees manquantes' }, { status: 400 })
     }
 
-    // Récupérer le user_id si le client est connecté
     let user_id: number | null = null
     const token = req.cookies.get('bookme_token')?.value
     if (token) {
@@ -27,32 +24,33 @@ export async function POST(req: NextRequest) {
       } catch {}
     }
 
-    const supabase = createAdminClient()
-
-    // 1. Récupérer le service AVEC les infos de promotion et le salon
+    // 1. Recuperer le service, le salon ET l'email du pro
     const [{ data: service }, { data: salon }] = await Promise.all([
-      supabase.from('services').select('nom, prix, promo_active, promo_pourcentage, promo_nom').eq('id', service_id).single(),
-      supabase.from('salons').select('nom').eq('id', salon_id).single()
+      supabase.from('services').select('nom, prix, promo_active, promo_pourcentage').eq('id', service_id).single(),
+      supabase.from('salons').select('nom, pro_id').eq('id', salon_id).single()
     ])
 
     if (!service) {
       return NextResponse.json({ error: 'Service introuvable' }, { status: 404 })
     }
 
-    // 2. Calculer le prix final et le nom final à enregistrer
+    // Recuperer l'email du pro
+    let proEmail: string | null = null
+    if (salon?.pro_id) {
+      const { data: pro } = await supabase.from('pros').select('email').eq('id', salon.pro_id).single()
+      proEmail = pro?.email || null
+    }
+
+    // 2. Calculer le prix final
     let finalPrice = service.prix
     let finalName = service.nom
 
     if (service.promo_active && service.promo_pourcentage && service.promo_pourcentage > 0) {
       finalPrice = Math.round(service.prix - (service.prix * service.promo_pourcentage / 100))
-      if (service.promo_nom) {
-        finalName = `${service.nom} (✨ ${service.promo_nom})`
-      } else {
-        finalName = `${service.nom} (PROMO -${service.promo_pourcentage}%)`
-      }
+      finalName = `${service.nom} (PROMO -${service.promo_pourcentage}%)`
     }
 
-    // 3. Créer la réservation dans Supabase
+    // 3. Creer la reservation
     const { data: reservation, error } = await supabase
       .from('reservations')
       .insert({
@@ -74,29 +72,38 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
-    // 4. Envoi de l'email de confirmation via Resend
-    if (client_email) {
-      try {
-        const dateObj = new Date(date_rdv)
-        const dateFormatted = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-        const timeFormatted = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')
+    // 4. Envoyer les emails (sans bloquer la reservation)
+    if (process.env.RESEND_API_KEY) {
+      const dateObj = new Date(date_rdv)
+      const dateFormatted = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      const timeFormatted = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h')
+      const fullClientName = client_prenom ? `${client_prenom} ${client_nom}` : client_nom
 
-        await resend.emails.send({
-          from: 'Bookme.dz <onboarding@resend.dev>', // L'adresse de test Resend
-          to: [client_email], // Attention: en Sandbox, cet email DOIT être celui de ton compte Resend !
-          subject: `Confirmation de votre rendez-vous au ${salon?.nom || 'Salon'}`,
-          react: BookingConfirmation({
-            clientName: client_prenom ? `${client_prenom} ${client_nom}` : client_nom,
-            salonName: salon?.nom || 'votre salon',
-            serviceName: finalName,
-            date: dateFormatted,
-            time: timeFormatted,
-            price: finalPrice,
-          }),
-        })
-      } catch (emailErr) {
-        // En cas d'erreur Resend, on ne bloque pas la réservation pour l'utilisateur
-        console.error("Erreur lors de l'envoi de l'email:", emailErr)
+      // Email au client
+      if (client_email) {
+        sendBookingConfirmation({
+          clientEmail: client_email,
+          clientName: fullClientName,
+          salonName: salon?.nom || 'votre salon',
+          serviceName: finalName,
+          date: dateFormatted,
+          time: timeFormatted,
+          price: finalPrice,
+        }).catch(err => console.error('Email client echoue:', err))
+      }
+
+      // Email au pro
+      if (proEmail) {
+        sendProNotification({
+          proEmail,
+          salonName: salon?.nom || 'votre salon',
+          clientName: fullClientName,
+          clientPhone: client_telephone || '',
+          serviceName: finalName,
+          date: dateFormatted,
+          time: timeFormatted,
+          price: finalPrice,
+        }).catch(err => console.error('Email pro echoue:', err))
       }
     }
 
@@ -113,7 +120,6 @@ export async function GET(req: NextRequest) {
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
     const { payload } = await jwtVerify(token, secret)
-    const supabase = createAdminClient()
 
     const { data, error } = await supabase
       .from('reservations')
@@ -122,7 +128,6 @@ export async function GET(req: NextRequest) {
       .order('date_rdv', { ascending: false })
 
     if (error) throw error
-
     return NextResponse.json({ success: true, reservations: data })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -136,12 +141,11 @@ export async function PATCH(req: NextRequest) {
 
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
     const { payload } = await jwtVerify(token, secret)
-    
+
     const body = await req.json()
     const { id, action } = body
 
     if (action === 'cancel' && id) {
-      const supabase = createAdminClient()
       const { error } = await supabase
         .from('reservations')
         .update({ statut: 'annule' })
@@ -149,7 +153,6 @@ export async function PATCH(req: NextRequest) {
         .eq('user_id', payload.id)
 
       if (error) throw error
-
       return NextResponse.json({ success: true })
     }
 
