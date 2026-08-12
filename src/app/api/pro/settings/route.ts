@@ -135,11 +135,16 @@ export async function POST(req: NextRequest) {
 
   // ── Modifier une promo ──
   if (body.action === 'set_promo') {
-    const { id, promo_pourcentage, promo_active } = body
+    const { id, promo_pourcentage, promo_active, promo_debut, promo_fin } = body
 
     const { error } = await supabase
       .from('services')
-      .update({ promo_pourcentage: promo_pourcentage || null, promo_active: promo_active || false })
+      .update({
+        promo_pourcentage: promo_pourcentage || null,
+        promo_active: promo_active || false,
+        promo_debut: promo_debut || null,
+        promo_fin: promo_fin || null
+      })
       .eq('id', id)
       .eq('salon_id', salonId)
 
