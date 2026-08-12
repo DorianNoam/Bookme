@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   // 2. Récupération des données publiques standards (Services, Employés, Avis)
   const [servicesRes, employesRes, avisRes] = await Promise.all([
-   select('id, nom, prix, duree, categorie_service, salon_id, promo_pourcentage, promo_active, promo_debut, promo_fin')
+  supabase.from('services').select('id, nom, prix, duree, categorie_service, salon_id, promo_pourcentage, promo_active, promo_debut, promo_fin').eq('salon_id', salonId).order('categorie_service'),
     supabase.from('employes').select('*').eq('salon_id', salonId),
     supabase.from('avis').select('*, users(prenom, nom)').eq('salon_id', salonId)
   ])
