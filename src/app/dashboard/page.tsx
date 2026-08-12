@@ -21,11 +21,10 @@ type Reservation = {
 
 export default function DashboardPage() {
   const router = useRouter()
-  
+
   const [activeTab, setActiveTab] = useState('rdv')
   const [loading, setLoading] = useState(true)
-  const [cancelingId, setCancelingId] = useState<number | null>(null) // État pour gérer le chargement lors de l'annulation
-  
+
   const [user, setUser] = useState<User | null>(null)
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [favoris, setFavoris] = useState<SalonInfo[]>([])
@@ -55,31 +54,6 @@ export default function DashboardPage() {
     router.push('/login')
   }
 
-  // Fonction pour annuler la réservation
-  async function handleCancel(id: number) {
-    if (!confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?')) return
-    
-    setCancelingId(id)
-    try {
-      const res = await fetch('/api/reservations', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, action: 'cancel' })
-      })
-      const data = await res.json()
-      
-      if (data.success) {
-        // Met à jour l'état local : la réservation passe au statut 'annule', elle glissera automatiquement dans l'onglet "Passés"
-        setReservations(prev => prev.map(r => r.id === id ? { ...r, statut: 'annule' } : r))
-      } else {
-        alert(data.error || 'Erreur lors de l\'annulation')
-      }
-    } catch (e) {
-      alert('Erreur réseau lors de l\'annulation')
-    }
-    setCancelingId(null)
-  }
-
   function formatDate(d: string) {
     const opts: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }
     return new Date(d).toLocaleDateString('fr-FR', opts).replace(':', 'h')
@@ -107,7 +81,7 @@ export default function DashboardPage() {
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
-      
+
       {/* HEADER */}
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '12px 0' }}>
         <div style={{
@@ -136,7 +110,7 @@ export default function DashboardPage() {
                 <line x1="12" y1="8" x2="12" y2="16"></line>
                 <line x1="8" y1="12" x2="16" y2="12"></line>
               </svg>
-              <span style={{ display: 'none' }} className="desktop-only">Nouvelle reservation</span>
+              <span className="hide-mobile">Nouvelle reservation</span>
             </Link>
             <button onClick={handleLogout} style={{
               background: 'none',
@@ -170,7 +144,7 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 16px', marginTop: 24 }}>
-        
+
         {/* TABS NAVIGATION */}
         <div style={{
           display: 'flex',
@@ -213,8 +187,7 @@ export default function DashboardPage() {
         {/* CONTENU : RENDEZ-VOUS */}
         {activeTab === 'rdv' && (
           <div style={{ display: 'grid', gap: 32 }}>
-            
-            {/* A VENIR */}
+
             <div>
               <h2 style={{
                 fontSize: 16,
@@ -228,7 +201,7 @@ export default function DashboardPage() {
                 <span style={{ display: 'inline-block', width: 8, height: 8, background: OR, borderRadius: '50%' }}></span>
                 A venir ({aVenir.length})
               </h2>
-              
+
               {aVenir.length === 0 ? (
                 <div style={{
                   background: '#fff',
@@ -263,23 +236,9 @@ export default function DashboardPage() {
                       border: '1px solid #EDE5D8',
                       borderRadius: 6,
                       overflow: 'hidden',
-                      display: 'flex',
-                      flexDirection: 'row',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
                     }}>
-                      {/* Image salon - cachee sur tres petit mobile */}
-                      <div style={{
-                        width: 'clamp(0px, 20vw, 120px)',
-                        minHeight: 100,
-                        background: '#eee',
-                        flexShrink: 0,
-                        display: 'none'
-                      }}>
-                        {rdv.salons?.image && (
-                          <img src={rdv.salons.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        )}
-                      </div>
-                      <div style={{ padding: 'clamp(12px, 3vw, 20px)', flex: 1, minWidth: 0 }}>
+                      <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
                         <div style={{
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -327,39 +286,18 @@ export default function DashboardPage() {
                         }}>
                           {formatDate(rdv.date_rdv)}
                         </div>
-
-                        {/* Conteneur avec statut et bouton d'annulation */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
-                          <div style={{
-                            display: 'inline-block',
-                            fontSize: 11,
-                            fontWeight: 700,
-                            padding: '4px 12px',
-                            borderRadius: 20,
-                            background: '#f0fdf4',
-                            color: '#166534',
-                            textTransform: 'uppercase'
-                          }}>
-                            {rdv.statut}
-                          </div>
-                          
-                          <button 
-                            onClick={() => handleCancel(rdv.id)}
-                            disabled={cancelingId === rdv.id}
-                            style={{
-                              background: 'transparent',
-                              border: '1px solid #ffcccb',
-                              color: '#d32f2f',
-                              padding: '6px 12px',
-                              borderRadius: 4,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              cursor: cancelingId === rdv.id ? 'not-allowed' : 'pointer',
-                              transition: 'all 0.2s'
-                            }}
-                          >
-                            {cancelingId === rdv.id ? 'Annulation...' : 'Annuler'}
-                          </button>
+                        <div style={{
+                          display: 'inline-block',
+                          marginTop: 8,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          padding: '3px 10px',
+                          borderRadius: 20,
+                          background: '#f0fdf4',
+                          color: '#166534',
+                          textTransform: 'uppercase'
+                        }}>
+                          {rdv.statut}
                         </div>
                       </div>
                     </div>
@@ -368,7 +306,6 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* PASSES */}
             {passes.length > 0 && (
               <div>
                 <h2 style={{
@@ -531,31 +468,93 @@ export default function DashboardPage() {
 
         {/* CONTENU : PROFIL */}
         {activeTab === 'profil' && (
-          <div style={{
-            background: '#fff',
-            border: '1px solid #EDE5D8',
-            borderRadius: 6,
-            padding: 'clamp(20px, 4vw, 30px)',
-            maxWidth: 500
-          }}>
-            <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Mes informations</h2>
-            <div style={{ display: 'grid', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom complet</label>
-                <div style={{ fontSize: 15, fontWeight: 600, color: NOIR }}>{user.prenom} {user.nom}</div>
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Email</label>
-                <div style={{ fontSize: 15, fontWeight: 600, color: NOIR, wordBreak: 'break-all' }}>{user.email}</div>
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Telephone</label>
-                <div style={{ fontSize: 15, fontWeight: 600, color: NOIR }}>{user.telephone}</div>
-              </div>
-            </div>
-          </div>
+          <ProfileTab user={user} onUpdate={(u) => setUser(u)} />
         )}
 
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// COMPOSANT : Profil editable
+// ═══════════════════════════════════════════════════════════════════
+
+function ProfileTab({ user, onUpdate }: { user: User; onUpdate: (u: User) => void }) {
+  const [form, setForm] = useState({ ...user })
+  const [saving, setSaving] = useState(false)
+  const [message, setMessage] = useState('')
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  async function handleSave() {
+    setSaving(true)
+    setMessage('')
+    try {
+      const res = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (data.success) {
+        onUpdate(form)
+        setMessage('Informations mises a jour !')
+      } else {
+        setMessage(data.error || 'Erreur')
+      }
+    } catch { setMessage('Erreur reseau') }
+    setSaving(false)
+    setTimeout(() => setMessage(''), 3000)
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '12px 16px', border: '1px solid #E0D8CE',
+    borderRadius: 4, fontSize: 16, outline: 'none', boxSizing: 'border-box',
+    WebkitAppearance: 'none', fontFamily: 'Inter, sans-serif'
+  }
+
+  return (
+    <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: 'clamp(20px, 4vw, 30px)', maxWidth: 500 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Mes informations</h2>
+      {message && (
+        <div style={{
+          background: message.includes('Erreur') || message.includes('erreur') || message.includes('utilise') ? '#fef2f2' : '#f0fdf4',
+          border: message.includes('Erreur') || message.includes('erreur') || message.includes('utilise') ? '1px solid #fecaca' : '1px solid #bbf7d0',
+          borderRadius: 4, padding: '10px 14px', marginBottom: 16, fontSize: 13, fontWeight: 600,
+          color: message.includes('Erreur') || message.includes('erreur') || message.includes('utilise') ? '#b91c1c' : '#166534'
+        }}>
+          {message}
+        </div>
+      )}
+      <div style={{ display: 'grid', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 calc(50% - 6px)', minWidth: 140 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Prenom</label>
+            <input name="prenom" value={form.prenom} onChange={handleChange} style={inputStyle} />
+          </div>
+          <div style={{ flex: '1 1 calc(50% - 6px)', minWidth: 140 }}>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom</label>
+            <input name="nom" value={form.nom} onChange={handleChange} style={inputStyle} />
+          </div>
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Email</label>
+          <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} />
+        </div>
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Telephone</label>
+          <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} style={inputStyle} />
+        </div>
+        <button onClick={handleSave} disabled={saving} style={{
+          width: '100%', padding: '14px 0', background: saving ? '#999' : NOIR,
+          color: '#fff', border: 'none', borderRadius: 4, fontWeight: 800,
+          fontSize: 15, cursor: saving ? 'not-allowed' : 'pointer', marginTop: 4
+        }}>
+          {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
+        </button>
       </div>
     </div>
   )
