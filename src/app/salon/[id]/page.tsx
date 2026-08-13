@@ -77,13 +77,42 @@ export default async function SalonPage({
         }
       `}} />
 
-      {/* CONTENEUR PRINCIPAL SÉCURISÉ */}
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '30px 20px' }}>
+      {/* HEADER GLOBAL (FIXE EN HAUT DE PAGE) */}
+      <header style={{ 
+        background: '#fff', 
+        borderBottom: '1px solid #E0D8CE', 
+        padding: '16px 24px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50
+      }}>
+        <div style={{ flex: 1 }}>
+          <Link href="/" style={{ fontSize: 24, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>
+            Bookme<span style={{ color: OR }}>.dz</span>
+          </Link>
+        </div>
         
-        {/* 1. BANNIÈRE */}
-        <div style={{ width: '100%', height: 380, position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-          <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 30px 24px 30px' }}>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <Link href="/" style={{ color: '#888', fontSize: 14, textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}>
+            ← Retour aux salons
+          </Link>
+        </div>
+
+        <div style={{ flex: 1, textAlign: 'right' }}>
+          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '10px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none', transition: 'opacity 0.2s' }}>
+            Mon espace
+          </Link>
+        </div>
+      </header>
+
+      {/* 1. BANNIÈRE */}
+      <div style={{ width: '100%', height: 380, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+        <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 30px 24px 30px' }}>
+          <div style={{ maxWidth: 1040, margin: '0 auto' }}>
             <div style={{ color: OR, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
               {salon.type_salon}
             </div>
@@ -93,6 +122,10 @@ export default async function SalonPage({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* CONTENEUR PRINCIPAL */}
+      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '30px 20px' }}>
 
         {/* 2. INFOS RAPIDES DU SALON */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, fontSize: 14, color: '#555', alignItems: 'center', marginBottom: 30 }}>
