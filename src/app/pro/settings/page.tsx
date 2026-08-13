@@ -27,7 +27,7 @@ const DEFAULT_IMAGES: Record<string, string> = {
 const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
 
-type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean; promo_debut: string | null; promo_fin: string | null }
+type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; promo_pourcentage: number | null; promo_active: boolean; promo_nom: string | null; promo_debut: string | null; promo_fin: string | null }
 type Employe = { id: number; nom: string; email: string | null; acces_agenda: boolean }
 type VentePrivee = { id: number; nom: string; prix: number; duree: number; description: string }
 type Salon = {
@@ -284,8 +284,11 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   const [editPrix, setEditPrix] = useState('')
   const [editDuree, setEditDuree] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
+  
+  // Variables d'état pour la gestion des promotions
   const [promoId, setPromoId] = useState<number | null>(null)
   const [promoPct, setPromoPct] = useState('')
+  const [promoNom, setPromoNom] = useState('') // Ajout du nom de la promotion !
   const [savingPromo, setSavingPromo] = useState(false)
   const [promoDebut, setPromoDebut] = useState('')
   const [promoFin, setPromoFin] = useState('')
@@ -301,9 +304,31 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
     if (isNaN(pct) || pct < 1 || pct > 99) return
     setSavingPromo(true)
     try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null }) })
+      const res = await fetch('/api/pro/settings', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ 
+          action: 'set_promo', 
+          id: s.id, 
+          promo_pourcentage: pct, 
+          promo_active: true, 
+          promo_nom: promoNom || null, // Envoi du nom de la promotion
+          promo_debut: promoDebut || null, 
+          promo_fin: promoFin || null 
+        }) 
+      })
       const data = await res.json()
-      if (data.success) { onUpdate({ ...s, promo_pourcentage: pct, promo_active: true, promo_debut: promoDebut || null, promo_fin: promoFin || null }); setPromoId(null) }
+      if (data.success) { 
+        onUpdate({ 
+          ...s, 
+          promo_pourcentage: pct, 
+          promo_active: true, 
+          promo_nom: promoNom || null,
+          promo_debut: promoDebut || null, 
+          promo_fin: promoFin || null 
+        }); 
+        setPromoId(null) 
+      }
     } catch (e) {}
     setSavingPromo(false)
   }
@@ -311,9 +336,31 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   async function handlePromoRemove(s: Service) {
     setSavingPromo(true)
     try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: null, promo_active: false, promo_debut: null, promo_fin: null }) })
+      const res = await fetch('/api/pro/settings', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ 
+          action: 'set_promo', 
+          id: s.id, 
+          promo_pourcentage: null, 
+          promo_active: false, 
+          promo_nom: null,
+          promo_debut: null, 
+          promo_fin: null 
+        }) 
+      })
       const data = await res.json()
-      if (data.success) { onUpdate({ ...s, promo_pourcentage: null, promo_active: false, promo_debut: null, promo_fin: null }); setPromoId(null) }
+      if (data.success) { 
+        onUpdate({ 
+          ...s, 
+          promo_pourcentage: null, 
+          promo_active: false, 
+          promo_nom: null,
+          promo_debut: null, 
+          promo_fin: null 
+        }); 
+        setPromoId(null) 
+      }
     } catch (e) {}
     setSavingPromo(false)
   }
@@ -411,7 +458,10 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                               <div>
                                 <span style={{ fontSize: 12, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
                                 <div style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</div>
-                                <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block', marginTop: 2 }}>-{s.promo_pourcentage}%</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}>
+                                  <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block' }}>-{s.promo_pourcentage}%</span>
+                                </div>
+                                {s.promo_nom && <div style={{ fontSize: 11, fontWeight: 800, color: OR, marginTop: 2 }}>✨ {s.promo_nom}</div>}
                                 {s.promo_debut && s.promo_fin && (
                                   <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>{new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
                                 )}
@@ -422,22 +472,39 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           </div>
                         </div>
                         <div className="responsive-actions">
-                          <button onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); setPromoDebut(s.promo_debut || ''); setPromoFin(s.promo_fin || '') }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>{s.promo_active ? '% Promo' : '+ Promo'}</button>
+                          <button onClick={() => { 
+                            setPromoId(s.id); 
+                            setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); 
+                            setPromoNom(s.promo_nom || ''); 
+                            setPromoDebut(s.promo_debut || ''); 
+                            setPromoFin(s.promo_fin || '') 
+                          }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
+                            {s.promo_active ? '% Promo' : '+ Promo'}
+                          </button>
                           <button onClick={() => startEdit(s)} style={{ background: 'transparent', border: '1px solid #ddd', color: '#444', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Modifier</button>
                           <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Supprimer</button>
                         </div>
                       </div>
+                      
+                      {/* FORMULAIRE DE PROMOTION AFFICHE ICI */}
                       {promoId === s.id && (
                         <div style={{ marginTop: 15, padding: '14px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Mettre en promotion :</span>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Configurer la promotion :</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 13, color: '#888' }}>-</span>
                             <input type="number" value={promoPct} onChange={(e) => setPromoPct(e.target.value)} placeholder="20" min="1" max="99" style={{ width: 80, padding: '8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }} />
                             <span style={{ fontSize: 13, fontWeight: 700 }}>% de reduction</span>
                           </div>
+                          
+                          <div style={{ width: '100%' }}>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l'offre (Optionnel, ex: Spécial Aïd)</label>
+                            <input type="text" value={promoNom} onChange={e => setPromoNom(e.target.value)} placeholder="Spécial Aïd" style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+                          </div>
+
                           {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (
                             <span style={{ fontSize: 13, color: '#666' }}>Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong></span>
                           )}
+                          
                           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%' }}>
                             <div style={{ flex: '1 1 140px' }}>
                               <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Debut de la promo</label>
