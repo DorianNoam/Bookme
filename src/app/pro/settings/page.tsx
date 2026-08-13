@@ -36,6 +36,7 @@ type Salon = {
   type_salon: string; image: string; seuil_fidelite: number;
 }
 type CatalogueItem = { id: number; categorie: string; nom: string }
+type GalleryImage = { id: number; image_path: string } // Nouveau type
 
 export default function ProSettingsPage() {
   const [tab, setTab] = useState<'services' | 'vip' | 'employes' | 'salon'>('services')
@@ -44,6 +45,7 @@ export default function ProSettingsPage() {
   const [ventesPrivees, setVentesPrivees] = useState<VentePrivee[]>([])
   const [employes, setEmployes] = useState<Employe[]>([])
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([])
+  const [gallery, setGallery] = useState<GalleryImage[]>([]) // Nouvel état pour la galerie
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [proEmail, setProEmail] = useState('')
@@ -58,6 +60,7 @@ export default function ProSettingsPage() {
         setVentesPrivees(data.ventes_privees || [])
         setEmployes(data.employes || [])
         setCatalogue(data.catalogue || [])
+        setGallery(data.gallery || []) // Stocker la galerie récupérée
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -143,14 +146,16 @@ export default function ProSettingsPage() {
         {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
         {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
         {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
-        {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} />}
+        
+        {/* On passe `gallery` et les fonctions de maj au SalonTab */}
+        {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} gallery={gallery} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} onAddGalleryImage={(img) => setGallery([...gallery, img])} onDeleteGalleryImage={(id) => setGallery(gallery.filter(g => g.id !== id))} />}
       </main>
     </div>
   )
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Ventes Privees
+// COMPOSANT : Ventes Privees (Inchangé)
 // ═══════════════════════════════════════════════════════════════════
 
 function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventesPrivees: VentePrivee[]; onAdd: (v: VentePrivee) => void; onUpdate: (v: VentePrivee) => void; onDelete: (id: number) => void }) {
@@ -270,7 +275,7 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Services
+// COMPOSANT : Services (Inchangé)
 // ═══════════════════════════════════════════════════════════════════
 
 function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { services: Service[]; catalogue: CatalogueItem[]; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
@@ -285,7 +290,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   const [editDuree, setEditDuree] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
   
-  // Variables d'état pour la gestion des promotions
   const [promoId, setPromoId] = useState<number | null>(null)
   const [promoPct, setPromoPct] = useState('')
   const [promoNom, setPromoNom] = useState('') 
@@ -304,31 +308,9 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
     if (isNaN(pct) || pct < 1 || pct > 99) return
     setSavingPromo(true)
     try {
-      const res = await fetch('/api/pro/settings', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ 
-          action: 'set_promo', 
-          id: s.id, 
-          promo_pourcentage: pct, 
-          promo_active: true, 
-          promo_nom: promoNom || null, 
-          promo_debut: promoDebut || null, 
-          promo_fin: promoFin || null 
-        }) 
-      })
+      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true, promo_nom: promoNom || null, promo_debut: promoDebut || null, promo_fin: promoFin || null }) })
       const data = await res.json()
-      if (data.success) { 
-        onUpdate({ 
-          ...s, 
-          promo_pourcentage: pct, 
-          promo_active: true, 
-          promo_nom: promoNom || null,
-          promo_debut: promoDebut || null, 
-          promo_fin: promoFin || null 
-        }); 
-        setPromoId(null) 
-      }
+      if (data.success) { onUpdate({ ...s, promo_pourcentage: pct, promo_active: true, promo_nom: promoNom || null, promo_debut: promoDebut || null, promo_fin: promoFin || null }); setPromoId(null) }
     } catch (e) {}
     setSavingPromo(false)
   }
@@ -336,31 +318,9 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   async function handlePromoRemove(s: Service) {
     setSavingPromo(true)
     try {
-      const res = await fetch('/api/pro/settings', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ 
-          action: 'set_promo', 
-          id: s.id, 
-          promo_pourcentage: null, 
-          promo_active: false, 
-          promo_nom: null,
-          promo_debut: null, 
-          promo_fin: null 
-        }) 
-      })
+      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: null, promo_active: false, promo_nom: null, promo_debut: null, promo_fin: null }) })
       const data = await res.json()
-      if (data.success) { 
-        onUpdate({ 
-          ...s, 
-          promo_pourcentage: null, 
-          promo_active: false, 
-          promo_nom: null,
-          promo_debut: null, 
-          promo_fin: null 
-        }); 
-        setPromoId(null) 
-      }
+      if (data.success) { onUpdate({ ...s, promo_pourcentage: null, promo_active: false, promo_nom: null, promo_debut: null, promo_fin: null }); setPromoId(null) }
     } catch (e) {}
     setSavingPromo(false)
   }
@@ -486,7 +446,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                         </div>
                       </div>
                       
-                      {/* FORMULAIRE DE PROMOTION AFFICHE ICI */}
                       {promoId === s.id && (
                         <div style={{ marginTop: 15, padding: '14px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Configurer la promotion :</span>
@@ -498,7 +457,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           
                           <div style={{ width: '100%' }}>
                             <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l'offre (Optionnel)</label>
-                            {/* CORRECTION ICI : Remplacement par un <datalist> pour avoir le menu déroulant ! */}
                             <input 
                               list="promo-events"
                               type="text" 
@@ -555,7 +513,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Employes (avec gestion acces agenda)
+// COMPOSANT : Employes (Inchangé)
 // ═══════════════════════════════════════════════════════════════════
 
 function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd: (e: Employe) => void; onDelete: (id: number) => void }) {
@@ -688,16 +646,21 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Infos salon
+// COMPOSANT : Infos salon (+ NOUVELLE GALERIE)
 // ═══════════════════════════════════════════════════════════════════
 
-function SalonTab({ salon, proEmail, onUpdate }: { salon: Salon; proEmail: string; onUpdate: (s: Salon, email?: string) => void }) {
+function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDeleteGalleryImage }: { salon: Salon; proEmail: string; gallery: GalleryImage[]; onUpdate: (s: Salon, email?: string) => void; onAddGalleryImage: (img: GalleryImage) => void; onDeleteGalleryImage: (id: number) => void }) {
   const [form, setForm] = useState({ ...salon })
   const [emailValue, setEmailValue] = useState(proEmail)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadMsg, setUploadMsg] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // --- ÉTATS POUR LA GALERIE ---
+  const [uploadingGallery, setUploadingGallery] = useState(false)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
+
   const displayImage = form.image || DEFAULT_IMAGES[form.type_salon] || DEFAULT_IMAGES['Coiffure']
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
@@ -705,6 +668,7 @@ function SalonTab({ salon, proEmail, onUpdate }: { salon: Salon; proEmail: strin
     setForm({ ...form, [name]: (name === 'jour_off' || name === 'seuil_fidelite') ? parseInt(value) || 0 : value })
   }
 
+  // --- UPLOAD IMAGE PRINCIPALE ---
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -724,6 +688,54 @@ function SalonTab({ salon, proEmail, onUpdate }: { salon: Salon; proEmail: strin
     } catch (err: any) { setUploadMsg('Erreur : ' + (err.message || 'Upload echoue')) }
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  // --- UPLOAD GALERIE PHOTOS ---
+  async function handleUploadGallery(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) { alert('Fichier non valide.'); return }
+    if (file.size > 5 * 1024 * 1024) { alert('Image trop lourde (max 5 Mo)'); return }
+    
+    setUploadingGallery(true)
+    try {
+      const ext = file.name.split('.').pop() || 'jpg'
+      const fileName = `gallery-${salon.id}-${Date.now()}.${ext}`
+      
+      const { error: uploadError } = await supabaseClient.storage.from('salon-images').upload(fileName, file)
+      if (uploadError) throw uploadError
+      
+      const { data: urlData } = supabaseClient.storage.from('salon-images').getPublicUrl(fileName)
+      const publicUrl = urlData.publicUrl
+
+      const res = await fetch('/api/pro/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_gallery_image', image_path: publicUrl })
+      })
+      const data = await res.json()
+      
+      if (data.success) {
+        onAddGalleryImage(data.image)
+      }
+    } catch (err) {
+      alert("Erreur lors de l'envoi de l'image de la galerie.")
+    }
+    setUploadingGallery(false)
+    if (galleryInputRef.current) galleryInputRef.current.value = ''
+  }
+
+  // --- SUPPRESSION IMAGE GALERIE ---
+  async function handleDeleteGallery(id: number) {
+    if(!confirm("Supprimer cette photo de votre galerie ?")) return
+    try {
+      const res = await fetch('/api/pro/settings', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'delete_gallery_image', id })
+      })
+      if (res.ok) onDeleteGalleryImage(id)
+    } catch(e) {}
   }
 
   async function handleRemoveImage() {
@@ -760,6 +772,49 @@ function SalonTab({ salon, proEmail, onUpdate }: { salon: Salon; proEmail: strin
           {form.image && (<button onClick={handleRemoveImage} style={{ background: 'transparent', border: '1px solid #ddd', color: '#888', padding: '10px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Image par defaut</button>)}
           <span style={{ fontSize: 12, color: '#aaa' }}>JPG, PNG ou WebP — max 5 Mo</span>
           {uploadMsg && (<span style={{ fontSize: 13, fontWeight: 600, color: uploadMsg.includes('Erreur') ? '#d32f2f' : '#2e7d32' }}>{uploadMsg}</span>)}
+        </div>
+      </div>
+
+      {/* --- NOUVELLE SECTION GALERIE PHOTOS --- */}
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 10 }}>Galerie Photos</h3>
+      <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Ajoutez d'autres photos de votre salon ou de vos réalisations pour donner envie à vos clients.</p>
+      
+      <div style={{ background: '#fff', padding: 24, borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.03)', marginBottom: 30 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+          
+          {/* Bouton pour ajouter à la galerie */}
+          <div 
+            onClick={() => !uploadingGallery && galleryInputRef.current?.click()}
+            style={{ 
+              width: 120, height: 120, background: '#FAFAF5', border: `2px dashed ${OR}`, 
+              borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', 
+              justifyContent: 'center', cursor: uploadingGallery ? 'not-allowed' : 'pointer',
+              opacity: uploadingGallery ? 0.5 : 1
+            }}
+          >
+            <span style={{ fontSize: 24, color: OR, marginBottom: 8 }}>+</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: OR }}>Ajouter</span>
+            <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleUploadGallery} style={{ display: 'none' }} />
+          </div>
+
+          {/* Affichage des photos de la galerie */}
+          {gallery.map(img => (
+            <div key={img.id} style={{ position: 'relative', width: 120, height: 120, borderRadius: 8, overflow: 'hidden', border: '1px solid #ddd' }}>
+              <img src={img.image_path} alt="Galerie" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <button 
+                onClick={() => handleDeleteGallery(img.id)}
+                style={{ 
+                  position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', 
+                  color: '#fff', border: 'none', width: 24, height: 24, borderRadius: '50%', 
+                  fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  cursor: 'pointer' 
+                }}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+
         </div>
       </div>
 
