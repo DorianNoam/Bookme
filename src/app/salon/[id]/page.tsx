@@ -24,23 +24,23 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
   const [servicesRes, avisRes, galleryRes] = await Promise.all([
     supabase.from('services').select('*').eq('salon_id', salonId).order('categorie_service'),
     supabase.from('avis').select('*').eq('salon_id', salonId),
-    supabase.from('salon_images').select('*').eq('salon_id', salonId) // <-- NOUVEAU
+    supabase.from('salon_images').select('*').eq('salon_id', salonId)
   ])
 
   const safeServices = servicesRes.data || []
   const safeAvis = avisRes.data || []
-  const safeGallery = galleryRes.data || [] // <-- NOUVEAU
+  const safeGallery = galleryRes.data || []
 
-  // Grouper les prestations par catégorie
-  const grouped = safeServices.reduce((acc, s) => {
+  // CORRECTION TYPESCRIPT : Typage explicite (Record<string, any[]>) pour éviter l'erreur sur Vercel
+  const grouped: Record<string, any[]> = safeServices.reduce((acc: Record<string, any[]>, s: any) => {
     const cat = s.categorie_service || 'Général'
     if (!acc[cat]) acc[cat] = []
     acc[cat].push(s)
     return acc
-  }, {} as Record<string, typeof safeServices>)
+  }, {})
 
-  // Filtrer uniquement les prestations en promotion
-  const promos = safeServices.filter(s => s.promo_active && s.promo_pourcentage)
+  // Typage explicite pour le filtre des promotions
+  const promos = safeServices.filter((s: any) => s.promo_active && s.promo_pourcentage)
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
@@ -54,7 +54,7 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
       {/* HEADER DU SALON (Couverture Principale) */}
       <div style={{ background: NOIR, color: '#fff', padding: '40px 20px', position: 'relative', overflow: 'hidden' }}>
         
-        {/* Image de couverture en fond flouté (Optionnel pour un effet Luxe) */}
+        {/* Image de couverture en fond flouté */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.15, zIndex: 0 }}>
             <img src={salon.image} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(10px)' }} />
         </div>
@@ -89,13 +89,12 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
         {/* DESCRIPTION */}
         <p style={{ color: '#555', fontSize: 15, lineHeight: 1.6, marginBottom: 40 }}>{salon.description}</p>
 
-        {/* NOUVEAU : GALERIE PHOTOS */}
+        {/* GALERIE PHOTOS */}
         {safeGallery.length > 0 && (
           <div style={{ marginBottom: 40 }}>
             <h3 style={{ fontSize: 14, fontWeight: 800, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Galerie Photos</h3>
-            {/* Conteneur avec scroll horizontal */}
             <div className="hide-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, scrollBehavior: 'smooth' }}>
-              {safeGallery.map((img) => (
+              {safeGallery.map((img: any) => (
                 <div key={img.id} style={{ flexShrink: 0, width: 280, height: 200, borderRadius: 8, overflow: 'hidden', border: '1px solid #E0D8CE', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                   <img src={img.image_path} alt="Galerie salon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
@@ -111,7 +110,7 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
               🎉 OFFRES SPÉCIALES
             </h2>
             <div style={{ display: 'grid', gap: 16 }}>
-              {promos.map(promo => {
+              {promos.map((promo: any) => {
                 const prixRemise = Math.round(promo.prix - (promo.prix * (promo.promo_pourcentage || 0) / 100))
                 return (
                   <div key={promo.id} style={{ background: '#fff', border: '1px solid #ffcccb', borderRadius: 8, padding: 24, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 15px rgba(211, 47, 47, 0.05)' }}>
@@ -157,7 +156,7 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
           <div key={cat} style={{ marginBottom: 40 }}>
             <h3 style={{ fontSize: 14, fontWeight: 800, color: '#888', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>{cat}</h3>
             <div style={{ background: '#fff', borderRadius: 8, border: '1px solid #E0D8CE', overflow: 'hidden' }}>
-              {items.map((service, index) => (
+              {items.map((service: any, index: number) => (
                 <div key={service.id} style={{ padding: '20px', borderBottom: index < items.length - 1 ? '1px solid #F0EBE1' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: NOIR, marginBottom: 4 }}>{service.nom}</div>
