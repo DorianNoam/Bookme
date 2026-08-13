@@ -45,7 +45,7 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
       
-      {/* STYLE POUR UNE BARRE DE DÉFILEMENT ÉLÉGANTE ET VISIBLE SUR ORDINATEUR */}
+      {/* STYLE POUR LA BARRE DE DÉFILEMENT DE LA GALERIE */}
       <style dangerouslySetInnerHTML={{__html: `
         .custom-scroll {
           overflow-x: auto;
@@ -67,39 +67,43 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
         }
       `}} />
 
-      {/* 1. BANNIÈRE PRINCIPALE (Image de couverture) */}
-      <div style={{ width: '100%', height: '400px', position: 'relative' }}>
-        <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {/* CONTENEUR PRINCIPAL SÉCURISÉ (Empêche de recouvrir le menu du haut) */}
+      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '30px 20px' }}>
         
-        {/* Dégradé sombre en bas de l'image pour lire le texte facilement */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 20px 20px 20px' }}>
-          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+        {/* 1. BANNIÈRE SÉCURISÉE (Bords arrondis, intégrée au flux) */}
+        <div style={{ width: '100%', height: 380, position: 'relative', borderRadius: 16, overflow: 'hidden', marginBottom: 24, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+          <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          
+          {/* Dégradé sombre pour lire le texte facilement */}
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 30px 24px 30px' }}>
             <div style={{ color: OR, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
               {salon.type_salon}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
               <h1 style={{ fontSize: 36, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>{salon.nom}</h1>
-              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)' }}>♡</div>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)' }}>♡</div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* CONTENEUR PRINCIPAL */}
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '30px 20px' }}>
-        
-        {/* 2. INFOS DU SALON */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, fontSize: 14, color: '#555', alignItems: 'center', marginBottom: 40, background: '#fff', padding: '16px 24px', borderRadius: 12, border: '1px solid #E0D8CE' }}>
+        {/* 2. ONGLETS (Remontés juste sous la bannière) */}
+        <div style={{ display: 'flex', gap: 30, borderBottom: '1px solid #E0D8CE', marginBottom: 30 }}>
+          <div style={{ paddingBottom: 12, borderBottom: `3px solid ${OR}`, fontWeight: 800, color: NOIR, cursor: 'pointer' }}>Prestations</div>
+          <div style={{ paddingBottom: 12, color: '#888', fontWeight: 600, cursor: 'pointer' }}>Avis ({safeAvis.length})</div>
+          <div style={{ paddingBottom: 12, color: '#888', fontWeight: 600, cursor: 'pointer' }}>Informations</div>
+        </div>
+
+        {/* 3. INFOS RAPIDES DU SALON */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, fontSize: 14, color: '#555', alignItems: 'center', marginBottom: 30 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: NOIR }}>📍 {salon.adresse}, {salon.ville}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>⭐ {safeAvis.length > 0 ? '4.8' : 'Nouveau'} ({safeAvis.length} avis)</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>🕒 {salon.ouverture} - {salon.fermeture}</span>
           {salon.jour_off > 0 && <span style={{ color: '#d32f2f', fontWeight: 700 }}>Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</span>}
         </div>
 
-        {/* 3. GALERIE PHOTOS */}
+        {/* 4. GALERIE PHOTOS (Immédiatement visible sous les infos) */}
         {safeGallery.length > 0 && (
           <div style={{ marginBottom: 40 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Galerie Photos</h3>
             <div className="custom-scroll" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, scrollBehavior: 'smooth' }}>
               {safeGallery.map((img: any) => (
                 <div key={img.id} style={{ flexShrink: 0, width: 280, height: 200, borderRadius: 12, overflow: 'hidden', border: '1px solid #E0D8CE', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
@@ -110,15 +114,9 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
           </div>
         )}
 
-        {/* 4. TABS (Navigation interne) */}
-        <div style={{ display: 'flex', gap: 30, borderBottom: '1px solid #E0D8CE', margin: '30px 0' }}>
-          <div style={{ paddingBottom: 12, borderBottom: `3px solid ${OR}`, fontWeight: 800, color: NOIR, cursor: 'pointer' }}>Prestations</div>
-          <div style={{ paddingBottom: 12, color: '#888', fontWeight: 600, cursor: 'pointer' }}>Avis ({safeAvis.length})</div>
-          <div style={{ paddingBottom: 12, color: '#888', fontWeight: 600, cursor: 'pointer' }}>Informations</div>
-        </div>
-
         {/* 5. DESCRIPTION */}
-        <div style={{ marginBottom: 40 }}>
+        <div style={{ marginBottom: 40, background: '#fff', padding: 24, borderRadius: 12, border: '1px solid #E0D8CE' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 12 }}>À propos</h3>
           <p style={{ color: '#555', fontSize: 15, lineHeight: 1.6, margin: 0 }}>{salon.description}</p>
         </div>
 
