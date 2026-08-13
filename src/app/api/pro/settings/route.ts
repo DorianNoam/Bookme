@@ -110,8 +110,14 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.action === 'set_promo') {
-    const { id, promo_pourcentage, promo_active, promo_debut, promo_fin } = body
-    const { error } = await supabase.from('services').update({ promo_pourcentage: promo_pourcentage || null, promo_active: promo_active || false, promo_debut: promo_debut || null, promo_fin: promo_fin || null }).eq('id', id).eq('salon_id', salonId)
+    const { id, promo_pourcentage, promo_active, promo_nom, promo_debut, promo_fin } = body
+    const { error } = await supabase.from('services').update({ 
+      promo_pourcentage: promo_pourcentage || null, 
+      promo_active: promo_active || false, 
+      promo_nom: promo_nom || null,
+      promo_debut: promo_debut || null, 
+      promo_fin: promo_fin || null 
+    }).eq('id', id).eq('salon_id', salonId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true })
   }
