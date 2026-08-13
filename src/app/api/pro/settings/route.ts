@@ -34,11 +34,12 @@ export async function GET(req: NextRequest) {
   const { data: salon } = await supabase.from('salons').select('*').eq('pro_id', proId).single()
   if (!salon) return NextResponse.json({ error: 'Aucun salon trouve' }, { status: 404 })
 
-  const [servicesRes, employesRes, catalogueRes, ventesPriveesRes] = await Promise.all([
+  const [servicesRes, employesRes, catalogueRes, ventesPriveesRes, galleryRes] = await Promise.all([
     supabase.from('services').select('*').eq('salon_id', salon.id).order('categorie_service'),
     supabase.from('employes').select('*').eq('salon_id', salon.id).order('nom'),
     supabase.from('catalogue_services').select('*').order('categorie').order('nom'),
-    supabase.from('ventes_privees').select('*').eq('salon_id', salon.id).order('created_at', { ascending: false })
+    supabase.from('ventes_privees').select('*').eq('salon_id', salon.id).order('created_at', { ascending: false }),
+    supabase.from('salon_images').select('*').eq('salon_id', salon.id) // Récupération de la galerie
   ])
 
   return NextResponse.json({
@@ -47,7 +48,8 @@ export async function GET(req: NextRequest) {
     services: servicesRes.data || [],
     employes: employesRes.data || [],
     catalogue: catalogueRes.data || [],
-    ventes_privees: ventesPriveesRes.data || []
+    ventes_privees: ventesPriveesRes.data || [],
+    gallery: galleryRes.data || []
   })
 }
 
@@ -65,7 +67,6 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json()
   const { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon, image, seuil_fidelite, pro_email } = body
 
-  // Mettre a jour l'email du pro si fourni
   if (pro_email !== undefined) {
     await supabase.from('pros').update({ email: pro_email }).eq('id', proId)
   }
@@ -92,6 +93,15 @@ export async function POST(req: NextRequest) {
   if (!salonId) return NextResponse.json({ error: 'Salon introuvable' }, { status: 404 })
 
   const body = await req.json()
+
+  // --- NOUVEAU : Ajouter une image à la galerie ---
+  if (body.action === 'add_gallery_image') {
+    const { image_path } = body
+    if (!image_path) return NextResponse.json({ error: 'Image requise' }, { status: 400 })
+    const { data, error } = await supabase.from('salon_images').insert({ salon_id: salonId, image_path }).select().single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true, image: data })
+  }
 
   if (body.action === 'add_service') {
     const { nom, prix, duree, categorie_service } = body
@@ -161,6 +171,13 @@ export async function DELETE(req: NextRequest) {
   if (!salonId) return NextResponse.json({ error: 'Salon introuvable' }, { status: 404 })
 
   const body = await req.json()
+
+  // --- NOUVEAU : Supprimer une image de la galerie ---
+  if (body.action === 'delete_gallery_image') {
+    const { error } = await supabase.from('salon_images').delete().eq('id', body.id).eq('salon_id', salonId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  }
 
   if (body.action === 'delete_service') {
     const { error } = await supabase.from('services').delete().eq('id', body.id).eq('salon_id', salonId)
