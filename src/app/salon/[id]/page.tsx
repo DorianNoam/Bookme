@@ -2,7 +2,7 @@ import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 
-// DÉSACTIVER TOTALEMENT LE CACHE NEXT.JS POUR AFFICHER LES NOUVELLES PHOTOS EN TEMPS RÉEL
+// DÉSACTIVER TOTALEMENT LE CACHE NEXT.JS POUR AFFICHER LES NOUVELLES PHOTOS
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
@@ -27,7 +27,7 @@ export default async function SalonPage({
   
   // On lit l'onglet actif depuis l'URL (par défaut: prestations)
   const activeTab = typeof searchParams.tab === 'string' ? searchParams.tab : 'prestations'
-  
+
   // Gestion de l'ouverture de la galerie (Modal)
   const isGalleryOpen = searchParams.gallery === 'open'
 
@@ -83,6 +83,28 @@ export default async function SalonPage({
           </div>
         </div>
       )}
+
+      {/* STYLE POUR LA BARRE DE DÉFILEMENT DE LA GALERIE */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scroll {
+          overflow-x: auto;
+          scrollbar-width: thin;
+          scrollbar-color: #E0D8CE transparent;
+        }
+        .custom-scroll::-webkit-scrollbar {
+          height: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background-color: #E0D8CE;
+          border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+          background-color: ${OR};
+        }
+      `}} />
 
       {/* HEADER GLOBAL (FIXE EN HAUT DE PAGE) */}
       <header style={{ 
@@ -142,52 +164,16 @@ export default async function SalonPage({
           {salon.jour_off > 0 && <span style={{ color: '#d32f2f', fontWeight: 700 }}>Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</span>}
         </div>
 
-        {/* 3. GALERIE PHOTOS (Mosaïque avec effet flouté "Voir les X photos") */}
+        {/* 3. GALERIE PHOTOS (Maintenant avec le modal au clic) */}
         {safeGallery.length > 0 && (
           <div style={{ marginBottom: 40 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Galerie Photos</h3>
-            
-            {/* Si 1 seule photo supplémentaire */}
-            {safeGallery.length === 1 && (
-              <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} scroll={false} style={{ display: 'block', height: 350, borderRadius: 12, overflow: 'hidden' }}>
-                <img src={safeGallery[0].image_path} alt="Galerie 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </Link>
-            )}
-
-            {/* Si 2 photos supplémentaires */}
-            {safeGallery.length === 2 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, height: 350 }}>
-                <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} scroll={false} style={{ borderRadius: 12, overflow: 'hidden' }}>
-                  <img src={safeGallery[0].image_path} alt="Galerie 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div className="custom-scroll" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, scrollBehavior: 'smooth' }}>
+              {safeGallery.map((img: any) => (
+                <Link key={img.id} href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} scroll={false} style={{ flexShrink: 0, width: 280, height: 200, borderRadius: 12, overflow: 'hidden', border: '1px solid #E0D8CE', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'block' }}>
+                  <img src={img.image_path} alt="Galerie salon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </Link>
-                <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} scroll={false} style={{ borderRadius: 12, overflow: 'hidden' }}>
-                  <img src={safeGallery[1].image_path} alt="Galerie 2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </Link>
-              </div>
-            )}
-
-            {/* Si 3 photos supplémentaires ou plus */}
-            {safeGallery.length >= 3 && (
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, height: 400 }}>
-                <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} scroll={false} style={{ borderRadius: 12, overflow: 'hidden' }}>
-                  <img src={safeGallery[0].image_path} alt="Galerie 1" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </Link>
-                <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 12 }}>
-                  <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} scroll={false} style={{ borderRadius: 12, overflow: 'hidden' }}>
-                    <img src={safeGallery[1].image_path} alt="Galerie 2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </Link>
-                  <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} scroll={false} style={{ borderRadius: 12, overflow: 'hidden', position: 'relative' }}>
-                    <img src={safeGallery[2].image_path} alt="Galerie 3" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    {/* Le calque flouté si on a plus que 3 photos au total */}
-                    {allImages.length > 4 && (
-                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 16 }}>
-                        Voir les {allImages.length} photos
-                      </div>
-                    )}
-                  </Link>
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         )}
 
