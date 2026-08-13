@@ -2,8 +2,10 @@ import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 
-// DÉSACTIVER LE CACHE NEXT.JS POUR AFFICHER LES MODIFS EN TEMPS RÉEL
+// DÉSACTIVER TOTALEMENT LE CACHE NEXT.JS POUR AFFICHER LES NOUVELLES PHOTOS
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,17 +25,14 @@ export default async function SalonPage({
 }) {
   const salonId = params.id
   
-  // Onglet actif (Prestations, Avis, Infos)
+  // On lit l'onglet actif depuis l'URL (par défaut: prestations)
   const activeTab = typeof searchParams.tab === 'string' ? searchParams.tab : 'prestations'
-  
-  // Gestion de l'ouverture de la galerie complète (Modal)
-  const isGalleryOpen = searchParams.gallery === 'open'
 
   // Récupération des données du salon
   const { data: salon } = await supabase.from('salons').select('*').eq('id', salonId).single()
   if (!salon) return <div style={{ padding: 40, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>Salon introuvable</div>
 
-  // Récupération des prestations, avis ET galerie
+  // Récupération des prestations, avis (avec nom du client) ET galerie
   const [servicesRes, avisRes, galleryRes] = await Promise.all([
     supabase.from('services').select('*').eq('salon_id', salonId).order('categorie_service'),
     supabase.from('avis').select('*, users(prenom, nom)').eq('salon_id', salonId),
@@ -44,11 +43,7 @@ export default async function SalonPage({
   const safeAvis = avisRes.data || []
   const safeGallery = galleryRes.data || []
 
-  // Consolidation de TOUTES les photos (Couverture + Galerie)
-  const allImages = [salon.image, ...safeGallery.map((g: any) => g.image_path)].filter(Boolean)
-  const displayImages = allImages.slice(0, 3) // Les 3 premières pour la mosaïque
-
-  // Grouper les prestations par catégorie (Typage explicite pour éviter le crash Vercel)
+  // Grouper les prestations par catégorie
   const grouped: Record<string, any[]> = safeServices.reduce((acc: Record<string, any[]>, s: any) => {
     const cat = s.categorie_service || 'Général'
     if (!acc[cat]) acc[cat] = []
@@ -62,105 +57,100 @@ export default async function SalonPage({
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
       
-      {/* ============================================================== */}
-      {/* MODAL : GALERIE PLEIN ÉCRAN (Affiche TOUTES les photos) */}
-      {/* ============================================================== */}
-      {isGalleryOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(10,10,10,0.95)', zIndex: 9999, overflowY: 'auto', padding: '60px 20px' }}>
-          <Link href={`/salon/${salonId}?tab=${activeTab}`} style={{ position: 'fixed', top: 20, right: 30, color: '#fff', fontSize: 40, textDecoration: 'none', fontWeight: 300, zIndex: 10000 }}>
-            &times;
-          </Link>
-          <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            {allImages.map((img, i) => (
-              <img key={i} src={img} alt={`Galerie ${i + 1}`} style={{ width: '100%', borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* STYLE POUR LA BARRE DE DÉFILEMENT DE LA GALERIE */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scroll {
+          overflow-x: auto;
+          scrollbar-width: thin;
+          scrollbar-color: #E0D8CE transparent;
+        }
+        .custom-scroll::-webkit-scrollbar {
+          height: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background-color: #E0D8CE;
+          border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+          background-color: ${OR};
+        }
+      `}} />
 
-      {/* ============================================================== */}
-      {/* HEADER GLOBAL (Le menu type Planity, fixe en haut) */}
-      {/* ============================================================== */}
-      <header style={{ background: '#fff', borderBottom: '1px solid #E0D8CE', padding: '16px 24px', position: 'sticky', top: 0, zIndex: 50, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link href="/" style={{ fontSize: 24, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>
-          Bookme<span style={{ color: OR }}>.dz</span>
-        </Link>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <Link href="/pro/login" style={{ color: '#555', fontSize: 14, fontWeight: 600, textDecoration: 'none', background: '#f5f5f5', padding: '10px 16px', borderRadius: 6, display: 'none', '@media (min-width: 768px)': { display: 'block' } }}>
-            Je suis un professionnel
+      {/* HEADER GLOBAL (FIXE EN HAUT DE PAGE) */}
+      <header style={{ 
+        background: '#fff', 
+        borderBottom: '1px solid #E0D8CE', 
+        padding: '16px 24px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50
+      }}>
+        <div style={{ flex: 1 }}>
+          <Link href="/" style={{ fontSize: 24, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>
+            Bookme<span style={{ color: OR }}>.dz</span>
           </Link>
-          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '10px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
-            Mon compte
+        </div>
+        
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <Link href="/" style={{ color: '#888', fontSize: 14, textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}>
+            ← Retour aux salons
+          </Link>
+        </div>
+
+        <div style={{ flex: 1, textAlign: 'right' }}>
+          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '10px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none', transition: 'opacity 0.2s' }}>
+            Mon espace
           </Link>
         </div>
       </header>
 
-      {/* CONTENEUR PRINCIPAL */}
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '40px 20px' }}>
-        
-        {/* 1. EN-TÊTE DU SALON */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20, marginBottom: 24 }}>
-          <div>
-            <h1 style={{ fontSize: 32, fontWeight: 900, color: NOIR, margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>{salon.nom}</h1>
-            <div style={{ color: '#555', fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
-              📍 {salon.adresse}, {salon.ville}
+      {/* 1. BANNIÈRE */}
+      <div style={{ width: '100%', height: 380, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+        <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 30px 24px 30px' }}>
+          <div style={{ maxWidth: 1040, margin: '0 auto' }}>
+            <div style={{ color: OR, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+              {salon.type_salon}
             </div>
-            <div style={{ color: '#555', fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-              ⭐ {safeAvis.length > 0 ? '4.8' : 'Nouveau'} ({safeAvis.length} avis) • 💸 {salon.type_salon}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <h1 style={{ fontSize: 36, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>{salon.nom}</h1>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)' }}>♡</div>
             </div>
           </div>
-          <a href="#prestations" style={{ background: NOIR, color: '#fff', padding: '14px 28px', borderRadius: 8, fontSize: 15, fontWeight: 800, textDecoration: 'none', display: 'inline-block' }}>
-            Prendre RDV
-          </a>
+        </div>
+      </div>
+
+      {/* CONTENEUR PRINCIPAL */}
+      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '30px 20px' }}>
+
+        {/* 2. INFOS RAPIDES DU SALON */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, fontSize: 14, color: '#555', alignItems: 'center', marginBottom: 30 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: NOIR }}>📍 {salon.adresse}, {salon.ville}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>⭐ {safeAvis.length > 0 ? '4.8' : 'Nouveau'} ({safeAvis.length} avis)</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>🕒 {salon.ouverture} - {salon.fermeture}</span>
+          {salon.jour_off > 0 && <span style={{ color: '#d32f2f', fontWeight: 700 }}>Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</span>}
         </div>
 
-        {/* 2. MOSAÏQUE DE PHOTOS (Style Planity) */}
-        <div style={{ marginBottom: 40 }}>
-          {/* Si 1 seule photo */}
-          {displayImages.length === 1 && (
-            <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} style={{ display: 'block', height: 450, borderRadius: 16, overflow: 'hidden' }}>
-              <img src={displayImages[0]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </Link>
-          )}
-          
-          {/* Si 2 photos */}
-          {displayImages.length === 2 && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, height: 450 }}>
-              <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} style={{ borderRadius: 16, overflow: 'hidden' }}><img src={displayImages[0]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></Link>
-              <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} style={{ borderRadius: 16, overflow: 'hidden' }}><img src={displayImages[1]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></Link>
+        {/* 3. GALERIE PHOTOS (Maintenant avec le cache désactivé, toutes les photos s'afficheront) */}
+        {safeGallery.length > 0 && (
+          <div style={{ marginBottom: 40 }}>
+            <div className="custom-scroll" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, scrollBehavior: 'smooth' }}>
+              {safeGallery.map((img: any) => (
+                <div key={img.id} style={{ flexShrink: 0, width: 280, height: 200, borderRadius: 12, overflow: 'hidden', border: '1px solid #E0D8CE', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                  <img src={img.image_path} alt="Galerie salon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Si 3 photos ou plus */}
-          {displayImages.length >= 3 && (
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, height: 450 }}>
-              <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} style={{ borderRadius: 16, overflow: 'hidden' }}>
-                <img src={displayImages[0]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} />
-              </Link>
-              <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 12 }}>
-                <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} style={{ borderRadius: 16, overflow: 'hidden' }}>
-                  <img src={displayImages[1]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} />
-                </Link>
-                <Link href={`/salon/${salonId}?tab=${activeTab}&gallery=open`} style={{ borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
-                  <img src={displayImages[2]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer' }} />
-                  {/* Calque "+ X photos" s'il y a des photos cachées */}
-                  {allImages.length > 3 && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18, cursor: 'pointer' }}>
-                      + {allImages.length - 3} photos
-                    </div>
-                  )}
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div style={{ fontSize: 22, fontWeight: 900, color: NOIR, marginBottom: 8, marginTop: 40 }} id="prestations">
-          Réserver en ligne chez {salon.nom}
-        </div>
-        <p style={{ color: '#555', fontSize: 14, marginBottom: 30 }}>24h/24 - Paiement sur place - Confirmation immédiate</p>
-
-        {/* 3. ONGLETS INTERACTIFS */}
+        {/* 4. ONGLETS INTERACTIFS */}
         <div style={{ display: 'flex', gap: 30, borderBottom: '1px solid #E0D8CE', marginBottom: 30 }}>
           <Link href={`/salon/${salonId}?tab=prestations`} scroll={false} style={{ paddingBottom: 12, borderBottom: activeTab === 'prestations' ? `3px solid ${OR}` : 'none', fontWeight: activeTab === 'prestations' ? 800 : 600, color: activeTab === 'prestations' ? NOIR : '#888', textDecoration: 'none' }}>
             Prestations
@@ -177,7 +167,7 @@ export default async function SalonPage({
         {/* CONTENU DYNAMIQUE DES ONGLETS */}
         {/* ============================================================== */}
 
-        {/* ONGLET 1 : PRESTATIONS */}
+        {/* ONGLET 1 : PRESTATIONS (Défaut) */}
         {activeTab === 'prestations' && (
           <div>
             {/* PROMOS */}
