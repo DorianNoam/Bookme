@@ -288,7 +288,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   // Variables d'état pour la gestion des promotions
   const [promoId, setPromoId] = useState<number | null>(null)
   const [promoPct, setPromoPct] = useState('')
-  const [promoNom, setPromoNom] = useState('') // Ajout du nom de la promotion !
+  const [promoNom, setPromoNom] = useState('') 
   const [savingPromo, setSavingPromo] = useState(false)
   const [promoDebut, setPromoDebut] = useState('')
   const [promoFin, setPromoFin] = useState('')
@@ -312,7 +312,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
           id: s.id, 
           promo_pourcentage: pct, 
           promo_active: true, 
-          promo_nom: promoNom || null, // Envoi du nom de la promotion
+          promo_nom: promoNom || null, 
           promo_debut: promoDebut || null, 
           promo_fin: promoFin || null 
         }) 
@@ -497,8 +497,28 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           </div>
                           
                           <div style={{ width: '100%' }}>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l'offre (Optionnel, ex: Spécial Aïd)</label>
-                            <input type="text" value={promoNom} onChange={e => setPromoNom(e.target.value)} placeholder="Spécial Aïd" style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
+                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l'offre (Optionnel)</label>
+                            {/* CORRECTION ICI : Remplacement par un <datalist> pour avoir le menu déroulant ! */}
+                            <input 
+                              list="promo-events"
+                              type="text" 
+                              value={promoNom} 
+                              onChange={e => setPromoNom(e.target.value)} 
+                              placeholder="Choisissez dans la liste ou tapez un nom..." 
+                              style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} 
+                            />
+                            <datalist id="promo-events">
+                              <option value="Spécial Aïd El Fitr" />
+                              <option value="Spécial Aïd El Adha" />
+                              <option value="Promo Ramadan" />
+                              <option value="Offre Mariage" />
+                              <option value="Journée de la Femme (8 Mars)" />
+                              <option value="Soldes d'été" />
+                              <option value="Soldes d'hiver" />
+                              <option value="Black Friday" />
+                              <option value="Nouvel An" />
+                              <option value="Yennayer" />
+                            </datalist>
                           </div>
 
                           {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (
