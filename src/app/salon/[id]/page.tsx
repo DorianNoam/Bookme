@@ -31,10 +31,6 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
   const safeAvis = avisRes.data || []
   const safeGallery = galleryRes.data || []
 
-  // Consolidation de toutes les images (Photo principale + Galerie)
-  const allImages = [salon.image, ...safeGallery.map((g: any) => g.image_path)].filter(Boolean)
-  const displayImages = allImages.slice(0, 3) // On garde max 3 images pour la mosaïque du haut
-
   // Grouper les prestations par catégorie (avec typage explicite pour Vercel)
   const grouped: Record<string, any[]> = safeServices.reduce((acc: Record<string, any[]>, s: any) => {
     const cat = s.categorie_service || 'Général'
@@ -49,79 +45,68 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
       
-      {/* CONTENEUR PRINCIPAL */}
-      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '40px 20px 0 20px' }}>
+      {/* STYLE POUR CACHER LA SCROLLBAR DE LA GALERIE TOUT EN GARDANT LE SCROLL */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}} />
+
+      {/* 1. BANNIÈRE PRINCIPALE (Image de couverture) */}
+      <div style={{ width: '100%', height: '400px', position: 'relative' }}>
+        <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         
-        {/* 1. EN-TÊTE DU SALON (Texte sur fond clair) */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ color: OR, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-            {salon.type_salon}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 16 }}>
-            <h1 style={{ fontSize: 36, fontWeight: 900, color: NOIR, margin: 0, letterSpacing: '-0.5px' }}>{salon.nom}</h1>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid #E0D8CE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: NOIR, cursor: 'pointer', background: '#fff' }}>♡</div>
-          </div>
-          
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, fontSize: 14, color: '#555', alignItems: 'center' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>📍 {salon.adresse}, {salon.ville}</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>⭐ {safeAvis.length > 0 ? '4.8' : 'Nouveau'} ({safeAvis.length} avis)</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>🕒 {salon.ouverture} - {salon.fermeture}</span>
-            {salon.jour_off > 0 && <span style={{ color: '#d32f2f', fontWeight: 700 }}>Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</span>}
+        {/* Dégradé sombre en bas de l'image pour lire le texte facilement */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 20px 20px 20px' }}>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+            <div style={{ color: OR, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+              {salon.type_salon}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <h1 style={{ fontSize: 36, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>{salon.nom}</h1>
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)' }}>♡</div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* 2. MOSAÏQUE DE PHOTOS (Style Planity) */}
-        <div style={{ marginBottom: 40 }}>
-          {displayImages.length === 1 && (
-            <div style={{ height: 450, borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-              <img src={displayImages[0]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-          )}
-          
-          {displayImages.length === 2 && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, height: 450 }}>
-              <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}><img src={displayImages[0]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-              <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}><img src={displayImages[1]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /></div>
-            </div>
-          )}
-
-          {displayImages.length >= 3 && (
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, height: 450 }}>
-              <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                <img src={displayImages[0]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateRows: '1fr 1fr', gap: 12 }}>
-                <div style={{ borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                  <img src={displayImages[1]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ borderRadius: 16, overflow: 'hidden', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                  <img src={displayImages[2]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  {/* Calque "+ X photos" si on a beaucoup d'images */}
-                  {allImages.length > 3 && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18, cursor: 'pointer', transition: 'background 0.3s' }}>
-                      + {allImages.length - 3} photos
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+      {/* CONTENEUR PRINCIPAL */}
+      <div style={{ maxWidth: 1040, margin: '0 auto', padding: '30px 20px' }}>
+        
+        {/* 2. INFOS DU SALON */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, fontSize: 14, color: '#555', alignItems: 'center', marginBottom: 40, background: '#fff', padding: '16px 24px', borderRadius: 12, border: '1px solid #E0D8CE' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: NOIR }}>📍 {salon.adresse}, {salon.ville}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>⭐ {safeAvis.length > 0 ? '4.8' : 'Nouveau'} ({safeAvis.length} avis)</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>🕒 {salon.ouverture} - {salon.fermeture}</span>
+          {salon.jour_off > 0 && <span style={{ color: '#d32f2f', fontWeight: 700 }}>Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</span>}
         </div>
 
-        {/* 3. TABS (Navigation interne) */}
+        {/* 3. GALERIE PHOTOS (Autres photos en dessous) */}
+        {safeGallery.length > 0 && (
+          <div style={{ marginBottom: 40 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Galerie Photos</h3>
+            <div className="hide-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, scrollBehavior: 'smooth' }}>
+              {safeGallery.map((img: any) => (
+                <div key={img.id} style={{ flexShrink: 0, width: 280, height: 200, borderRadius: 12, overflow: 'hidden', border: '1px solid #E0D8CE', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                  <img src={img.image_path} alt="Galerie salon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 4. TABS (Navigation interne) */}
         <div style={{ display: 'flex', gap: 30, borderBottom: '1px solid #E0D8CE', margin: '30px 0' }}>
           <div style={{ paddingBottom: 12, borderBottom: `3px solid ${OR}`, fontWeight: 800, color: NOIR, cursor: 'pointer' }}>Prestations</div>
           <div style={{ paddingBottom: 12, color: '#888', fontWeight: 600, cursor: 'pointer' }}>Avis ({safeAvis.length})</div>
           <div style={{ paddingBottom: 12, color: '#888', fontWeight: 600, cursor: 'pointer' }}>Informations</div>
         </div>
 
-        {/* 4. DESCRIPTION */}
-        <div style={{ background: '#fff', padding: 24, borderRadius: 12, border: '1px solid #E0D8CE', marginBottom: 40 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 12 }}>À propos</h3>
+        {/* 5. DESCRIPTION */}
+        <div style={{ marginBottom: 40 }}>
           <p style={{ color: '#555', fontSize: 15, lineHeight: 1.6, margin: 0 }}>{salon.description}</p>
         </div>
 
-        {/* 5. SECTION PROMOS */}
+        {/* 6. SECTION PROMOS */}
         {promos.length > 0 && (
           <div style={{ marginBottom: 40 }}>
             <h2 style={{ fontSize: 20, fontWeight: 900, color: '#d32f2f', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -169,7 +154,7 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
           </div>
         )}
 
-        {/* 6. LISTE DES PRESTATIONS NORMALES */}
+        {/* 7. LISTE DES PRESTATIONS NORMALES */}
         {Object.entries(grouped).map(([cat, items]) => (
           <div key={cat} style={{ marginBottom: 40 }}>
             <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>{cat}</h3>
