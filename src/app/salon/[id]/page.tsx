@@ -45,10 +45,26 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 60 }}>
       
-      {/* STYLE POUR CACHER LA SCROLLBAR DE LA GALERIE TOUT EN GARDANT LE SCROLL */}
+      {/* STYLE POUR UNE BARRE DE DÉFILEMENT ÉLÉGANTE ET VISIBLE SUR ORDINATEUR */}
       <style dangerouslySetInnerHTML={{__html: `
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scroll {
+          overflow-x: auto;
+          scrollbar-width: thin;
+          scrollbar-color: #E0D8CE transparent;
+        }
+        .custom-scroll::-webkit-scrollbar {
+          height: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background-color: #E0D8CE;
+          border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+          background-color: ${OR};
+        }
       `}} />
 
       {/* 1. BANNIÈRE PRINCIPALE (Image de couverture) */}
@@ -80,11 +96,11 @@ export default async function SalonPage({ params }: { params: { id: string } }) 
           {salon.jour_off > 0 && <span style={{ color: '#d32f2f', fontWeight: 700 }}>Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</span>}
         </div>
 
-        {/* 3. GALERIE PHOTOS (Autres photos en dessous) */}
+        {/* 3. GALERIE PHOTOS */}
         {safeGallery.length > 0 && (
           <div style={{ marginBottom: 40 }}>
             <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>Galerie Photos</h3>
-            <div className="hide-scrollbar" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, scrollBehavior: 'smooth' }}>
+            <div className="custom-scroll" style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 16, scrollBehavior: 'smooth' }}>
               {safeGallery.map((img: any) => (
                 <div key={img.id} style={{ flexShrink: 0, width: 280, height: 200, borderRadius: 12, overflow: 'hidden', border: '1px solid #E0D8CE', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                   <img src={img.image_path} alt="Galerie salon" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
