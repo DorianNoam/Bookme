@@ -265,7 +265,9 @@ function SearchContent() {
             </Link>
           </div>
 
-          <MobileMenu />
+         <div className="hide-desktop" style={{ marginLeft: 'auto' }}>
+            <MobileMenu />
+          </div>
         </div>
       </header>
 
