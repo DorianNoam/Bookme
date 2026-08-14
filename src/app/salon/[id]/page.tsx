@@ -82,7 +82,7 @@ export default async function SalonPage({
         .custom-scroll::-webkit-scrollbar-thumb:hover { background-color: #B8922A; }
       `}} />
 
-      <header style={{ background: '#fff', borderBottom: '1px solid #E0D8CE', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, gap: 12 }}>
+    <header style={{ background: '#fff', borderBottom: '1px solid #E0D8CE', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, gap: 12 }}>
         <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 900, color: NOIR, textDecoration: 'none', flexShrink: 0 }}>
           Bookme<span style={{ color: OR }}>.dz</span>
         </Link>
@@ -91,14 +91,16 @@ export default async function SalonPage({
           &larr; Retour aux salons
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: 'clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 20px)', borderRadius: 6, fontWeight: 700, fontSize: 'clamp(12px, 1.5vw, 14px)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+        <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
             Mon espace
           </Link>
-          <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: 'clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 20px)', borderRadius: 6, fontWeight: 700, fontSize: 'clamp(12px, 1.5vw, 14px)', textDecoration: 'none', border: `1.5px solid ${OR}`, whiteSpace: 'nowrap' }}>
+          <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none', border: `1.5px solid ${OR}` }}>
             Espace Pro
           </Link>
         </div>
+
+        <MobileMenu />
       </header>
 
       <div style={{ width: '100%', height: 380, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
