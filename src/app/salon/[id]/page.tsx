@@ -291,26 +291,64 @@ export default async function SalonPage({
           </div>
         )}
 
-        {/* ONGLET 3 : INFORMATIONS */}
+{/* ONGLET 3 : INFORMATIONS */}
         {activeTab === 'infos' && (
-          <div style={{ background: '#fff', padding: 32, borderRadius: 12, border: '1px solid #E0D8CE', display: 'grid', gap: 30 }}>
+          <div style={{ background: '#fff', padding: 'clamp(20px, 4vw, 32px)', borderRadius: 12, border: '1px solid #E0D8CE', display: 'grid', gap: 30 }}>
             <div>
               <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 12 }}>À propos du salon</h3>
               <p style={{ color: '#555', fontSize: 15, lineHeight: 1.6, margin: 0 }}>{salon.description}</p>
             </div>
             <div style={{ borderTop: '1px solid #E0D8CE', paddingTop: 30 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 16 }}>Horaires & Accès</h3>
-              <div style={{ display: 'grid', gap: 12, color: '#555', fontSize: 15 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📍 <strong>Adresse :</strong> {salon.adresse}, {salon.ville}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>📞 <strong>Téléphone :</strong> {salon.telephone}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>🕒 <strong>Ouverture :</strong> Ouvert de {salon.ouverture} à {salon.fermeture}</div>
-                {salon.jour_off > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#d32f2f', fontWeight: 700 }}>⚠️ <strong>Fermeture :</strong> Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</div>}
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Horaires & Accès</h3>
+              <div style={{ display: 'grid', gap: 16 }}>
+
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ width: 36, height: 36, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>📍</span>
+                  <div style={{ color: '#555', fontSize: 15, lineHeight: 1.5, paddingTop: 6 }}>
+                    <strong style={{ color: NOIR }}>Adresse</strong><br/>
+                    {salon.adresse}, {salon.ville}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ width: 36, height: 36, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>📞</span>
+                  <div style={{ color: '#555', fontSize: 15, lineHeight: 1.5, paddingTop: 6 }}>
+                    <strong style={{ color: NOIR }}>Téléphone</strong><br/>
+                    {salon.telephone}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{ width: 36, height: 36, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🕒</span>
+                  <div style={{ color: '#555', fontSize: 15, lineHeight: 1.5, paddingTop: 6 }}>
+                    <strong style={{ color: NOIR }}>Horaires</strong><br/>
+                    {salon.ouverture} - {salon.fermeture}
+                  </div>
+                </div>
+
+                {salon.jour_off > 0 && (
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <span style={{ width: 36, height: 36, borderRadius: '50%', background: '#FFF5F5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>⚠️</span>
+                    <div style={{ color: '#d32f2f', fontSize: 15, lineHeight: 1.5, fontWeight: 700, paddingTop: 6 }}>
+                      <strong>Fermeture</strong><br/>
+                      Fermé le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}
+                    </div>
+                  </div>
+                )}
+
+                {salon.instagram && (
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                    <span style={{ width: 36, height: 36, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>📸</span>
+                    <div style={{ color: '#555', fontSize: 15, lineHeight: 1.5, paddingTop: 6 }}>
+                      <strong style={{ color: NOIR }}>Instagram</strong><br/>
+                      <a href={`https://instagram.com/${salon.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" style={{ color: OR, fontWeight: 600, textDecoration: 'none' }}>
+                        {salon.instagram}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
         )}
-
-      </div>
-    </div>
-  )
-}
