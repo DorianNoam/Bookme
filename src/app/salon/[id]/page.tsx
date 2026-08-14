@@ -1,3 +1,4 @@
+import MobileMenu from '@/components/MobileMenu'
 import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
