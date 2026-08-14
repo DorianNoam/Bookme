@@ -1,4 +1,5 @@
 'use client';
+import MobileMenu from '@/components/MobileMenu'
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -250,12 +251,12 @@ function SearchContent() {
             </button>
           </form>
 
-          <div style={{ display: 'flex', gap: 8, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
+          <div className="hide-mobile" style={{ display: 'flex', gap: 8, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
             {isLoggedIn ? (
               <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Mon espace</Link>
             ) : (
               <>
-                <Link href="/login" className="hide-mobile" style={{ color: '#555', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>Connexion</Link>
+                <Link href="/login" style={{ color: '#555', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>Connexion</Link>
                 <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Mon espace</Link>
               </>
             )}
@@ -263,6 +264,8 @@ function SearchContent() {
               Espace Pro
             </Link>
           </div>
+
+          <MobileMenu />
         </div>
       </header>
 
