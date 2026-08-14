@@ -225,7 +225,7 @@ function SearchContent() {
         </div>
       )}
 
-      {/* HEADER DESKTOP & MOBILE */}
+{/* HEADER DESKTOP & MOBILE */}
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '10px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 900, color: NOIR, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
@@ -239,27 +239,29 @@ function SearchContent() {
             </select>
             
             <select value={loc} onChange={e => setLoc(e.target.value)} style={{ flex: '1 1 120px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, minWidth: 0, cursor: 'pointer' }}>
-              <option value="">Toutes les villes (Algérie)</option>
+              <option value="">Toutes les villes (Algerie)</option>
               {VILLES_ALGERIE.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
 
             <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '8px 18px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, letterSpacing: 0.5, whiteSpace: 'nowrap', flexShrink: 0 }}>Rechercher</button>
             
-            {/* Bouton Autour de moi - Desktop */}
             <button type="button" onClick={handleAutourDeMoi} style={{ background: userLocation ? NOIR : 'transparent', color: userLocation ? '#fff' : OR, border: `1px solid ${userLocation ? NOIR : OR}`, padding: '8px 14px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
               📍 Autour de moi
             </button>
           </form>
 
-          <div style={{ display: 'flex', gap: 10, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto' }}>
+          <div style={{ display: 'flex', gap: 8, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
             {isLoggedIn ? (
               <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Mon espace</Link>
             ) : (
               <>
                 <Link href="/login" className="hide-mobile" style={{ color: '#555', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>Connexion</Link>
-                <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Inscription</Link>
+                <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Mon espace</Link>
               </>
             )}
+            <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none', border: `1.5px solid ${OR}` }}>
+              Espace Pro
+            </Link>
           </div>
         </div>
       </header>
