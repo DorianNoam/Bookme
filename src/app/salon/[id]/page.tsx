@@ -350,5 +350,10 @@ export default async function SalonPage({
 
               </div>
             </div>
+
+                  </div>
+    </div>
+  )
+}
           </div>
         )}
