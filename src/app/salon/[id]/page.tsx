@@ -106,33 +106,33 @@ export default async function SalonPage({
         }
       `}} />
 
-      {/* HEADER GLOBAL (FIXE EN HAUT DE PAGE) */}
+ {/* HEADER GLOBAL (FIXE EN HAUT DE PAGE) */}
       <header style={{ 
         background: '#fff', 
         borderBottom: '1px solid #E0D8CE', 
-        padding: '16px 24px', 
+        padding: '12px 20px', 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
         position: 'sticky',
         top: 0,
-        zIndex: 50
+        zIndex: 50,
+        gap: 12
       }}>
-        <div style={{ flex: 1 }}>
-          <Link href="/" style={{ fontSize: 24, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
-          </Link>
-        </div>
+        <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 900, color: NOIR, textDecoration: 'none', flexShrink: 0 }}>
+          Bookme<span style={{ color: OR }}>.dz</span>
+        </Link>
         
-        <div style={{ flex: 1, textAlign: 'center' }}>
-          <Link href="/" style={{ color: '#888', fontSize: 14, textDecoration: 'none', fontWeight: 600, transition: 'color 0.2s' }}>
-            ← Retour aux salons
-          </Link>
-        </div>
+        <Link href="/" className="hide-mobile" style={{ color: '#888', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
+          ← Retour aux salons
+        </Link>
 
-        <div style={{ flex: 1, textAlign: 'right' }}>
-          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '10px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none', transition: 'opacity 0.2s' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: 'clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 20px)', borderRadius: 6, fontWeight: 700, fontSize: 'clamp(12px, 1.5vw, 14px)', textDecoration: 'none', whiteSpace: 'nowrap' }}>
             Mon espace
+          </Link>
+          <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: 'clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 20px)', borderRadius: 6, fontWeight: 700, fontSize: 'clamp(12px, 1.5vw, 14px)', textDecoration: 'none', border: `1.5px solid ${OR}`, whiteSpace: 'nowrap' }}>
+            Espace Pro
           </Link>
         </div>
       </header>
