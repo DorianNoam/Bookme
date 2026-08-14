@@ -58,7 +58,7 @@ export default function HomePage() {
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '12px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: NOIR, whiteSpace: 'nowrap', textDecoration: 'none' }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
+            Bookme<span style={{ color: OR }}>dz</span>
           </Link>
 
           {/* Nav desktop */}
