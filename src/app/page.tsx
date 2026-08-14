@@ -94,7 +94,7 @@ export default function HomePage() {
       {menuOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#fff', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>.dz</span></span>
+            <span style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>dz</span></span>
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: '#888', padding: 4 }}>{'✕'}</button>
           </div>
           {NAV_LINKS.map(c => (
@@ -240,7 +240,7 @@ export default function HomePage() {
         <div style={{ width: 40, height: 2, background: OR, margin: '0 auto 18px' }} />
         <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14 }}>Espace Partenaire</div>
         <h2 style={{ fontSize: 'clamp(22px, 5vw, 38px)', marginBottom: 14, fontWeight: 900, letterSpacing: '-0.5px' }}>Vous etes un professionnel de la beaute ?</h2>
-        <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#aaa', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>Rejoignez Bookme Pro pour digitaliser votre agenda, eliminer les no-shows et developper votre clientele a travers toute l'Algerie.</p>
+        <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#aaa', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>Rejoignez Bookmedz Pro pour digitaliser votre agenda, eliminer les no-shows et developper votre clientele a travers toute l'Algerie.</p>
         <Link href="/pro" style={{ display: 'inline-block', background: OR, color: NOIR, padding: '16px clamp(24px, 5vw, 36px)', fontWeight: 900, borderRadius: 4, marginTop: 28, fontSize: 14, textDecoration: 'none', letterSpacing: '0.5px' }}>
           Decouvrir notre offre Pro
         </Link>
@@ -248,7 +248,7 @@ export default function HomePage() {
 
       {/* ══════ FOOTER ══════ */}
       <footer style={{ background: '#050505', padding: '24px 16px', borderTop: '1px solid #1a1a1a', textAlign: 'center', color: '#666', fontSize: 13 }}>
-        Bookme.dz — La beaute a portee de clic en Algerie
+        Bookmedz — La beauté à portée de clic en Algerie
       </footer>
     </div>
   )
