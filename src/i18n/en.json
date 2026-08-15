@@ -1,5 +1,18 @@
 {
 
+  "contact": {
+    "titre": "Contact us",
+    "sousTitre": "Have a question or partnership inquiry? Feel free to write to us.",
+    "nom": "Full name",
+    "email": "Email address",
+    "sujet": "Subject",
+    "message": "Your message",
+    "envoyer": "Send message",
+    "envoiEnCours": "Sending...",
+    "succes": "Your message has been sent successfully! We will get back to you shortly.",
+    "erreur": "An error occurred while sending."
+  },
+
   "dashboard": {
     "chargement": "Loading your account...",
     "nouvelleReservation": "New booking",
