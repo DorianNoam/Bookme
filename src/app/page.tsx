@@ -29,13 +29,13 @@ export default function HomePage() {
   const [loc, setLoc] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  const NAV_LINKS = [
-    { label: t.nav.coiffure, val: 'Coiffure' },
-    { label: t.nav.ongles, val: 'Beauté des ongles' },
-    { label: t.nav.bienetre, val: 'Massage et bien-être' },
-    { label: t.nav.barbier, val: 'Barbier' },
-    { label: t.nav.hammam, val: 'Hammam & Spa' },
-    { label: t.nav.chirurgie, val: 'Chirurgie esthétique' },
+const NAV_LINKS = [
+    { label: t.navShort.coiffure, val: 'Coiffure' },
+    { label: t.navShort.ongles, val: 'Beauté des ongles' },
+    { label: t.navShort.bienetre, val: 'Massage et bien-être' },
+    { label: t.navShort.barbier, val: 'Barbier' },
+    { label: t.navShort.hammam, val: 'Hammam & Spa' },
+    { label: t.navShort.chirurgie, val: 'Chirurgie esthétique' },
   ]
 
   const SLIDES = [
