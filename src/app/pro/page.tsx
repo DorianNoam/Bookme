@@ -131,7 +131,7 @@ export default function ProLandingPage() {
                   <span style={{ fontSize: 'clamp(40px, 8vw, 56px)', fontWeight: 900, color: '#fff' }}>3 000 DA</span>
                   <span style={{ color: '#888', fontSize: 15 }}>/mois</span>
                 </div>
-                <p style={{ color: '#aaa', fontSize: 15, marginBottom: 30 }}>Soit <strong style={{ color: '#fff' }}>36 000 DA/an</strong> - paiement annuel</p>
+                <p style={{ color: '#aaa', fontSize: 15, marginBottom: 30 }}>Soit <strong style={{ color: '#fff' }}>36 000 DA/an</strong> - engagement 12 mois</p>
 
                 <div style={{ display: 'grid', gap: 14, marginBottom: 30 }}>
                   {[
@@ -140,7 +140,7 @@ export default function ProLandingPage() {
                     'Mises a jour automatiques',
                     'Aucune commission sur les RDV',
                     'Paiement par virement ou CCP',
-                    'Annulation a tout moment',
+                   'Engagement annuel renouvelable',
                   ].map(f => (
                     <div key={f} style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, color: '#ccc' }}>
                       <span style={{ color: OR, fontSize: 16 }}>{'\u2713'}</span>
@@ -172,7 +172,7 @@ export default function ProLandingPage() {
               </div>
               <div style={{ background: '#111', border: '1px solid #222', borderRadius: 6, padding: 24 }}>
                 <p style={{ fontWeight: 700, color: '#fff', margin: '0 0 8px', fontSize: 15 }}>Comment je renouvelle apres 1 an ?</p>
-                <p style={{ color: '#888', fontSize: 14, lineHeight: 1.6, margin: 0 }}>Un simple virement de 36 000 DA avec votre nom de salon en motif. Vous recevrez un email de rappel 30 jours avant l&apos;echeance.</p>
+               <p style={{ color: '#888', fontSize: 14, lineHeight: 1.6, margin: 0 }}>Un simple virement de 36 000 DA (engagement 12 mois) avec votre nom de salon en motif. Vous recevrez des rappels a J-30, J-7 et J-3 avant l&apos;echeance. Sans renouvellement, l&apos;acces a votre espace pro sera suspendu.</p>
               </div>
             </div>
           </div>
