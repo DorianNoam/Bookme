@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "coiffure": "تصفيف الشعر",
+    "ongles": "العناية بالأظافر",
+    "bienetre": "تدليك و استرخاء",
+    "barbier": "حلاق",
+    "hammam": "حمام و سبا",
+    "chirurgie": "جراحة تجميلية",
+    "connexion": "تسجيل الدخول",
+    "inscription": "إنشاء حساب",
+    "monEspace": "حسابي",
+    "espacePro": "فضاء المحترفين",
+    "retourSalons": "العودة إلى الصالونات"
+  },
+  "hero": {
+    "subtitle": "المنصة رقم 1 في الجزائر",
+    "title": "احجز جمالك عبر الإنترنت",
+    "desc": "أفضل الصالونات والمعاهد والسبا في جميع أنحاء الجزائر.",
+    "prestation": "الخدمة",
+    "ville": "المدينة",
+    "rechercher": "بحث",
+    "placeholder": "تصفيف، تدليك، أظافر...",
+    "toutesVilles": "جميع المدن"
+  },
+  "search": {
+    "selectEtablissement": "اختر مؤسسة",
+    "rechercheEnCours": "جاري البحث...",
+    "meilleursSalons": "أفضل الصالونات والمعاهد",
+    "enAlgerie": "في الجزائر",
+    "reservation": "الحجز عبر الإنترنت",
+    "autourDeMoi": "حولي",
+    "toutesVilles": "جميع المدن (الجزائر)",
+    "toutesPrestations": "جميع الخدمات",
+    "aucunResultat": "لا توجد مؤسسة تطابق بحثك.",
+    "voirTous": "عرض جميع المؤسسات",
+    "prestations": "الخدمات",
+    "carte": "خريطة",
+    "liste": "قائمة",
+    "ville": "المدينة",
+    "tous": "الكل",
+    "matin": "صباحاً",
+    "apresMidi": "بعد الظهر",
+    "plusInfos": "مزيد من المعلومات",
+    "prendreRdv": "احجز الآن",
+    "nouveau": "جديد",
+    "avis": "تقييمات"
+  },
+  "salon": {
+    "prestations": "الخدمات",
+    "avis": "التقييمات",
+    "informations": "المعلومات",
+    "offresSpeciales": "عروض خاصة",
+    "reserver": "احجز",
+    "choisir": "اختر",
+    "ferme": "مغلق يوم",
+    "aPropos": "عن الصالون",
+    "horaires": "المواعيد والوصول",
+    "adresse": "العنوان",
+    "telephone": "الهاتف",
+    "fermeture": "الإغلاق",
+    "instagram": "انستغرام"
+  },
+  "booking": {
+    "confirmation": "تم تأكيد الموعد!",
+    "prixSurPlace": "السعر يُدفع في المكان",
+    "mesRdv": "مواعيدي"
+  },
+  "auth": {
+    "bonRetour": "مرحباً بعودتك!",
+    "connectezVous": "سجّل الدخول لإدارة حجوزاتك.",
+    "email": "البريد الإلكتروني",
+    "motDePasse": "كلمة المرور",
+    "seConnecter": "تسجيل الدخول",
+    "mdpOublie": "نسيت كلمة المرور؟",
+    "pasDeCompte": "ليس لديك حساب؟",
+    "inscrivezVous": "سجّل الآن"
+  },
+  "common": {
+    "chargement": "جاري التحميل...",
+    "da": "د.ج",
+    "min": "د",
+    "jours": ["", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
+  },
+  "features": {
+    "title1": "24/7 على مدار الساعة",
+    "desc1": "احجز في أي وقت، أينما كنت في الجزائر.",
+    "title2": "تأكيد فوري",
+    "desc2": "يتم حجز موعدك فوراً، بدون مكالمة هاتفية.",
+    "title3": "تقييمات موثوقة",
+    "desc3": "فقط العملاء الذين حصلوا على موعد فعلي يمكنهم التقييم."
+  },
+  "footer": "Bookmedz.com — الجمال في متناول يدك في الجزائر"
+}
