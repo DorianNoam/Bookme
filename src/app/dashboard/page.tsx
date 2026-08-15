@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
@@ -22,7 +21,6 @@ type Reservation = {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const t = useTranslations('dashboard')
 
   const [activeTab, setActiveTab] = useState('rdv')
   const [loading, setLoading] = useState(true)
@@ -72,7 +70,7 @@ export default function DashboardPage() {
       color: NOIR,
       fontSize: 15
     }}>
-      {t('chargement')}
+      Chargement de votre espace...
     </div>
   )
   if (!user) return null
@@ -112,7 +110,7 @@ export default function DashboardPage() {
                 <line x1="12" y1="8" x2="12" y2="16"></line>
                 <line x1="8" y1="12" x2="16" y2="12"></line>
               </svg>
-              <span className="hide-mobile">{t('nouvelleReservation')}</span>
+              <span className="hide-mobile">Nouvelle réservation</span>
             </Link>
             <button onClick={handleLogout} style={{
               background: 'none',
@@ -123,7 +121,7 @@ export default function DashboardPage() {
               cursor: 'pointer',
               padding: '6px 0'
             }}>
-              {t('deconnexion')}
+              Déconnexion
             </button>
           </div>
         </div>
@@ -137,10 +135,10 @@ export default function DashboardPage() {
             fontWeight: 900,
             marginBottom: 5
           }}>
-            {t('bonjour')} {user.prenom} !
+            Bonjour, {user.prenom} !
           </h1>
           <p style={{ color: '#aaa', fontSize: 'clamp(13px, 2.5vw, 15px)' }}>
-            {t('gererRdv')}
+            Gérez vos réservations et vos salons favoris.
           </p>
         </div>
       </div>
@@ -159,9 +157,9 @@ export default function DashboardPage() {
           scrollbarWidth: 'none'
         }}>
           {[
-            { id: 'rdv', label: t('rdv') },
-            { id: 'favoris', label: t('favoris') },
-            { id: 'profil', label: t('profil') }
+            { id: 'rdv', label: 'Rendez-vous' },
+            { id: 'favoris', label: 'Favoris' },
+            { id: 'profil', label: 'Profil' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -201,7 +199,7 @@ export default function DashboardPage() {
                 gap: 8
               }}>
                 <span style={{ display: 'inline-block', width: 8, height: 8, background: OR, borderRadius: '50%' }}></span>
-                {t('aVenir')} ({aVenir.length})
+                À venir ({aVenir.length})
               </h2>
 
               {aVenir.length === 0 ? (
@@ -214,7 +212,7 @@ export default function DashboardPage() {
                   color: '#888',
                   fontSize: 14
                 }}>
-                  {t('aucunRdv')}
+                  Vous n'avez aucun rendez-vous prévu.
                   <div style={{ marginTop: 16 }}>
                     <Link href="/search" style={{
                       display: 'inline-block',
@@ -226,7 +224,7 @@ export default function DashboardPage() {
                       fontWeight: 700,
                       fontSize: 13
                     }}>
-                      {t('reserverMaintenant')}
+                      Réserver maintenant
                     </Link>
                   </div>
                 </div>
@@ -320,7 +318,7 @@ export default function DashboardPage() {
                   gap: 8
                 }}>
                   <span style={{ display: 'inline-block', width: 8, height: 8, background: '#ccc', borderRadius: '50%' }}></span>
-                  {t('passes')} ({passes.length})
+                  Passés ({passes.length})
                 </h2>
                 <div style={{ display: 'grid', gap: 12 }}>
                   {passes.map(rdv => (
@@ -401,7 +399,7 @@ export default function DashboardPage() {
                 color: '#888',
                 fontSize: 14
               }}>
-                {t('aucunFavori')}
+                Vous n'avez pas encore de salons favoris.
                 <div style={{ marginTop: 16 }}>
                   <Link href="/search" style={{
                     display: 'inline-block',
@@ -413,7 +411,7 @@ export default function DashboardPage() {
                     fontWeight: 700,
                     fontSize: 13
                   }}>
-                    {t('decouvrirSalons')}
+                    Découvrir les salons
                   </Link>
                 </div>
               </div>
@@ -483,7 +481,6 @@ export default function DashboardPage() {
 // ═══════════════════════════════════════════════════════════════════
 
 function ProfileTab({ user, onUpdate }: { user: User; onUpdate: (u: User) => void }) {
-  const t = useTranslations('dashboard')
   const [form, setForm] = useState({ ...user })
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -521,7 +518,7 @@ function ProfileTab({ user, onUpdate }: { user: User; onUpdate: (u: User) => voi
 
   return (
     <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: 'clamp(20px, 4vw, 30px)', maxWidth: 500 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>{t('mesInfos')}</h2>
+      <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 20 }}>Mes informations</h2>
       {message && (
         <div style={{
           background: message.includes('Erreur') || message.includes('erreur') || message.includes('utilise') ? '#fef2f2' : '#f0fdf4',
@@ -556,7 +553,7 @@ function ProfileTab({ user, onUpdate }: { user: User; onUpdate: (u: User) => voi
           color: '#fff', border: 'none', borderRadius: 4, fontWeight: 800,
           fontSize: 15, cursor: saving ? 'not-allowed' : 'pointer', marginTop: 4
         }}>
-          {saving ? t('enregistrement') : t('enregistrer')}
+          {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
         </button>
       </div>
     </div>
