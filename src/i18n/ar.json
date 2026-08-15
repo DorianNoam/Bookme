@@ -1,4 +1,25 @@
 {
+
+  "dashboard": {
+    "chargement": "جاري تحميل حسابك...",
+    "nouvelleReservation": "حجز جديد",
+    "deconnexion": "تسجيل الخروج",
+    "bonjour": "مرحباً،",
+    "gererRdv": "أدر حجوزاتك وصالوناتك المفضلة.",
+    "rdv": "المواعيد",
+    "favoris": "المفضلة",
+    "profil": "الملف الشخصي",
+    "aVenir": "القادمة",
+    "passes": "السابقة",
+    "aucunRdv": "ليس لديك أي موعد قادم.",
+    "reserverMaintenant": "احجز الآن",
+    "aucunFavori": "ليس لديك صالونات مفضلة بعد.",
+    "decouvrirSalons": "اكتشف الصالونات",
+    "mesInfos": "معلوماتي",
+    "enregistrer": "حفظ التعديلات",
+    "enregistrement": "جاري الحفظ..."
+  },
+  
   "nav": {
     "coiffure": "تصفيف الشعر",
     "ongles": "العناية بالأظافر",
