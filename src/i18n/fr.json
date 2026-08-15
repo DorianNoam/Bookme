@@ -12,6 +12,16 @@
     "espacePro": "Espace Pro",
     "retourSalons": "Retour aux salons"
   },
+
+  "navShort": {
+    "coiffure": "Coiffure",
+    "ongles": "Ongles",
+    "bienetre": "Bien-être",
+    "barbier": "Barbier",
+    "hammam": "Hammam",
+    "chirurgie": "Chirurgie"
+  },
+  
   "hero": {
     "subtitle": "Plateforme N°1 en Algérie",
     "title": "Réservez votre beauté en ligne",
