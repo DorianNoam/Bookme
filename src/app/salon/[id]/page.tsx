@@ -86,7 +86,7 @@ export default async function SalonPage({
 
       <header style={{ background: '#fff', borderBottom: '1px solid #E0D8CE', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, gap: 12 }}>
         <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 900, color: NOIR, textDecoration: 'none', flexShrink: 0 }}>
-          Bookme<span style={{ color: OR }}>.dz</span>
+          Bookme<span style={{ color: OR }}>dz</span>
         </Link>
         
         <Link href="/" className="hide-mobile" style={{ color: '#888', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
