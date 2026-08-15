@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Bookme.dz - Réservez votre beauté',
+  title: 'Bookmedz - Réservez votre beauté',
   description: 'Réservez en ligne dans les meilleurs salons de beauté, coiffure et spa.',
 }
 
