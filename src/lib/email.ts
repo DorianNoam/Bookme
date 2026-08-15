@@ -32,7 +32,7 @@ export async function sendBookingConfirmation({
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;border:1px solid #E0D8CE;overflow:hidden;">
         <tr><td style="background:#0A0A0A;padding:20px;text-align:center;">
-          <span style="color:#ffffff;font-size:24px;font-weight:bold;">Bookme</span><span style="color:#B8922A;font-size:24px;font-weight:bold;">.dz</span>
+          <span style="color:#ffffff;font-size:24px;font-weight:bold;">Bookme</span><span style="color:#B8922A;font-size:24px;font-weight:bold;">dz</span>
         </td></tr>
         <tr><td style="padding:40px;">
           <h1 style="color:#0A0A0A;font-size:24px;font-weight:bold;margin:0 0 20px;">Rendez-vous confirme !</h1>
@@ -48,7 +48,7 @@ export async function sendBookingConfirmation({
           </table>
           <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 16px;">Merci de vous presenter 5 minutes avant l'heure prevue. En cas d'empechement, vous pouvez annuler directement depuis votre espace client.</p>
           <hr style="border:none;border-top:1px solid #E0D8CE;margin:30px 0;" />
-          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">L'equipe Bookme.dz<br/>La plateforme premium de beaute et bien-etre en Algerie.</p>
+          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">L'equipe Bookmedz<br/>La plateforme premium de beaute et bien-etre en Algerie.</p>
         </td></tr>
       </table>
     </td></tr>
@@ -120,7 +120,7 @@ export async function sendProNotification({
           </table>
           <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 16px;">Connectez-vous a votre espace pro pour consulter votre agenda.</p>
           <hr style="border:none;border-top:1px solid #E0D8CE;margin:30px 0;" />
-          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">Bookme.dz Pro — Gestion de salon simplifiee.</p>
+          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">Bookmedz Pro — Gestion de salon simplifiee.</p>
         </td></tr>
       </table>
     </td></tr>
@@ -185,7 +185,7 @@ export async function sendBookingReminder({
           </table>
           <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 16px;">Merci de vous presenter 5 minutes avant l'heure prevue. En cas d'empechement, pensez a annuler depuis votre espace client pour liberer le creneau.</p>
           <hr style="border:none;border-top:1px solid #E0D8CE;margin:30px 0;" />
-          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">L'equipe Bookme.dz<br/>La plateforme premium de beaute et bien-etre en Algerie.</p>
+          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">L'equipe Bookmedz<br/>La plateforme premium de beaute et bien-etre en Algerie.</p>
         </td></tr>
       </table>
     </td></tr>
