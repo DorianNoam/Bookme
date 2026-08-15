@@ -90,6 +90,27 @@
     "min": "min",
     "jours": ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
   },
+
+  "carousel": {
+    "subtitle": "Selected for you",
+    "title": "Discover our Categories",
+    "voirEtablissements": "View establishments",
+    "slide1Title": "The art of the cut",
+    "slide1Desc": "Looking for a change or a simple refresh? Our hairstylists master all techniques: balayage, ombré, Brazilian blowout...",
+    "slide2Title": "Perfect hands",
+    "slide2Desc": "Polish, gel, nail art or pedicure. Find the ideal specialist for flawless nails.",
+    "slide3Title": "Total relaxation",
+    "slide3Desc": "Scrub, massage and traditional treatments. Treat yourself to a true wellness experience in the best hammams.",
+    "slide4Title": "Trusted professionals",
+    "slide4Desc": "Consultations and procedures performed by qualified doctors. Find the right clinic for you."
+  },
+  "cta": {
+    "subtitle": "Partner Area",
+    "title": "Are you a beauty professional?",
+    "desc": "Join Bookmedz Pro to digitalize your schedule, eliminate no-shows and grow your clientele across Algeria.",
+    "button": "Discover our Pro offer"
+  }
+  
   "features": {
     "title1": "24/7",
     "desc1": "Book anytime, anywhere in Algeria.",
