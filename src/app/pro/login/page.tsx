@@ -49,7 +49,7 @@ function ProLoginContent() {
       <header style={{ padding: '15px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px', textAlign: 'center' }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: '#fff', textDecoration: 'none' }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
+            Bookme<span style={{ color: OR }}>dz</span>
             <span style={{ fontWeight: 400, fontSize: 'clamp(12px, 2.5vw, 16px)', color: '#888', marginLeft: 8 }}>Pro</span>
           </Link>
         </div>
@@ -92,7 +92,7 @@ function ProLoginContent() {
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                placeholder="votre@email.dz"
+                placeholder="votre@emaildz"
                 style={{ width: '100%', padding: '12px 16px', background: '#000', border: '1px solid #333', color: '#fff', borderRadius: 4, fontSize: 16, outline: 'none', boxSizing: 'border-box', WebkitAppearance: 'none' }}
                 required
                 autoComplete="email"
