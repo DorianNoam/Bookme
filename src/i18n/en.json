@@ -81,7 +81,16 @@
     "seConnecter": "Log in",
     "mdpOublie": "Forgot password?",
     "pasDeCompte": "No account yet?",
-    "inscrivezVous": "Sign up"
+    "inscrivezVous": "Sign up",
+    "creerCompte": "Create a client account",
+    "rejoignez": "Join Bookmedz to book your beauty and wellness services.",
+    "prenom": "First name",
+    "nom": "Last name",
+    "telephone": "Phone",
+    "inscrire": "Sign up",
+    "creation": "Creating...",
+    "dejaCompte": "Already have an account?",
+    "connectezVousLink": "Log in"
   },
   "common": {
     "chargement": "Loading...",
