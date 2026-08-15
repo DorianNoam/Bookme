@@ -1,25 +1,34 @@
 'use client'
+
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { VILLES_ALGERIE } from '@/data/villes'
 
-const CATEGORIES = ['Coiffure', 'Beaute des ongles', 'Massage et bien-etre', 'Barbier', 'Hammam & Spa', 'Chirurgie esthetique']
+// Utilisation d'objets pour séparer la valeur en Base de données (val) de l'affichage parfait en français (label)
+const CATEGORIES = [
+  { val: 'Coiffure', label: 'Coiffure' },
+  { val: 'Beaute des ongles', label: 'Beauté des ongles' },
+  { val: 'Massage et bien-etre', label: 'Massage et bien-être' },
+  { val: 'Barbier', label: 'Barbier' },
+  { val: 'Hammam & Spa', label: 'Hammam & Spa' },
+  { val: 'Chirurgie esthetique', label: 'Chirurgie esthétique' },
+]
 
 const NAV_LINKS = [
   { label: 'Coiffure', val: 'Coiffure' },
   { label: 'Ongles', val: 'Beaute des ongles' },
-  { label: 'Bien-etre', val: 'Massage et bien-etre' },
+  { label: 'Bien-être', val: 'Massage et bien-etre' },
   { label: 'Barbier', val: 'Barbier' },
   { label: 'Hammam', val: 'Hammam & Spa' },
   { label: 'Chirurgie', val: 'Chirurgie esthetique' },
 ]
 
 const SLIDES = [
-  { cat: 'Coiffure', title: "L'art de la coupe", desc: "Envie d'un changement ou d'un simple rafraichissement ? Nos coiffeurs maitrisent toutes les techniques : balayage, ombre hair, lissage bresilien...", img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=Coiffure' },
-  { cat: 'Beaute des ongles', title: 'Des mains parfaites', desc: "Pose de vernis, gel, nail art ou beaute des pieds. Trouvez la specialiste ideale pour des ongles impeccables.", img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800', link: '/search?q=Beaute des ongles' },
-  { cat: 'Hammam & Spa', title: 'Detente absolue', desc: "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthese de bien-etre dans les meilleurs hammams.", img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=Hammam & Spa' },
-  { cat: 'Chirurgie esthetique', title: 'Des professionnels de confiance', desc: "Consultations et interventions realisees par des medecins qualifies. Trouvez la clinique qu'il vous faut.", img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', link: '/search?q=Chirurgie esthetique' },
+  { cat: 'Coiffure', title: "L'art de la coupe", desc: "Envie d'un changement ou d'un simple rafraîchissement ? Nos coiffeurs maîtrisent toutes les techniques : balayage, ombré hair, lissage brésilien...", img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=Coiffure' },
+  { cat: 'Beauté des ongles', title: 'Des mains parfaites', desc: "Pose de vernis, gel, nail art ou beauté des pieds. Trouvez la spécialiste idéale pour des ongles impeccables.", img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800', link: '/search?q=Beaute+des+ongles' },
+  { cat: 'Hammam & Spa', title: 'Détente absolue', desc: "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthèse de bien-être dans les meilleurs hammams.", img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=Hammam+%26+Spa' },
+  { cat: 'Chirurgie esthétique', title: 'Des professionnels de confiance', desc: "Consultations et interventions réalisées par des médecins qualifiés. Trouvez la clinique qu'il vous faut.", img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', link: '/search?q=Chirurgie+esthetique' },
 ]
 
 const NOIR = '#0A0A0A'
@@ -58,13 +67,13 @@ export default function HomePage() {
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '12px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: NOIR, whiteSpace: 'nowrap', textDecoration: 'none' }}>
-            Bookme<span style={{ color: OR }}>dz</span>
+            Bookme<span style={{ color: OR }}>.dz</span>
           </Link>
 
           {/* Nav desktop */}
           <nav className="hide-mobile" style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
             {NAV_LINKS.map(c => (
-              <Link key={c.val} href={'/search?q=' + c.val} style={{ color: '#444', fontWeight: 500, fontSize: 13, textDecoration: 'none' }}>{c.label}</Link>
+              <Link key={c.val} href={`/search?q=${encodeURIComponent(c.val)}`} style={{ color: '#444', fontWeight: 500, fontSize: 13, textDecoration: 'none' }}>{c.label}</Link>
             ))}
           </nav>
 
@@ -94,11 +103,11 @@ export default function HomePage() {
       {menuOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: '#fff', padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>dz</span></span>
+            <span style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>.dz</span></span>
             <button onClick={() => setMenuOpen(false)} style={{ background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: '#888', padding: 4 }}>{'✕'}</button>
           </div>
           {NAV_LINKS.map(c => (
-            <Link key={c.val} href={'/search?q=' + c.val} onClick={() => setMenuOpen(false)} style={{ fontSize: 16, fontWeight: 600, color: NOIR, textDecoration: 'none', padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}>{c.label}</Link>
+            <Link key={c.val} href={`/search?q=${encodeURIComponent(c.val)}`} onClick={() => setMenuOpen(false)} style={{ fontSize: 16, fontWeight: 600, color: NOIR, textDecoration: 'none', padding: '10px 0', borderBottom: '1px solid #f5f5f5' }}>{c.label}</Link>
           ))}
           <div style={{ borderTop: '2px solid #eee', marginTop: 'auto', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {isLoggedIn ? (
@@ -126,13 +135,13 @@ export default function HomePage() {
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: 'clamp(40px, 8vw, 60px) 16px', width: '100%', boxSizing: 'border-box' }}>
           <div style={{ width: 40, height: 2, background: OR, marginBottom: 16 }} />
           <div style={{ fontSize: 11, fontWeight: 600, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14 }}>
-            Plateforme N1 en Algerie
+            Plateforme N°1 en Algérie
           </div>
           <h1 style={{ fontSize: 'clamp(28px, 6vw, 50px)', fontWeight: 900, color: '#fff', marginBottom: 14, lineHeight: 1.1, maxWidth: 540, letterSpacing: -1 }}>
-            Reservez votre beaute en ligne
+            Réservez votre beauté en ligne
           </h1>
           <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#999', marginBottom: 'clamp(24px, 5vw, 38px)', maxWidth: 380, lineHeight: 1.7 }}>
-            Les meilleurs salons, instituts et spas partout en Algerie.
+            Les meilleurs salons, instituts et spas partout en Algérie.
           </p>
 
           {/* BARRE DE RECHERCHE */}
@@ -141,7 +150,7 @@ export default function HomePage() {
               <div style={{ fontSize: 9, fontWeight: 700, color: OR, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 }}>Prestation</div>
               <select value={query} onChange={e => setQuery(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, fontWeight: 500, color: NOIR, width: '100%', fontFamily: 'Inter, sans-serif', background: 'transparent', cursor: 'pointer' }}>
                 <option value="">Coiffure, massage, ongles...</option>
-                {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                {CATEGORIES.map(c => <option key={c.val} value={c.val}>{c.label}</option>)}
               </select>
             </div>
 
@@ -174,7 +183,7 @@ export default function HomePage() {
         }}>
           <button onClick={() => router.push('/search')} style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>Tous</button>
           {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => router.push('/search?q=' + cat)} style={{ color: '#444', border: '1px solid #DDD5C8', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 600, background: '#fff', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{cat}</button>
+            <button key={cat.val} onClick={() => router.push(`/search?q=${encodeURIComponent(cat.val)}`)} style={{ color: '#444', border: '1px solid #DDD5C8', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 600, background: '#fff', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{cat.label}</button>
           ))}
         </div>
       </div>
@@ -182,8 +191,8 @@ export default function HomePage() {
       {/* ══════ CAROUSEL ══════ */}
       <section style={{ padding: 'clamp(40px, 8vw, 80px) 0', background: BG }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Selectionne pour vous</div>
-          <div style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 900, color: NOIR, marginBottom: 'clamp(24px, 5vw, 40px)', letterSpacing: '-0.5px' }}>Decouvrez nos Univers</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Sélectionné pour vous</div>
+          <div style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 900, color: NOIR, marginBottom: 'clamp(24px, 5vw, 40px)', letterSpacing: '-0.5px' }}>Découvrez nos Univers</div>
 
           <div style={{
             display: 'flex',
@@ -206,7 +215,7 @@ export default function HomePage() {
               <p style={{ fontSize: 'clamp(13px, 2.5vw, 15px)', color: '#666', lineHeight: 1.7, marginBottom: 'clamp(20px, 4vw, 30px)' }}>{current.desc}</p>
 
               <Link href={current.link} style={{ fontWeight: 800, color: NOIR, fontSize: 14, textDecoration: 'none', borderBottom: `2px solid ${NOIR}`, paddingBottom: 2, display: 'inline-block' }}>
-                Voir les etablissements
+                Voir les établissements
               </Link>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 'clamp(20px, 4vw, 40px)' }}>
@@ -222,9 +231,9 @@ export default function HomePage() {
       <section style={{ background: '#fff', padding: 'clamp(40px, 8vw, 80px) 0', borderTop: '1px solid #EDE5D8', borderBottom: '1px solid #EDE5D8' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 'clamp(20px, 4vw, 40px)', textAlign: 'center' }}>
           {[
-            { icon: '🕐', title: '24h/24, 7j/7', desc: "Reservez a n'importe quel moment, ou que vous soyez en Algerie." },
-            { icon: '✅', title: 'Confirmation immediate', desc: 'Votre creneau est bloque instantanement, sans appel telephonique.' },
-            { icon: '⭐', title: 'Avis verifies', desc: 'Seuls les clients ayant eu un rendez-vous effectif peuvent noter.' },
+            { icon: '🕐', title: '24h/24, 7j/7', desc: "Réservez à n'importe quel moment, où que vous soyez en Algérie." },
+            { icon: '✅', title: 'Confirmation immédiate', desc: 'Votre créneau est bloqué instantanément, sans appel téléphonique.' },
+            { icon: '⭐', title: 'Avis vérifiés', desc: 'Seuls les clients ayant eu un rendez-vous effectif peuvent noter.' },
           ].map(f => (
             <div key={f.title} style={{ maxWidth: 300, flex: '1 1 220px', padding: 'clamp(12px, 3vw, 20px)' }}>
               <div style={{ fontSize: 28, marginBottom: 14, background: BG, width: 60, height: 60, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '1px solid #E0D8CE' }}>{f.icon}</div>
@@ -239,16 +248,16 @@ export default function HomePage() {
       <section style={{ background: NOIR, color: '#fff', padding: 'clamp(50px, 10vw, 90px) 16px', textAlign: 'center' }}>
         <div style={{ width: 40, height: 2, background: OR, margin: '0 auto 18px' }} />
         <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14 }}>Espace Partenaire</div>
-        <h2 style={{ fontSize: 'clamp(22px, 5vw, 38px)', marginBottom: 14, fontWeight: 900, letterSpacing: '-0.5px' }}>Vous etes un professionnel de la beaute ?</h2>
-        <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#aaa', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>Rejoignez Bookmedz Pro pour digitaliser votre agenda, eliminer les no-shows et developper votre clientele a travers toute l'Algerie.</p>
+        <h2 style={{ fontSize: 'clamp(22px, 5vw, 38px)', marginBottom: 14, fontWeight: 900, letterSpacing: '-0.5px' }}>Vous êtes un professionnel de la beauté ?</h2>
+        <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#aaa', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>Rejoignez Bookmedz Pro pour digitaliser votre agenda, éliminer les no-shows et développer votre clientèle à travers toute l'Algérie.</p>
         <Link href="/pro" style={{ display: 'inline-block', background: OR, color: NOIR, padding: '16px clamp(24px, 5vw, 36px)', fontWeight: 900, borderRadius: 4, marginTop: 28, fontSize: 14, textDecoration: 'none', letterSpacing: '0.5px' }}>
-          Decouvrir notre offre Pro
+          Découvrir notre offre Pro
         </Link>
       </section>
 
       {/* ══════ FOOTER ══════ */}
       <footer style={{ background: '#050505', padding: '24px 16px', borderTop: '1px solid #1a1a1a', textAlign: 'center', color: '#666', fontSize: 13 }}>
-        Bookmedz — La beauté à portée de clic en Algerie
+        Bookme.dz — La beauté à portée de clic en Algérie
       </footer>
     </div>
   )
