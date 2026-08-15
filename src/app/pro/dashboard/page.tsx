@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 
+import AbonnementGuard from '@/components/AbonnementGuard'
 import React from 'react'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -37,6 +38,7 @@ export default async function ProDashboardPage() {
 
   if (!salon) {
     return (
+      <AbonnementGuard>
       <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
         <Header pro={pro} activePage="dashboard" />
         <main style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(20px, 5vw, 40px) 16px' }}>
@@ -46,9 +48,10 @@ export default async function ProDashboardPage() {
             <Link href="/pro/salon/create" style={{ display: 'inline-block', background: OR, color: '#fff', textDecoration: 'none', padding: '12px 24px', borderRadius: 4, fontWeight: 700 }}>
               Creer mon salon
             </Link>
-          </div>
+           </div>
         </main>
       </div>
+      </AbonnementGuard>
     )
   }
 
@@ -131,7 +134,8 @@ export default async function ProDashboardPage() {
 
   const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
-  return (
+ return (
+    <AbonnementGuard>
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
       <Header pro={pro} activePage="dashboard" />
 
@@ -349,8 +353,9 @@ export default async function ProDashboardPage() {
           )}
         </div>
 
-      </main>
+</main>
     </div>
+    </AbonnementGuard>
   )
 }
 
