@@ -93,7 +93,7 @@ export default function DashboardPage() {
           justifyContent: 'space-between'
         }}>
           <Link href="/" style={{ fontSize: 20, fontWeight: 900, color: NOIR, textDecoration: 'none', flexShrink: 0 }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
+            Bookme<span style={{ color: OR }}>dz</span>
           </Link>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link href="/search" style={{
