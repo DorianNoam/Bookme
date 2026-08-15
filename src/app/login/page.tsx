@@ -46,7 +46,7 @@ export default function LoginPage() {
 
       <header style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: NOIR, textDecoration: 'none' }}>
-          Bookmedz<span style={{ color: OR }}>.com</span>
+          Bookme<span style={{ color: OR }}>dz</span>
         </Link>
         <LanguageSwitcher />
       </header>
