@@ -182,7 +182,7 @@ function BookingContent() {
 
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '12px 0', marginBottom: 20 }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>.dz</span></Link>
+          <Link href="/" style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Bookme<span style={{ color: OR }}>dz</span></Link>
           <Link href={'/salon/' + salonId} style={{ color: '#777', fontSize: 13 }}>{'← Retour au salon'}</Link>
         </div>
       </header>
@@ -360,7 +360,7 @@ function BookingContent() {
                   </div>
                   <div>
                     <label style={labelSt}>Email</label>
-                    <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="amina@email.dz" style={inputStyle} />
+                    <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="amina@emaildz" style={inputStyle} />
                   </div>
                   <div>
                     <label style={labelSt}>Telephone</label>
