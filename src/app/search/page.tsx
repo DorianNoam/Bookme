@@ -1,5 +1,7 @@
 'use client';
 import MobileMenu from '@/components/MobileMenu'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { useLanguage } from '@/components/LanguageProvider'
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -10,7 +12,7 @@ import { VILLES_ALGERIE } from '@/data/villes';
 
 const SearchMap = dynamic(() => import('@/components/SearchMap'), { 
   ssr: false, 
-  loading: () => <div style={{ width: '100%', height: '100%', background: '#e5e3df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>Chargement de la carte...</div> 
+  loading: () => <div style={{ width: '100%', height: '100%', background: '#e5e3df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>...</div> 
 });
 
 type Salon = {
@@ -28,7 +30,15 @@ type Salon = {
   longitude?: number;
 };
 
-const CATEGORIES = ['Coiffure', 'Beauté des ongles', 'Massage et bien-être', 'Barbier', 'Hammam & Spa', 'Chirurgie esthétique'];
+const CATEGORY_KEYS = [
+  { val: 'Coiffure', key: 'coiffure' as const },
+  { val: 'Beauté des ongles', key: 'ongles' as const },
+  { val: 'Massage et bien-être', key: 'bienetre' as const },
+  { val: 'Barbier', key: 'barbier' as const },
+  { val: 'Hammam & Spa', key: 'hammam' as const },
+  { val: 'Chirurgie esthétique', key: 'chirurgie' as const },
+];
+
 const NOIR = '#0A0A0A';
 const OR = '#B8922A';
 const BG = '#F8F5F0';
@@ -48,6 +58,7 @@ function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number)
 function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const [salons, setSalons] = useState<Salon[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState(searchParams.get('q') || '');
@@ -130,11 +141,9 @@ function SearchContent() {
           applyFilters(query, ''); 
         },
         () => {
-          alert("Impossible de récupérer votre position. Veuillez autoriser la géolocalisation.");
+          alert("Impossible de récupérer votre position.");
         }
       );
-    } else {
-      alert("La géolocalisation n'est pas supportée par votre navigateur.");
     }
   }
 
@@ -147,13 +156,19 @@ function SearchContent() {
 
   const hasMappable = salons.some(s => s.latitude && s.longitude);
 
+  // Trouver le label traduit pour une catégorie
+  function getCatLabel(val: string) {
+    const found = CATEGORY_KEYS.find(c => c.val === val);
+    return found ? t.nav[found.key] : val;
+  }
+
   return (
     <div style={{ background: BG, minHeight: '100vh', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column' }}>
 
       {showMobilePrestations && (
         <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid #EDE5D8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Choisir une prestation</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>{t.search.prestations}</h2>
             <button onClick={() => setShowMobilePrestations(false)} style={{ fontSize: 28, background: 'none', border: 'none', color: NOIR, cursor: 'pointer' }}>×</button>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
@@ -161,15 +176,15 @@ function SearchContent() {
               onClick={() => applyFilters('', loc)} 
               style={{ padding: '16px', textAlign: 'left', background: !query ? NOIR : BG, color: !query ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: 'none' }}
             >
-              Toutes les prestations
+              {t.search.toutesPrestations}
             </button>
-            {CATEGORIES.map(cat => (
+            {CATEGORY_KEYS.map(cat => (
               <button 
-                key={cat} 
-                onClick={() => applyFilters(cat, loc)} 
-                style={{ padding: '16px', textAlign: 'left', background: query === cat ? NOIR : BG, color: query === cat ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 600, border: 'none' }}
+                key={cat.val} 
+                onClick={() => applyFilters(cat.val, loc)} 
+                style={{ padding: '16px', textAlign: 'left', background: query === cat.val ? NOIR : BG, color: query === cat.val ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 600, border: 'none' }}
               >
-                {cat}
+                {t.nav[cat.key]}
               </button>
             ))}
           </div>
@@ -179,7 +194,7 @@ function SearchContent() {
       {showMobileFiltres && (
         <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid #EDE5D8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>Adresse</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: NOIR }}>{t.search.ville}</h2>
             <button onClick={() => setShowMobileFiltres(false)} style={{ fontSize: 28, background: 'none', border: 'none', color: NOIR, cursor: 'pointer' }}>×</button>
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
@@ -188,7 +203,7 @@ function SearchContent() {
               onClick={handleAutourDeMoi} 
               style={{ padding: '16px', textAlign: 'left', background: userLocation ? BG : '#fff', color: userLocation ? NOIR : OR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: userLocation ? `2px solid ${NOIR}` : `1px solid ${OR}`, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
             >
-              <span style={{ fontSize: 20 }}>📍</span> Autour de moi
+              <span style={{ fontSize: 20 }}>📍</span> {t.search.autourDeMoi}
             </button>
             
             <hr style={{ border: 'none', borderTop: '1px solid #EDE5D8', margin: '8px 0' }} />
@@ -197,7 +212,7 @@ function SearchContent() {
               onClick={() => applyFilters(query, '')} 
               style={{ padding: '16px', textAlign: 'left', background: !loc && !userLocation ? NOIR : BG, color: !loc && !userLocation ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: 'none' }}
             >
-              {"Toute l'Algérie"}
+              {t.search.toutesVilles}
             </button>
             {VILLES_ALGERIE.map(v => (
               <button 
@@ -215,38 +230,39 @@ function SearchContent() {
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '10px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 900, color: NOIR, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            Bookme<span style={{ color: OR }}>dz</span>
+            Bookmedz<span style={{ color: OR }}>.com</span>
           </Link>
 
           <form onSubmit={handleSearch} className="hide-mobile" style={{ flex: 1, display: 'flex', gap: 8, minWidth: 0 }}>
             <select value={query} onChange={e => setQuery(e.target.value)} style={{ flex: '1 1 140px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, cursor: 'pointer' }}>
-              <option value="">Toutes les prestations</option>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">{t.search.toutesPrestations}</option>
+              {CATEGORY_KEYS.map(c => <option key={c.val} value={c.val}>{t.nav[c.key]}</option>)}
             </select>
             
             <select value={loc} onChange={e => setLoc(e.target.value)} style={{ flex: '1 1 120px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, minWidth: 0, cursor: 'pointer' }}>
-              <option value="">{"Toutes les villes (Algérie)"}</option>
+              <option value="">{t.search.toutesVilles}</option>
               {VILLES_ALGERIE.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
 
-            <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '8px 18px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, letterSpacing: 0.5, whiteSpace: 'nowrap', flexShrink: 0 }}>Rechercher</button>
+            <button type="submit" style={{ background: OR, color: '#fff', border: 'none', padding: '8px 18px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, letterSpacing: 0.5, whiteSpace: 'nowrap', flexShrink: 0 }}>{t.hero.rechercher}</button>
             
             <button type="button" onClick={handleAutourDeMoi} style={{ background: userLocation ? NOIR : 'transparent', color: userLocation ? '#fff' : OR, border: `1px solid ${userLocation ? NOIR : OR}`, padding: '8px 14px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-              📍 Autour de moi
+              📍 {t.search.autourDeMoi}
             </button>
           </form>
 
           <div className="hide-mobile" style={{ display: 'flex', gap: 8, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
+            <LanguageSwitcher />
             {isLoggedIn ? (
-              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Mon espace</Link>
+              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>{t.nav.monEspace}</Link>
             ) : (
               <>
-                <Link href="/login" style={{ color: '#555', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>Connexion</Link>
-                <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Mon espace</Link>
+                <Link href="/login" style={{ color: '#555', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>{t.nav.connexion}</Link>
+                <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>{t.nav.monEspace}</Link>
               </>
             )}
             <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none', border: `1.5px solid ${OR}` }}>
-              Espace Pro
+              {t.nav.espacePro}
             </Link>
           </div>
 
@@ -258,24 +274,24 @@ function SearchContent() {
 
       <div className="hide-desktop" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '10px 16px', display: 'flex', gap: 8, position: 'sticky', top: 54, zIndex: 90, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
         <button onClick={() => setShowMobilePrestations(true)} style={{ flex: 1, padding: '10px 4px', background: BG, border: '1px solid #E0D8CE', borderRadius: 6, fontSize: 13, fontWeight: 600, color: NOIR, cursor: 'pointer', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-          🏷️ {query ? query : 'Prestations'}
+          🏷️ {query ? getCatLabel(query) : t.search.prestations}
         </button>
         <button 
           onClick={() => setShowMap(!showMap)} 
           style={{ flex: 1, padding: '10px 4px', background: showMap ? OR : '#fff', border: `1px solid ${showMap ? OR : '#E0D8CE'}`, borderRadius: 6, fontSize: 13, fontWeight: 700, color: showMap ? '#fff' : NOIR, cursor: 'pointer', transition: 'all 0.2s' }}
         >
-          {showMap ? '☰ Liste' : '🗺️ Carte'}
+          {showMap ? `☰ ${t.search.liste}` : `🗺️ ${t.search.carte}`}
         </button>
         <button onClick={() => setShowMobileFiltres(true)} style={{ flex: 1, padding: '10px 4px', background: BG, border: '1px solid #E0D8CE', borderRadius: 6, fontSize: 13, fontWeight: 600, color: NOIR, cursor: 'pointer', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
-          {userLocation ? '📍 Autour de moi' : (loc ? `⚙️ ${loc}` : '⚙️ Ville')}
+          {userLocation ? `📍 ${t.search.autourDeMoi}` : (loc ? `⚙️ ${loc}` : `⚙️ ${t.search.ville}`)}
         </button>
       </div>
 
       <div className="hide-mobile" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '8px 0' }}>
         <div style={{ padding: '0 16px', display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-          <button onClick={() => applyFilters('', loc)} style={{ background: !query ? NOIR : 'transparent', color: !query ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: !query ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>Tous</button>
-          {CATEGORIES.map(cat => (
-            <button key={cat} onClick={() => applyFilters(cat, loc)} style={{ background: query === cat ? NOIR : 'transparent', color: query === cat ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: query === cat ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: query === cat ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{cat}</button>
+          <button onClick={() => applyFilters('', loc)} style={{ background: !query ? NOIR : 'transparent', color: !query ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: !query ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{t.search.tous}</button>
+          {CATEGORY_KEYS.map(cat => (
+            <button key={cat.val} onClick={() => applyFilters(cat.val, loc)} style={{ background: query === cat.val ? NOIR : 'transparent', color: query === cat.val ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: query === cat.val ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: query === cat.val ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{t.nav[cat.key]}</button>
           ))}
         </div>
       </div>
@@ -284,20 +300,20 @@ function SearchContent() {
         <div className={`list-col ${showMap ? 'hide-on-mobile' : ''}`}>
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 800, color: NOIR, marginBottom: 4 }}>
-              {query ? query : "Sélectionnez un établissement"}
+              {query ? getCatLabel(query) : t.search.selectEtablissement}
             </h1>
             <p style={{ color: '#888', fontSize: 13 }}>
-              {loading ? 'Recherche en cours...' : (userLocation ? "Les meilleurs salons et instituts autour de vous : Réservation en ligne" : `Les meilleurs salons et instituts ${loc ? 'à ' + loc : 'en Algérie'} : Réservation en ligne`)}
+              {loading ? t.search.rechercheEnCours : (userLocation ? `${t.search.meilleursSalons} : ${t.search.reservation}` : `${t.search.meilleursSalons} ${loc ? loc : t.search.enAlgerie} : ${t.search.reservation}`)}
             </p>
           </div>
 
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>Chargement...</div>
+            <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>{t.common.chargement}</div>
           ) : displaySalons.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, background: '#fff', border: '1px dashed #DDD5C8', borderRadius: 4 }}>
               <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
-              <p style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>{"Aucun établissement ne correspond à votre recherche."}</p>
-              <button onClick={() => applyFilters('','')} style={{ background: 'none', border: 'none', color: OR, fontWeight: 700, borderBottom: '1px solid ' + OR, paddingBottom: 2, fontSize: 14, cursor: 'pointer' }}>{"Voir tous les établissements"}</button>
+              <p style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>{t.search.aucunResultat}</p>
+              <button onClick={() => applyFilters('','')} style={{ background: 'none', border: 'none', color: OR, fontWeight: 700, borderBottom: '1px solid ' + OR, paddingBottom: 2, fontSize: 14, cursor: 'pointer' }}>{t.search.voirTous}</button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -339,10 +355,7 @@ function SearchContent() {
                       <div style={{ flex: 1, padding: '20px', minWidth: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-                            <Link
-                              href={'/salon/' + salon.id}
-                              style={{ fontSize: '20px', fontWeight: 800, color: NOIR, textDecoration: 'none' }}
-                            >
+                            <Link href={'/salon/' + salon.id} style={{ fontSize: '20px', fontWeight: 800, color: NOIR, textDecoration: 'none' }}>
                               {salon.nom}
                             </Link>
                           </div>
@@ -354,14 +367,14 @@ function SearchContent() {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                            {salon.moy_note ? <span style={{ color: NOIR, fontWeight: 700 }}>★ {salon.moy_note} <span style={{ color: '#888', fontWeight: 400 }}>({salon.nb_avis} avis)</span></span> : <span style={{ color: '#bbb' }}>Nouveau</span>}
+                            {salon.moy_note ? <span style={{ color: NOIR, fontWeight: 700 }}>★ {salon.moy_note} <span style={{ color: '#888', fontWeight: 400 }}>({salon.nb_avis} {t.search.avis})</span></span> : <span style={{ color: '#bbb' }}>{t.search.nouveau}</span>}
                             <span style={{ color: '#ddd' }}>•</span>
                             <span style={{ color: '#888' }}>{salon.type_salon}</span>
                           </div>
 
                           <div style={{ marginTop: '24px', borderTop: '1px solid #F5F0E6', paddingTop: '20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '12px' }}>
-                              <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>MATIN</span>
+                              <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>{t.search.matin}</span>
                               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                 {nextDays.map(day => (
                                   <Link key={'m'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}>
@@ -371,7 +384,7 @@ function SearchContent() {
                               </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                              <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>APRÈS-MIDI</span>
+                              <span style={{ width: 85, fontSize: 11, fontWeight: 800, color: '#999', letterSpacing: 1 }}>{t.search.apresMidi}</span>
                               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                 {nextDays.map(day => (
                                   <Link key={'a'+day} href={`/salon/${salon.id}`} style={{ border: `1px solid ${OR}`, color: OR, padding: '8px 14px', borderRadius: 6, fontSize: 13, fontWeight: 600, textTransform: 'capitalize', textDecoration: 'none', background: '#fff', transition: 'all 0.2s' }}>
@@ -385,10 +398,10 @@ function SearchContent() {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 }}>
                           <Link href={'/salon/' + salon.id} style={{ color: '#444', fontSize: 13, fontWeight: 600, textDecoration: 'underline' }}>
-                            {"Plus d'informations"}
+                            {t.search.plusInfos}
                           </Link>
                           <Link href={'/booking?salon=' + salon.id} className="hide-mobile" style={{ background: NOIR, color: '#fff', padding: '10px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
-                            Prendre RDV
+                            {t.search.prendreRdv}
                           </Link>
                         </div>
                       </div>
@@ -414,7 +427,7 @@ function SearchContent() {
           <div className={`map-col ${showMap ? 'show-on-mobile' : 'hide-on-mobile'}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e3df', color: '#999', fontSize: 14, textAlign: 'center', padding: 20 }}>
             <div>
               <div style={{ fontSize: 36, marginBottom: 12 }}>🗺️</div>
-              {"Carte indisponible."}<br />{"Les salons n'ont pas encore de coordonnées GPS."}
+              Carte indisponible.
             </div>
           </div>
         )}
@@ -446,7 +459,7 @@ export default function SearchPage() {
   return (
     <Suspense fallback={
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: BG, fontFamily: 'Inter, sans-serif', color: NOIR }}>
-        Chargement...
+        ...
       </div>
     }>
       <SearchContent />
