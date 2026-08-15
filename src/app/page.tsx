@@ -38,11 +38,11 @@ const NAV_LINKS = [
     { label: t.navShort.chirurgie, val: 'Chirurgie esthétique' },
   ]
 
-  const SLIDES = [
-    { cat: t.nav.coiffure, title: "L'art de la coupe", desc: "Envie d'un changement ou d'un simple rafraîchissement ? Nos coiffeurs maîtrisent toutes les techniques : balayage, ombré hair, lissage brésilien...", img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=Coiffure' },
-    { cat: t.nav.ongles, title: 'Des mains parfaites', desc: "Pose de vernis, gel, nail art ou beauté des pieds. Trouvez la spécialiste idéale pour des ongles impeccables.", img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800', link: '/search?q=Beauté+des+ongles' },
-    { cat: t.nav.hammam, title: 'Détente absolue', desc: "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthèse de bien-être dans les meilleurs hammams.", img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=Hammam+%26+Spa' },
-    { cat: t.nav.chirurgie, title: 'Des professionnels de confiance', desc: "Consultations et interventions réalisées par des médecins qualifiés. Trouvez la clinique qu'il vous faut.", img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', link: '/search?q=Chirurgie+esthétique' },
+const SLIDES = [
+    { cat: t.nav.coiffure, title: t.carousel.slide1Title, desc: t.carousel.slide1Desc, img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=Coiffure' },
+    { cat: t.nav.ongles, title: t.carousel.slide2Title, desc: t.carousel.slide2Desc, img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800', link: '/search?q=Beauté+des+ongles' },
+    { cat: t.nav.hammam, title: t.carousel.slide3Title, desc: t.carousel.slide3Desc, img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=Hammam+%26+Spa' },
+    { cat: t.nav.chirurgie, title: t.carousel.slide4Title, desc: t.carousel.slide4Desc, img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', link: '/search?q=Chirurgie+esthétique' },
   ]
 
   const current = SLIDES[slide]
@@ -168,8 +168,8 @@ const NAV_LINKS = [
       {/* ══════ CAROUSEL ══════ */}
       <section style={{ padding: 'clamp(40px, 8vw, 80px) 0', background: BG }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px' }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>Sélectionné pour vous</div>
-          <div style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 900, color: NOIR, marginBottom: 'clamp(24px, 5vw, 40px)', letterSpacing: '-0.5px' }}>Découvrez nos Univers</div>
+  <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t.carousel.subtitle}</div>
+          <div style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 900, color: NOIR, marginBottom: 'clamp(24px, 5vw, 40px)', letterSpacing: '-0.5px' }}>{t.carousel.title}</div>
 
           <div style={{
             display: 'flex',
@@ -192,7 +192,7 @@ const NAV_LINKS = [
               <p style={{ fontSize: 'clamp(13px, 2.5vw, 15px)', color: '#666', lineHeight: 1.7, marginBottom: 'clamp(20px, 4vw, 30px)' }}>{current.desc}</p>
 
               <Link href={current.link} style={{ fontWeight: 800, color: NOIR, fontSize: 14, textDecoration: 'none', borderBottom: `2px solid ${NOIR}`, paddingBottom: 2, display: 'inline-block' }}>
-                Voir les établissements
+               {t.carousel.voirEtablissements}
               </Link>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 'clamp(20px, 4vw, 40px)' }}>
@@ -221,14 +221,14 @@ const NAV_LINKS = [
         </div>
       </section>
 
-      {/* ══════ CTA PRO ══════ */}
+{/* ══════ CTA PRO ══════ */}
       <section style={{ background: NOIR, color: '#fff', padding: 'clamp(50px, 10vw, 90px) 16px', textAlign: 'center' }}>
         <div style={{ width: 40, height: 2, background: OR, margin: '0 auto 18px' }} />
-        <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14 }}>Espace Partenaire</div>
-        <h2 style={{ fontSize: 'clamp(22px, 5vw, 38px)', marginBottom: 14, fontWeight: 900, letterSpacing: '-0.5px' }}>Vous êtes un professionnel de la beauté ?</h2>
-        <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#aaa', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>{"Rejoignez Bookmedz Pro pour digitaliser votre agenda, éliminer les no-shows et développer votre clientèle à travers toute l'Algérie."}</p>
+        <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14 }}>{t.cta.subtitle}</div>
+        <h2 style={{ fontSize: 'clamp(22px, 5vw, 38px)', marginBottom: 14, fontWeight: 900, letterSpacing: '-0.5px' }}>{t.cta.title}</h2>
+        <p style={{ fontSize: 'clamp(14px, 3vw, 16px)', color: '#aaa', maxWidth: 500, margin: '0 auto', lineHeight: 1.7 }}>{t.cta.desc}</p>
         <Link href="/pro" style={{ display: 'inline-block', background: OR, color: NOIR, padding: '16px clamp(24px, 5vw, 36px)', fontWeight: 900, borderRadius: 4, marginTop: 28, fontSize: 14, textDecoration: 'none', letterSpacing: '0.5px' }}>
-          Découvrir notre offre Pro
+          {t.cta.button}
         </Link>
       </section>
 
