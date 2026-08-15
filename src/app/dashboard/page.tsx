@@ -103,7 +103,7 @@ export default function DashboardPage() {
       <div style={{ background: NOIR, padding: 'clamp(24px, 5vw, 40px) 16px', color: '#fff' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <h1 style={{ fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: 900, marginBottom: 5 }}>
-            {t.dashboard.bonjour}, {user.prenom} !
+            {t.dashboard.bonjour} {user.prenom} !
           </h1>
           <p style={{ color: '#aaa', fontSize: 'clamp(13px, 2.5vw, 15px)' }}>
             {t.dashboard.gererRdv}
@@ -298,11 +298,13 @@ function ProfileTab({ user, onUpdate }: { user: User; onUpdate: (u: User) => voi
       const data = await res.json()
       if (data.success) {
         onUpdate(form)
-        setMessage(t.dashboard.majSucces)
+        setMessage('Informations mises à jour !')
       } else {
         setMessage(data.error || 'Erreur')
       }
-    } catch { setMessage(t.dashboard.erreurReseau) }
+    } catch { 
+      setMessage('Erreur réseau')
+    }
     setSaving(false)
     setTimeout(() => setMessage(''), 3000)
   }
@@ -329,20 +331,20 @@ function ProfileTab({ user, onUpdate }: { user: User; onUpdate: (u: User) => voi
       <div style={{ display: 'grid', gap: 16 }}>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 calc(50% - 6px)', minWidth: 140 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>{t.dashboard.prenom}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Prénom</label>
             <input name="prenom" value={form.prenom} onChange={handleChange} style={inputStyle} />
           </div>
           <div style={{ flex: '1 1 calc(50% - 6px)', minWidth: 140 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>{t.dashboard.nom}</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom</label>
             <input name="nom" value={form.nom} onChange={handleChange} style={inputStyle} />
           </div>
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>{t.dashboard.email}</label>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Email</label>
           <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} />
         </div>
         <div>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>{t.dashboard.telephone}</label>
+          <label style={{ fontSize: 12, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Téléphone</label>
           <input name="telephone" type="tel" value={form.telephone} onChange={handleChange} style={inputStyle} />
         </div>
         <button onClick={handleSave} disabled={saving} style={{
