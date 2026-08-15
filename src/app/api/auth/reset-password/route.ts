@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    await supabase.from(table).update({
-      mot_de_passe: hashedPassword,
+  await supabase.from(table).update({
+      password: hashedPassword,
       reset_token: null,
       reset_token_expires: null,
     }).eq('id', user.id)
