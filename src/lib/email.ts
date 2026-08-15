@@ -58,7 +58,7 @@ export async function sendBookingConfirmation({
 
   try {
     await resend.emails.send({
-      from: 'Bookme.dz <onboarding@resend.dev>',
+      from: 'Bookmedz <noreply@bookmedz.com>',
       to: [clientEmail],
       subject: `Confirmation de votre rendez-vous au ${salonName}`,
       html,
@@ -130,7 +130,7 @@ export async function sendProNotification({
 
   try {
     await resend.emails.send({
-      from: 'Bookme.dz <onboarding@resend.dev>',
+      from: 'Bookmedz <noreply@bookmedz.com>',
       to: [proEmail],
       subject: `Nouveau RDV : ${clientName} - ${serviceName}`,
       html,
@@ -195,7 +195,7 @@ export async function sendBookingReminder({
 
   try {
     await resend.emails.send({
-      from: 'Bookme.dz <onboarding@resend.dev>',
+     from: 'Bookmedz <noreply@bookmedz.com>',
       to: [clientEmail],
       subject: `Rappel : votre RDV demain au ${salonName} a ${time}`,
       html,
