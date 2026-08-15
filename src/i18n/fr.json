@@ -81,7 +81,16 @@
     "seConnecter": "Se connecter",
     "mdpOublie": "Mot de passe oublié ?",
     "pasDeCompte": "Pas encore de compte ?",
-    "inscrivezVous": "Inscrivez-vous"
+    "inscrivezVous": "Inscrivez-vous",
+    "creerCompte": "Créer un compte client",
+    "rejoignez": "Rejoignez Bookmedz pour réserver vos prestations beauté et bien-être.",
+    "prenom": "Prénom",
+    "nom": "Nom",
+    "telephone": "Téléphone",
+    "inscrire": "M'inscrire",
+    "creation": "Création en cours...",
+    "dejaCompte": "Vous avez déjà un compte ?",
+    "connectezVousLink": "Connectez-vous"
   },
   "common": {
     "chargement": "Chargement...",
