@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
 import InteractiveAgenda from './InteractiveAgenda'
+import AbonnementGuard from '@/components/AbonnementGuard'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
@@ -146,6 +147,7 @@ export default async function ProAgendaPage({
   }
 
   return (
+    <AbonnementGuard>
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
       
       {/* HEADER RESPONSIVE */}
@@ -252,5 +254,6 @@ export default async function ProAgendaPage({
 
       </main>
     </div>
+    </AbonnementGuard>
   )
 }
