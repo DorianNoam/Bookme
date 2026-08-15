@@ -416,17 +416,19 @@ export async function sendProWelcome({
 }
 
 // ═══════════════════════════════════════════════════════════════
-// EMAIL ADMIN : Alerte nouvelle inscription pro
+// EMAIL ADMIN : Notification de nouvelle inscription pro
 // ═══════════════════════════════════════════════════════════════
 
 export async function sendAdminNewProNotification({
   proName,
   proEmail,
   proPhone,
+  salonName,
 }: {
   proName: string
   proEmail: string
   proPhone: string
+  salonName: string
 }) {
   const html = `
 <!DOCTYPE html>
@@ -448,6 +450,7 @@ export async function sendAdminNewProNotification({
               <p style="color:#0A0A0A;font-size:15px;line-height:28px;margin:0;"><strong>Nom :</strong> ${proName}</p>
               <p style="color:#0A0A0A;font-size:15px;line-height:28px;margin:0;"><strong>Email :</strong> ${proEmail}</p>
               <p style="color:#0A0A0A;font-size:15px;line-height:28px;margin:0;"><strong>Téléphone :</strong> ${proPhone}</p>
+              <p style="color:#0A0A0A;font-size:15px;line-height:28px;margin:0;"><strong>Salon :</strong> ${salonName}</p>
             </td></tr>
           </table>
           <hr style="border:none;border-top:1px solid #E0D8CE;margin:30px 0;" />
@@ -461,9 +464,9 @@ export async function sendAdminNewProNotification({
 
   try {
     await resend.emails.send({
-      from: 'Bookmedz <noreply@bookmedz.com>', // Utilise la même adresse d'envoi
-      to: ['contact@bookmedz.com'], // Ton adresse de réception
-      subject: `🎉 Nouveau pro inscrit : ${proName}`,
+      from: 'Bookmedz <noreply@bookmedz.com>',
+      to: ['contact@bookmedz.com'],
+      subject: `🎉 Nouveau pro inscrit : ${salonName}`,
       html,
     })
     return { success: true }
