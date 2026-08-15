@@ -81,7 +81,16 @@
     "seConnecter": "تسجيل الدخول",
     "mdpOublie": "نسيت كلمة المرور؟",
     "pasDeCompte": "ليس لديك حساب؟",
-    "inscrivezVous": "سجّل الآن"
+    "inscrivezVous": "سجّل الآن",
+    "creerCompte": "إنشاء حساب عميل",
+    "rejoignez": "انضم إلى Bookmedz لحجز خدمات الجمال والاسترخاء.",
+    "prenom": "الاسم",
+    "nom": "اللقب",
+    "telephone": "الهاتف",
+    "inscrire": "التسجيل",
+    "creation": "جاري الإنشاء...",
+    "dejaCompte": "لديك حساب بالفعل؟",
+    "connectezVousLink": "سجّل الدخول"
   },
   "common": {
     "chargement": "جاري التحميل...",
