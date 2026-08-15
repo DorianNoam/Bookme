@@ -1,3 +1,4 @@
+import { sendProWelcome } from '@/lib/email'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
@@ -70,8 +71,20 @@ export async function POST(req: NextRequest) {
         jour_off: 5
       }])
 
-    if (salonError) {
+   if (salonError) {
       console.error('Erreur creation salon:', salonError.message)
+    }
+
+    // Email de bienvenue
+    if (process.env.RESEND_API_KEY) {
+      const finDate = new Date()
+      finDate.setFullYear(finDate.getFullYear() + 1)
+      sendProWelcome({
+        proEmail: email,
+        proName: prenom || nom,
+        salonName: salon_nom,
+        abonnementFin: finDate.toISOString().split('T')[0],
+      }).catch(err => console.error('Email bienvenue pro echoue:', err))
     }
 
     const token = await new SignJWT({ id: newPro.id, role: 'pro' })
