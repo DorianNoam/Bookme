@@ -8,7 +8,6 @@ import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { VILLES_ALGERIE } from '@/data/villes';
 
-// Import dynamique de la carte Leaflet
 const SearchMap = dynamic(() => import('@/components/SearchMap'), { 
   ssr: false, 
   loading: () => <div style={{ width: '100%', height: '100%', background: '#e5e3df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>Chargement de la carte...</div> 
@@ -29,14 +28,13 @@ type Salon = {
   longitude?: number;
 };
 
-const CATEGORIES = ['Coiffure', 'Beaute des ongles', 'Massage et bien-etre', 'Barbier', 'Hammam & Spa', 'Chirurgie esthetique'];
+const CATEGORIES = ['Coiffure', 'Beauté des ongles', 'Massage et bien-être', 'Barbier', 'Hammam & Spa', 'Chirurgie esthétique'];
 const NOIR = '#0A0A0A';
 const OR = '#B8922A';
 const BG = '#F8F5F0';
 
-// Fonction pour calculer la distance en km entre deux points GPS (Formule de Haversine)
 function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371; // Rayon de la Terre en km
+  const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -57,13 +55,11 @@ function SearchContent() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [hoveredSalonId, setHoveredSalonId] = useState<number | null>(null);
   
-  // États pour la version Mobile et la Géolocalisation
   const [showMap, setShowMap] = useState(false);
   const [showMobilePrestations, setShowMobilePrestations] = useState(false);
   const [showMobileFiltres, setShowMobileFiltres] = useState(false);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
 
-  // Forcer le redessin de Leaflet lors de l'ouverture de l'onglet Carte
   useEffect(() => {
     if (showMap) {
       setTimeout(() => {
@@ -72,7 +68,6 @@ function SearchContent() {
     }
   }, [showMap]);
 
-  // Génération des 3 prochains jours
   const nextDays = Array.from({ length: 3 }).map((_, i) => {
     const d = addDays(new Date(), i + 1);
     return format(d, 'E.d', { locale: fr });
@@ -90,10 +85,7 @@ function SearchContent() {
     const l = searchParams.get('loc') || '';
     setQuery(q);
     setLoc(l);
-    
-    // Si une ville est explicitement cherchée, on annule la géolocalisation
     if (l) setUserLocation(null);
-    
     fetchSalons(q, l);
   }, [searchParams]);
 
@@ -127,7 +119,6 @@ function SearchContent() {
     setShowMobileFiltres(false);
   }
 
-  // Activer la géolocalisation de l'utilisateur
   function handleAutourDeMoi() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -136,10 +127,9 @@ function SearchContent() {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           });
-          // On efface la ville dans l'URL pour ne pas filtrer par ville
           applyFilters(query, ''); 
         },
-        (error) => {
+        () => {
           alert("Impossible de récupérer votre position. Veuillez autoriser la géolocalisation.");
         }
       );
@@ -148,7 +138,6 @@ function SearchContent() {
     }
   }
 
-  // Tri des salons : si géolocalisé, on trie par distance
   const displaySalons = [...salons].sort((a, b) => {
     if (!userLocation || !a.latitude || !b.latitude) return 0;
     const distA = getDistanceInKm(userLocation.lat, userLocation.lng, a.latitude, a.longitude!);
@@ -161,7 +150,6 @@ function SearchContent() {
   return (
     <div style={{ background: BG, minHeight: '100vh', fontFamily: 'Inter, sans-serif', display: 'flex', flexDirection: 'column' }}>
 
-      {/* MODALE MOBILE : PRESTATIONS */}
       {showMobilePrestations && (
         <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid #EDE5D8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -188,7 +176,6 @@ function SearchContent() {
         </div>
       )}
 
-      {/* MODALE MOBILE : FILTRES (VILLES & AUTOUR DE MOI) */}
       {showMobileFiltres && (
         <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '20px', borderBottom: '1px solid #EDE5D8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -197,7 +184,6 @@ function SearchContent() {
           </div>
           <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
             
-            {/* BOUTON AUTOUR DE MOI */}
             <button 
               onClick={handleAutourDeMoi} 
               style={{ padding: '16px', textAlign: 'left', background: userLocation ? BG : '#fff', color: userLocation ? NOIR : OR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: userLocation ? `2px solid ${NOIR}` : `1px solid ${OR}`, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
@@ -211,7 +197,7 @@ function SearchContent() {
               onClick={() => applyFilters(query, '')} 
               style={{ padding: '16px', textAlign: 'left', background: !loc && !userLocation ? NOIR : BG, color: !loc && !userLocation ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 700, border: 'none' }}
             >
-              Toute l&apos;Algérie
+              {"Toute l'Algérie"}
             </button>
             {VILLES_ALGERIE.map(v => (
               <button 
@@ -226,11 +212,10 @@ function SearchContent() {
         </div>
       )}
 
-{/* HEADER DESKTOP & MOBILE */}
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '10px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 900, color: NOIR, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            Bookme<span style={{ color: OR }}>dz</span>
+            Bookmedz<span style={{ color: OR }}>.com</span>
           </Link>
 
           <form onSubmit={handleSearch} className="hide-mobile" style={{ flex: 1, display: 'flex', gap: 8, minWidth: 0 }}>
@@ -240,7 +225,7 @@ function SearchContent() {
             </select>
             
             <select value={loc} onChange={e => setLoc(e.target.value)} style={{ flex: '1 1 120px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, minWidth: 0, cursor: 'pointer' }}>
-              <option value="">Toutes les villes (Algerie)</option>
+              <option value="">{"Toutes les villes (Algérie)"}</option>
               {VILLES_ALGERIE.map(v => <option key={v} value={v}>{v}</option>)}
             </select>
 
@@ -265,13 +250,12 @@ function SearchContent() {
             </Link>
           </div>
 
-         <div className="hide-desktop" style={{ marginLeft: 'auto' }}>
+          <div className="hide-desktop" style={{ marginLeft: 'auto' }}>
             <MobileMenu />
           </div>
         </div>
       </header>
 
-      {/* BARRE D'ONGLETS MOBILE */}
       <div className="hide-desktop" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '10px 16px', display: 'flex', gap: 8, position: 'sticky', top: 54, zIndex: 90, boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
         <button onClick={() => setShowMobilePrestations(true)} style={{ flex: 1, padding: '10px 4px', background: BG, border: '1px solid #E0D8CE', borderRadius: 6, fontSize: 13, fontWeight: 600, color: NOIR, cursor: 'pointer', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
           🏷️ {query ? query : 'Prestations'}
@@ -287,7 +271,6 @@ function SearchContent() {
         </button>
       </div>
 
-      {/* FILTRES PAR CATÉGORIE (DESKTOP) */}
       <div className="hide-mobile" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '8px 0' }}>
         <div style={{ padding: '0 16px', display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           <button onClick={() => applyFilters('', loc)} style={{ background: !query ? NOIR : 'transparent', color: !query ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: !query ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>Tous</button>
@@ -297,15 +280,14 @@ function SearchContent() {
         </div>
       </div>
 
-      {/* CONTENU PRINCIPAL */}
       <div className="split-layout">
         <div className={`list-col ${showMap ? 'hide-on-mobile' : ''}`}>
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 800, color: NOIR, marginBottom: 4 }}>
-              {query ? query : 'Sélectionnez un établissement'}
+              {query ? query : {"Sélectionnez un établissement"}}
             </h1>
             <p style={{ color: '#888', fontSize: 13 }}>
-              {loading ? 'Recherche en cours...' : (userLocation ? `Les meilleurs salons et instituts autour de vous : Réservation en ligne` : `Les meilleurs salons et instituts ${loc ? 'à ' + loc : 'en Algérie'} : Réservation en ligne`)}
+              {loading ? 'Recherche en cours...' : (userLocation ? "Les meilleurs salons et instituts autour de vous : Réservation en ligne" : `Les meilleurs salons et instituts ${loc ? 'à ' + loc : 'en Algérie'} : Réservation en ligne`)}
             </p>
           </div>
 
@@ -313,15 +295,13 @@ function SearchContent() {
             <div style={{ textAlign: 'center', padding: 60, color: '#999' }}>Chargement...</div>
           ) : displaySalons.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, background: '#fff', border: '1px dashed #DDD5C8', borderRadius: 4 }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>{'🔍'}</div>
-              <p style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>Aucun établissement ne correspond à votre recherche.</p>
-              <button onClick={() => applyFilters('','')} style={{ background: 'none', border: 'none', color: OR, fontWeight: 700, borderBottom: '1px solid ' + OR, paddingBottom: 2, fontSize: 14, cursor: 'pointer' }}>Voir tous les établissements</button>
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🔍</div>
+              <p style={{ color: '#888', marginBottom: 16, fontSize: 14 }}>{"Aucun établissement ne correspond à votre recherche."}</p>
+              <button onClick={() => applyFilters('','')} style={{ background: 'none', border: 'none', color: OR, fontWeight: 700, borderBottom: '1px solid ' + OR, paddingBottom: 2, fontSize: 14, cursor: 'pointer' }}>{"Voir tous les établissements"}</button>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {displaySalons.map(salon => {
-                
-                // Calcul de la distance spécifique à afficher sur la carte si l'utilisateur est géolocalisé
                 let distanceText = '';
                 if (userLocation && salon.latitude && salon.longitude) {
                   const dist = getDistanceInKm(userLocation.lat, userLocation.lng, salon.latitude, salon.longitude);
@@ -405,7 +385,7 @@ function SearchContent() {
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24 }}>
                           <Link href={'/salon/' + salon.id} style={{ color: '#444', fontSize: 13, fontWeight: 600, textDecoration: 'underline' }}>
-                            Plus d&apos;informations
+                            {"Plus d'informations"}
                           </Link>
                           <Link href={'/booking?salon=' + salon.id} className="hide-mobile" style={{ background: NOIR, color: '#fff', padding: '10px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
                             Prendre RDV
@@ -433,8 +413,8 @@ function SearchContent() {
         {!hasMappable && !loading && salons.length > 0 && (
           <div className={`map-col ${showMap ? 'show-on-mobile' : 'hide-on-mobile'}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e3df', color: '#999', fontSize: 14, textAlign: 'center', padding: 20 }}>
             <div>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>{'🗺️'}</div>
-              Carte indisponible.<br />Les salons n&apos;ont pas encore de coordonnées GPS.
+              <div style={{ fontSize: 36, marginBottom: 12 }}>🗺️</div>
+              {"Carte indisponible."}<br />{"Les salons n'ont pas encore de coordonnées GPS."}
             </div>
           </div>
         )}
