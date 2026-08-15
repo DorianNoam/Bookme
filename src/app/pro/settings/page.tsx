@@ -108,7 +108,7 @@ export default function ProSettingsPage() {
       <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
         <div className="pro-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
+            Bookme<span style={{ color: OR }}>dz</span>
             <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
           </div>
           <nav className="pro-header-nav" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
@@ -624,7 +624,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
                   <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
                     <div style={{ flex: '1 1 200px' }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Email du collaborateur</label>
-                      <input type="email" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder="collaborateur@email.dz" style={{ ...inputStyle, fontSize: 14 }} />
+                      <input type="email" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder="collaborateur@emaildz" style={{ ...inputStyle, fontSize: 14 }} />
                     </div>
                     <div style={{ flex: '1 1 200px' }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Mot de passe</label>
@@ -832,7 +832,7 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
           <div><label style={labelStyle}>Seuil de fidelite (RDV requis)</label><select name="seuil_fidelite" value={form.seuil_fidelite || 4} onChange={handleChange} style={inputStyle}><option value={5}>5 rendez-vous</option><option value={10}>10 rendez-vous</option><option value={15}>15 rendez-vous</option><option value={20}>20 rendez-vous</option></select></div>
           <div style={{ gridColumn: '1 / -1', background: '#FAFAF5', padding: 16, borderRadius: 6, border: `1px dashed ${OR}` }}>
             <label style={{ ...labelStyle, color: OR }}>Email du compte pro (pour recevoir les notifications)</label>
-            <input type="email" value={emailValue} onChange={e => setEmailValue(e.target.value)} placeholder="contact@votre-salon.dz" style={inputStyle} />
+            <input type="email" value={emailValue} onChange={e => setEmailValue(e.target.value)} placeholder="contact@votre-salondz" style={inputStyle} />
             <p style={{ fontSize: 11, color: '#888', marginTop: 6, margin: 0 }}>C'est sur cette adresse que vous recevrez les confirmations de RDV.</p>
           </div>
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description</label><textarea name="description" value={form.description || ''} onChange={handleChange} rows={4} style={{ ...inputStyle, resize: 'vertical' }} /></div>
