@@ -94,7 +94,7 @@ export default async function SalonPage({
         </Link>
 
         <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+         <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
             Mon espace
           </Link>
           <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none', border: `1.5px solid ${OR}` }}>
