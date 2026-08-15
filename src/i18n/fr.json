@@ -1,4 +1,25 @@
 {
+
+  "dashboard": {
+    "chargement": "Chargement de votre espace...",
+    "nouvelleReservation": "Nouvelle réservation",
+    "deconnexion": "Déconnexion",
+    "bonjour": "Bonjour,",
+    "gererRdv": "Gérez vos réservations et vos salons favoris.",
+    "rdv": "Rendez-vous",
+    "favoris": "Favoris",
+    "profil": "Profil",
+    "aVenir": "À venir",
+    "passes": "Passés",
+    "aucunRdv": "Vous n'avez aucun rendez-vous prévu.",
+    "reserverMaintenant": "Réserver maintenant",
+    "aucunFavori": "Vous n'avez pas encore de salons favoris.",
+    "decouvrirSalons": "Découvrir les salons",
+    "mesInfos": "Mes informations",
+    "enregistrer": "Enregistrer les modifications",
+    "enregistrement": "Enregistrement..."
+  },
+  
   "nav": {
     "coiffure": "Coiffure",
     "ongles": "Beauté des ongles",
