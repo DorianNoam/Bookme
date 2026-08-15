@@ -6,17 +6,11 @@ import { Locale } from '@/i18n'
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 
-const FLAGS: Record<Locale, string> = {
-  fr: '🇫🇷',
-  en: '🇬🇧',
-  ar: '🇩🇿',
-}
-
-const LABELS: Record<Locale, string> = {
-  fr: 'FR',
-  en: 'EN',
-  ar: 'عر',
-}
+const LANGS: { code: Locale; label: string }[] = [
+  { code: 'fr', label: 'FR' },
+  { code: 'en', label: 'EN' },
+  { code: 'ar', label: 'AR' },
+]
 
 export default function LanguageSwitcher() {
   const { locale, setLocale } = useLanguage()
@@ -28,19 +22,19 @@ export default function LanguageSwitcher() {
         onClick={() => setOpen(!open)}
         style={{
           background: 'transparent',
-          border: `1px solid #E0D8CE`,
-          borderRadius: 6,
-          padding: '6px 10px',
+          border: 'none',
+          cursor: 'pointer',
+          padding: '6px 8px',
           fontSize: 13,
           fontWeight: 700,
-          cursor: 'pointer',
+          color: NOIR,
           display: 'flex',
           alignItems: 'center',
           gap: 4,
-          color: NOIR,
         }}
       >
-        {FLAGS[locale]} {LABELS[locale]}
+        {locale.toUpperCase()}
+        <span style={{ fontSize: 10, color: '#888' }}>{open ? '\u25B2' : '\u25BC'}</span>
       </button>
 
       {open && (
@@ -53,32 +47,30 @@ export default function LanguageSwitcher() {
             marginTop: 4,
             background: '#fff',
             border: '1px solid #E0D8CE',
-            borderRadius: 8,
+            borderRadius: 6,
             boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
             zIndex: 999,
             overflow: 'hidden',
-            minWidth: 120,
           }}>
-            {(['fr', 'en', 'ar'] as Locale[]).map(l => (
+            {LANGS.map(l => (
               <button
-                key={l}
-                onClick={() => { setLocale(l); setOpen(false); }}
+                key={l.code}
+                onClick={() => { setLocale(l.code); setOpen(false); }}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
+                  display: 'block',
                   width: '100%',
-                  padding: '10px 14px',
+                  padding: '8px 20px',
                   border: 'none',
-                  background: locale === l ? '#F8F5F0' : '#fff',
+                  background: locale === l.code ? '#F8F5F0' : '#fff',
                   cursor: 'pointer',
-                  fontSize: 14,
-                  fontWeight: locale === l ? 700 : 500,
-                  color: locale === l ? OR : NOIR,
-                  textAlign: 'left',
+                  fontSize: 13,
+                  fontWeight: locale === l.code ? 800 : 500,
+                  color: locale === l.code ? OR : NOIR,
+                  textAlign: 'center',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                {FLAGS[l]} {l === 'fr' ? 'Français' : l === 'en' ? 'English' : 'العربية'}
+                {l.label}
               </button>
             ))}
           </div>
