@@ -1,3 +1,4 @@
+import { sendAdminNewProNotification } from '@/lib/email'
 import { sendProWelcome } from '@/lib/email'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
