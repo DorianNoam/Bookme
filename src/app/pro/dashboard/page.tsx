@@ -401,7 +401,7 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
       
       <div className="pro-header-container">
         <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
-          Bookme<span style={{ color: OR }}>.dz</span>
+          Bookme<span style={{ color: OR }}>dz</span>
           <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
         </div>
         <nav className="pro-header-nav">
