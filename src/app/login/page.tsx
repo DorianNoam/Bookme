@@ -182,6 +182,12 @@ function LoginContent() {
             >
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
+
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <Link href="/forgot-password?type=client" style={{ color: OR, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                Mot de passe oublie ?
+              </Link>
+            </div>
           </form>
 
           <div style={{ textAlign: 'center', marginTop: 24, fontSize: 14, color: '#666' }}>
