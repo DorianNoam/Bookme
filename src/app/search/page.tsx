@@ -284,7 +284,7 @@ function SearchContent() {
         <div className={`list-col ${showMap ? 'hide-on-mobile' : ''}`}>
           <div style={{ marginBottom: 16 }}>
             <h1 style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 800, color: NOIR, marginBottom: 4 }}>
-              {query ? query : {"Sélectionnez un établissement"}}
+              {query ? query : "Sélectionnez un établissement"}
             </h1>
             <p style={{ color: '#888', fontSize: 13 }}>
               {loading ? 'Recherche en cours...' : (userLocation ? "Les meilleurs salons et instituts autour de vous : Réservation en ligne" : `Les meilleurs salons et instituts ${loc ? 'à ' + loc : 'en Algérie'} : Réservation en ligne`)}
