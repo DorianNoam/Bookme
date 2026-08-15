@@ -1,3 +1,4 @@
+import FavoriteButton from '@/components/FavoriteButton'
 import MobileMenu from '@/components/MobileMenu'
 import React from 'react'
 import Link from 'next/link'
@@ -115,7 +116,7 @@ export default async function SalonPage({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
               <h1 style={{ fontSize: 36, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>{salon.nom}</h1>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)' }}>{'\u2661'}</div>
+             <FavoriteButton salonId={salonId} />
             </div>
           </div>
         </div>
