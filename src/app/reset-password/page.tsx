@@ -7,12 +7,26 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
+function EyeToggle({ show, onClick }: { show: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4, fontSize: 18, color: '#888', lineHeight: 1 }}
+    >
+      {show ? '\uD83D\uDE48' : '\uD83D\uDC41'}
+    </button>
+  )
+}
+
 function ResetPasswordContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token') || ''
   const type = searchParams.get('type') || 'client'
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -82,26 +96,32 @@ function ResetPasswordContent() {
 
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontSize: 13, fontWeight: 700, color: isPro ? '#ccc' : NOIR, display: 'block', marginBottom: 6 }}>Nouveau mot de passe</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Minimum 6 caracteres"
-                required
-                style={{ width: '100%', padding: '12px 14px', border: `1px solid ${isPro ? '#333' : '#E0D8CE'}`, borderRadius: 6, fontSize: 14, background: isPro ? '#0a0a0a' : '#fff', color: isPro ? '#fff' : NOIR, boxSizing: 'border-box' }}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Minimum 6 caracteres"
+                  required
+                  style={{ width: '100%', padding: '12px 44px 12px 14px', border: `1px solid ${isPro ? '#333' : '#E0D8CE'}`, borderRadius: 6, fontSize: 14, background: isPro ? '#0a0a0a' : '#fff', color: isPro ? '#fff' : NOIR, boxSizing: 'border-box' }}
+                />
+                <EyeToggle show={showPass} onClick={() => setShowPass(!showPass)} />
+              </div>
             </div>
 
             <div style={{ marginBottom: 20 }}>
               <label style={{ fontSize: 13, fontWeight: 700, color: isPro ? '#ccc' : NOIR, display: 'block', marginBottom: 6 }}>Confirmer le mot de passe</label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                placeholder="Retapez le mot de passe"
-                required
-                style={{ width: '100%', padding: '12px 14px', border: `1px solid ${isPro ? '#333' : '#E0D8CE'}`, borderRadius: 6, fontSize: 14, background: isPro ? '#0a0a0a' : '#fff', color: isPro ? '#fff' : NOIR, boxSizing: 'border-box' }}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  placeholder="Retapez le mot de passe"
+                  required
+                  style={{ width: '100%', padding: '12px 44px 12px 14px', border: `1px solid ${isPro ? '#333' : '#E0D8CE'}`, borderRadius: 6, fontSize: 14, background: isPro ? '#0a0a0a' : '#fff', color: isPro ? '#fff' : NOIR, boxSizing: 'border-box' }}
+                />
+                <EyeToggle show={showConfirm} onClick={() => setShowConfirm(!showConfirm)} />
+              </div>
             </div>
 
             <button
