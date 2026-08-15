@@ -9,22 +9,21 @@ export default function ProLandingPage() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: NOIR, minHeight: '100vh', color: '#fff', display: 'flex', flexDirection: 'column' }}>
       
-      <header style={{ padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ fontSize: 22, fontWeight: 900, color: '#fff', textDecoration: 'none' }}>
-            Bookmedz<span style={{ color: OR }}>.com</span> <span style={{ fontWeight: 400, fontSize: 16, color: '#888' }}>| Pro</span>
+<header style={{ padding: '20px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: '#fff', textDecoration: 'none', flexShrink: 0 }}>
+            Bookmedz<span style={{ color: OR }}>.com</span> <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 16px)', color: '#888' }}>| Pro</span>
           </Link>
-          <div style={{ display: 'flex', gap: 15 }}>
-            <Link href="/" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600, display: 'flex', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 'clamp(8px, 2vw, 15px)', alignItems: 'center' }}>
+            <Link href="/" className="hide-mobile" style={{ color: '#aaa', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
               &larr; Retour au site client
             </Link>
-            <Link href="/pro/login" style={{ background: OR, color: '#fff', padding: '8px 20px', borderRadius: 4, fontSize: 14, textDecoration: 'none', fontWeight: 700 }}>
+            <Link href="/pro/login" style={{ background: OR, color: '#fff', padding: 'clamp(6px, 1.5vw, 8px) clamp(12px, 2.5vw, 20px)', borderRadius: 4, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>
               Se connecter
             </Link>
           </div>
         </div>
       </header>
-
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         
         <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: 500, height: 500, background: 'radial-gradient(circle, rgba(184, 146, 42, 0.15) 0%, transparent 70%)', zIndex: 0 }} />
