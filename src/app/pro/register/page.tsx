@@ -106,7 +106,7 @@ function ProRegisterContent() {
       <header style={{ padding: '15px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px', textAlign: 'center' }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: '#fff', textDecoration: 'none' }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
+            Bookme<span style={{ color: OR }}>dz</span>
             <span style={{ fontWeight: 400, fontSize: 'clamp(12px, 2.5vw, 16px)', color: '#888', marginLeft: 8 }}>Pro</span>
           </Link>
         </div>
@@ -145,7 +145,7 @@ function ProRegisterContent() {
           </h1>
           <p style={{ color: '#888', fontSize: 13, textAlign: 'center', marginBottom: 24 }}>
             {step === 1
-              ? 'Rejoignez Bookme.dz et developpez votre activite.'
+              ? 'Rejoignez Bookmedz et developpez votre activite.'
               : 'Dites-nous en plus sur votre salon.'}
           </p>
 
@@ -181,7 +181,7 @@ function ProRegisterContent() {
 
               <div>
                 <label style={labelStyle}>Email professionnel</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="contact@votre-salon.dz" style={inputStyle} required autoComplete="email" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="contact@votre-salondz" style={inputStyle} required autoComplete="email" />
               </div>
 
               <div>
