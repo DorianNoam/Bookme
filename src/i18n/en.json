@@ -12,7 +12,7 @@
     "espacePro": "Pro Area",
     "retourSalons": "Back to salons"
   },
-"navShort": {
+  "navShort": {
     "coiffure": "Hair",
     "ongles": "Nails",
     "bienetre": "Wellness",
@@ -20,7 +20,6 @@
     "hammam": "Hammam",
     "chirurgie": "Surgery"
   },
-  
   "hero": {
     "subtitle": "N°1 Platform in Algeria",
     "title": "Book your beauty online",
@@ -90,13 +89,20 @@
     "min": "min",
     "jours": ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
   },
-
+  "features": {
+    "title1": "24/7",
+    "desc1": "Book anytime, anywhere in Algeria.",
+    "title2": "Instant confirmation",
+    "desc2": "Your slot is locked instantly, no phone call needed.",
+    "title3": "Verified reviews",
+    "desc3": "Only clients who had an actual appointment can leave a review."
+  },
   "carousel": {
     "subtitle": "Selected for you",
     "title": "Discover our Categories",
     "voirEtablissements": "View establishments",
     "slide1Title": "The art of the cut",
-    "slide1Desc": "Looking for a change or a simple refresh? Our hairstylists master all techniques: balayage, ombré, Brazilian blowout...",
+    "slide1Desc": "Looking for a change or a simple refresh? Our hairstylists master all techniques: balayage, ombre, Brazilian blowout...",
     "slide2Title": "Perfect hands",
     "slide2Desc": "Polish, gel, nail art or pedicure. Find the ideal specialist for flawless nails.",
     "slide3Title": "Total relaxation",
@@ -109,15 +115,6 @@
     "title": "Are you a beauty professional?",
     "desc": "Join Bookmedz Pro to digitalize your schedule, eliminate no-shows and grow your clientele across Algeria.",
     "button": "Discover our Pro offer"
-  }
-  
-  "features": {
-    "title1": "24/7",
-    "desc1": "Book anytime, anywhere in Algeria.",
-    "title2": "Instant confirmation",
-    "desc2": "Your slot is locked instantly, no phone call needed.",
-    "title3": "Verified reviews",
-    "desc3": "Only clients who had an actual appointment can leave a review."
   },
   "footer": "Bookmedz.com — Beauty at your fingertips in Algeria"
 }
