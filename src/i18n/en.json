@@ -12,6 +12,15 @@
     "espacePro": "Pro Area",
     "retourSalons": "Back to salons"
   },
+"navShort": {
+    "coiffure": "Hair",
+    "ongles": "Nails",
+    "bienetre": "Wellness",
+    "barbier": "Barber",
+    "hammam": "Hammam",
+    "chirurgie": "Surgery"
+  },
+  
   "hero": {
     "subtitle": "N°1 Platform in Algeria",
     "title": "Book your beauty online",
