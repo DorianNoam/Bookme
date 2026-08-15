@@ -232,9 +232,14 @@ const SLIDES = [
         </Link>
       </section>
 
-      {/* ══════ FOOTER ══════ */}
-      <footer style={{ background: '#050505', padding: '24px 16px', borderTop: '1px solid #1a1a1a', textAlign: 'center', color: '#666', fontSize: 13 }}>
-        {t.footer}
+    {/* ══════ FOOTER ══════ */}
+      <footer style={{ background: '#050505', padding: '24px 16px', borderTop: '1px solid #1a1a1a', textAlign: 'center', color: '#666', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+        <div>{t.footer}</div>
+        <div>
+          <Link href="/contact" style={{ color: '#888', textDecoration: 'none', transition: 'color 0.2s' }}>
+            Contactez-nous
+          </Link>
+        </div>
       </footer>
     </div>
   )
