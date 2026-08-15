@@ -83,7 +83,7 @@ export default async function SalonPage({
         .custom-scroll::-webkit-scrollbar-thumb:hover { background-color: #B8922A; }
       `}} />
 
-    <header style={{ background: '#fff', borderBottom: '1px solid #E0D8CE', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, gap: 12 }}>
+      <header style={{ background: '#fff', borderBottom: '1px solid #E0D8CE', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 50, gap: 12 }}>
         <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 900, color: NOIR, textDecoration: 'none', flexShrink: 0 }}>
           Bookme<span style={{ color: OR }}>.dz</span>
         </Link>
@@ -101,7 +101,9 @@ export default async function SalonPage({
           </Link>
         </div>
 
-        <MobileMenu />
+        <div className="hide-desktop" style={{ marginLeft: 'auto' }}>
+          <MobileMenu />
+        </div>
       </header>
 
       <div style={{ width: '100%', height: 380, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
@@ -183,7 +185,7 @@ export default async function SalonPage({
                               <div style={{ color: '#999', textDecoration: 'line-through', fontSize: 14 }}>{promo.prix} DA</div>
                               <div style={{ color: '#d32f2f', fontSize: 24, fontWeight: 900 }}>{prixRemise} DA</div>
                             </div>
-                            <button style={{ background: OR, color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 6, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>Reserver</button>
+                            <Link href={`/booking?salon=${salonId}&service=${promo.id}`} style={{ background: OR, color: '#fff', padding: '12px 24px', borderRadius: 6, fontSize: 14, fontWeight: 800, textDecoration: 'none', display: 'inline-block' }}>Reserver</Link>
                           </div>
                         </div>
                       </div>
@@ -205,7 +207,7 @@ export default async function SalonPage({
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
                         <div style={{ fontSize: 16, fontWeight: 800, color: NOIR }}>{service.prix} DA</div>
-                        <button style={{ background: NOIR, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'background 0.2s' }}>Choisir</button>
+                        <Link href={`/booking?salon=${salonId}&service=${service.id}`} style={{ background: NOIR, color: '#fff', padding: '10px 20px', borderRadius: 6, fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'inline-block' }}>Choisir</Link>
                       </div>
                     </div>
                   ))}
