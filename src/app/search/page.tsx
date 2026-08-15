@@ -230,7 +230,7 @@ function SearchContent() {
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '10px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 900, color: NOIR, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
+            Bookme<span style={{ color: OR }}>dz</span>
           </Link>
 
           <form onSubmit={handleSearch} className="hide-mobile" style={{ flex: 1, display: 'flex', gap: 8, minWidth: 0 }}>
