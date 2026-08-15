@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "coiffure": "Hair Salon",
+    "ongles": "Nail Care",
+    "bienetre": "Massage & Wellness",
+    "barbier": "Barber",
+    "hammam": "Hammam & Spa",
+    "chirurgie": "Aesthetic Surgery",
+    "connexion": "Login",
+    "inscription": "Sign Up",
+    "monEspace": "My Account",
+    "espacePro": "Pro Area",
+    "retourSalons": "Back to salons"
+  },
+  "hero": {
+    "subtitle": "N°1 Platform in Algeria",
+    "title": "Book your beauty online",
+    "desc": "The best salons, institutes and spas across Algeria.",
+    "prestation": "Service",
+    "ville": "City",
+    "rechercher": "Search",
+    "placeholder": "Hair, massage, nails...",
+    "toutesVilles": "All cities"
+  },
+  "search": {
+    "selectEtablissement": "Select an establishment",
+    "rechercheEnCours": "Searching...",
+    "meilleursSalons": "The best salons and institutes",
+    "enAlgerie": "in Algeria",
+    "reservation": "Online booking",
+    "autourDeMoi": "Near me",
+    "toutesVilles": "All cities (Algeria)",
+    "toutesPrestations": "All services",
+    "aucunResultat": "No establishment matches your search.",
+    "voirTous": "View all establishments",
+    "prestations": "Services",
+    "carte": "Map",
+    "liste": "List",
+    "ville": "City",
+    "tous": "All",
+    "matin": "MORNING",
+    "apresMidi": "AFTERNOON",
+    "plusInfos": "More information",
+    "prendreRdv": "Book Now",
+    "nouveau": "New",
+    "avis": "reviews"
+  },
+  "salon": {
+    "prestations": "Services",
+    "avis": "Reviews",
+    "informations": "Information",
+    "offresSpeciales": "SPECIAL OFFERS",
+    "reserver": "Book",
+    "choisir": "Select",
+    "ferme": "Closed on",
+    "aPropos": "About the salon",
+    "horaires": "Hours & Access",
+    "adresse": "Address",
+    "telephone": "Phone",
+    "fermeture": "Closing",
+    "instagram": "Instagram"
+  },
+  "booking": {
+    "confirmation": "Appointment confirmed!",
+    "prixSurPlace": "Price to pay on site",
+    "mesRdv": "My appointments"
+  },
+  "auth": {
+    "bonRetour": "Welcome back!",
+    "connectezVous": "Log in to manage your bookings.",
+    "email": "Email",
+    "motDePasse": "Password",
+    "seConnecter": "Log in",
+    "mdpOublie": "Forgot password?",
+    "pasDeCompte": "No account yet?",
+    "inscrivezVous": "Sign up"
+  },
+  "common": {
+    "chargement": "Loading...",
+    "da": "DA",
+    "min": "min",
+    "jours": ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+  },
+  "features": {
+    "title1": "24/7",
+    "desc1": "Book anytime, anywhere in Algeria.",
+    "title2": "Instant confirmation",
+    "desc2": "Your slot is locked instantly, no phone call needed.",
+    "title3": "Verified reviews",
+    "desc3": "Only clients who had an actual appointment can leave a review."
+  },
+  "footer": "Bookmedz.com — Beauty at your fingertips in Algeria"
+}
