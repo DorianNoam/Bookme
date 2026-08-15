@@ -52,7 +52,6 @@ export default function ProSettingsPage() {
   const [proEmail, setProEmail] = useState('')
 
   useEffect(() => {
-    // Le paramètre ?t=... évite que Next.js serve une version en cache des paramètres
     fetch('/api/pro/settings?t=' + new Date().getTime())
       .then(r => r.json())
       .then(data => {
@@ -83,8 +82,8 @@ export default function ProSettingsPage() {
 
   const tabs = [
     { key: 'services' as const, label: 'Prestations', count: services.length },
-    { key: 'vip' as const, label: 'Ventes Privees', count: ventesPrivees.length },
-    { key: 'employes' as const, label: 'Equipe', count: employes.length },
+    { key: 'vip' as const, label: 'Ventes Privées', count: ventesPrivees.length },
+    { key: 'employes' as const, label: 'Équipe', count: employes.length },
     { key: 'salon' as const, label: 'Mon salon', count: null },
   ]
 
@@ -97,7 +96,6 @@ export default function ProSettingsPage() {
           .responsive-info { display: flex; align-items: center; gap: 20px; }
           .responsive-actions { display: flex; align-items: center; gap: 8px; }
           
-          /* Style élégant pour les barres de défilement (remplace hide-scrollbar) */
           .custom-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #E0D8CE transparent; }
           .custom-scroll::-webkit-scrollbar { height: 6px; }
           .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -123,7 +121,7 @@ export default function ProSettingsPage() {
             <nav className="pro-header-nav custom-scroll" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
               <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
               <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Agenda</Link>
-              <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Parametres</Link>
+              <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Paramètres</Link>
               <div style={{ whiteSpace: 'nowrap' }}><LogoutButton /></div>
             </nav>
           </div>
@@ -152,11 +150,11 @@ export default function ProSettingsPage() {
             ))}
           </div>
 
-          {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
-          {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
-          {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
+          {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutée') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise à jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimée') }} />}
+          {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutée') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise à jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimée') }} />}
+          {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employé ajouté') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employé supprimé') }} />}
           
-          {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} gallery={gallery} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} onAddGalleryImage={(img) => setGallery([...gallery, img])} onDeleteGalleryImage={(id) => setGallery(gallery.filter(g => g.id !== id))} />}
+          {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} gallery={gallery} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis à jour') }} onAddGalleryImage={(img) => setGallery([...gallery, img])} onDeleteGalleryImage={(id) => setGallery(gallery.filter(g => g.id !== id))} />}
         </main>
       </div>
     </AbonnementGuard>
@@ -164,7 +162,7 @@ export default function ProSettingsPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Ventes Privees (Inchangé)
+// COMPOSANT : Ventes Privées
 // ═══════════════════════════════════════════════════════════════════
 
 function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventesPrivees: VentePrivee[]; onAdd: (v: VentePrivee) => void; onUpdate: (v: VentePrivee) => void; onDelete: (id: number) => void }) {
@@ -219,26 +217,26 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
         <div>
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, margin: 0 }}>Ventes Privees</h3>
-          <p style={{ fontSize: 13, color: '#888', margin: '5px 0 0 0' }}>Offres exclusives reservees a vos clients fideles.</p>
+          <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, margin: 0 }}>Ventes Privées</h3>
+          <p style={{ fontSize: 13, color: '#888', margin: '5px 0 0 0' }}>Offres exclusives réservées à vos clients fidèles.</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} style={{ background: showForm ? '#eee' : OR, color: showForm ? NOIR : '#fff', border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{showForm ? 'Annuler' : '+ Creer VIP'}</button>
+        <button onClick={() => setShowForm(!showForm)} style={{ background: showForm ? '#eee' : OR, color: showForm ? NOIR : '#fff', border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{showForm ? 'Annuler' : '+ Créer VIP'}</button>
       </div>
 
       {showForm && (
         <div style={{ background: '#fff', padding: 25, borderRadius: 8, marginBottom: 25, border: `2px solid ${OR}`, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
           <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
-            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Nom de l'offre VIP</label><input type="text" placeholder="Ex: Soin Keratine VIP" value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>Prix special (DA)</label><input type="number" placeholder="1500" value={prix} onChange={(e) => setPrix(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>Duree (min)</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
+            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Nom de l&apos;offre VIP</label><input type="text" placeholder="Ex: Soin Kératine VIP" value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} /></div>
+            <div><label style={labelStyle}>Prix spécial (DA)</label><input type="number" placeholder="1500" value={prix} onChange={(e) => setPrix(e.target.value)} style={inputStyle} /></div>
+            <div><label style={labelStyle}>Durée (min)</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
             <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description courte</label><textarea placeholder="Avantages de cette offre exclusive..." value={description} onChange={(e) => setDescription(e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} rows={2} /></div>
           </div>
-          <button onClick={handleAdd} disabled={submitting || !nom || !prix} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 30px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1, width: '100%' }}>{submitting ? 'Creation...' : "Creer l'offre VIP"}</button>
+          <button onClick={handleAdd} disabled={submitting || !nom || !prix} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 30px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1, width: '100%' }}>{submitting ? 'Création...' : "Créer l'offre VIP"}</button>
         </div>
       )}
 
       {ventesPrivees.length === 0 ? (
-        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888' }}>Aucune offre VIP configuree.</div>
+        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888' }}>Aucune offre VIP configurée.</div>
       ) : (
         <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
           {ventesPrivees.map((v, i) => (
@@ -284,7 +282,7 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Services (Inchangé)
+// COMPOSANT : Services
 // ═══════════════════════════════════════════════════════════════════
 
 function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { services: Service[]; catalogue: CatalogueItem[]; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
@@ -306,7 +304,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   const [promoDebut, setPromoDebut] = useState('')
   const [promoFin, setPromoFin] = useState('')
 
-  const grouped = services.reduce((acc, s) => { const cat = s.categorie_service || 'General'; if (!acc[cat]) acc[cat] = []; acc[cat].push(s); return acc }, {} as Record<string, Service[]>)
+  const grouped = services.reduce((acc, s) => { const cat = s.categorie_service || 'Général'; if (!acc[cat]) acc[cat] = []; acc[cat].push(s); return acc }, {} as Record<string, Service[]>)
   const catalogueGrouped = catalogue.reduce((acc, c) => { if (!acc[c.categorie]) acc[c.categorie] = []; acc[c.categorie].push(c); return acc }, {} as Record<string, CatalogueItem[]>)
 
   function startEdit(s: Service) { setEditingId(s.id); setEditPrix(String(s.prix)); setEditDuree(String(s.duree)) }
@@ -349,7 +347,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
     if (!nom || !prix || !duree) return
     setSubmitting(true)
     try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_service', nom, prix, duree, categorie_service: categorie || 'General' }) })
+      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_service', nom, prix, duree, categorie_service: categorie || 'Général' }) })
       const data = await res.json()
       if (data.success) { onAdd(data.service); setNom(''); setPrix(''); setDuree('30'); setCategorie(''); setShowForm(false) }
     } catch (e) {}
@@ -382,19 +380,19 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                   <option value="">Choisir du catalogue...</option>
                   {Object.entries(catalogueGrouped).map(([cat, items]) => (<optgroup key={cat} label={cat}>{items.map(item => (<option key={item.id} value={item.nom}>{item.nom}</option>))}</optgroup>))}
                 </select>
-                <input type="text" placeholder="Ou tapez un nom personnalise" value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} />
+                <input type="text" placeholder="Ou tapez un nom personnalisé" value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} />
               </div>
             </div>
             <div><label style={labelStyle}>Prix (DA)</label><input type="number" placeholder="1500" value={prix} onChange={(e) => setPrix(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>Duree (min)</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
-            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Categorie</label><input type="text" placeholder="Coiffure, Soin, etc." value={categorie} onChange={(e) => setCategorie(e.target.value)} style={inputStyle} /></div>
+            <div><label style={labelStyle}>Durée (min)</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
+            <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Catégorie</label><input type="text" placeholder="Coiffure, Soin, etc." value={categorie} onChange={(e) => setCategorie(e.target.value)} style={inputStyle} /></div>
           </div>
           <button onClick={handleAdd} disabled={submitting || !nom || !prix} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 30px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1, width: '100%' }}>{submitting ? 'Ajout en cours...' : 'Ajouter'}</button>
         </div>
       )}
 
       {Object.keys(grouped).length === 0 ? (
-        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888' }}>Aucune prestation configuree.</div>
+        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888' }}>Aucune prestation configurée.</div>
       ) : (
         Object.entries(grouped).map(([cat, items]) => (
           <div key={cat} style={{ marginBottom: 20 }}>
@@ -461,11 +459,11 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span style={{ fontSize: 13, color: '#888' }}>-</span>
                             <input type="number" value={promoPct} onChange={(e) => setPromoPct(e.target.value)} placeholder="20" min="1" max="99" style={{ width: 80, padding: '8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }} />
-                            <span style={{ fontSize: 13, fontWeight: 700 }}>% de reduction</span>
+                            <span style={{ fontSize: 13, fontWeight: 700 }}>% de réduction</span>
                           </div>
                           
                           <div style={{ width: '100%' }}>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l'offre (Optionnel)</label>
+                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l&apos;offre (Optionnel)</label>
                             <input 
                               list="promo-events"
                               type="text" 
@@ -494,7 +492,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
                           
                           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%' }}>
                             <div style={{ flex: '1 1 140px' }}>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Debut de la promo</label>
+                              <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Début de la promo</label>
                               <input type="date" value={promoDebut} onChange={e => setPromoDebut(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
                             </div>
                             <div style={{ flex: '1 1 140px' }}>
@@ -522,7 +520,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Employes (Inchangé)
+// COMPOSANT : Employés
 // ═══════════════════════════════════════════════════════════════════
 
 function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd: (e: Employe) => void; onDelete: (id: number) => void }) {
@@ -550,7 +548,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Supprimer cet employe ?')) return
+    if (!confirm('Supprimer cet employé ?')) return
     try {
       const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_employe', id }) })
       const data = await res.json()
@@ -564,22 +562,22 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 
   async function handleEnableAccess(empId: number) {
     if (!accessEmail || !accessPassword) { setAccessError('Email et mot de passe requis.'); return }
-    if (accessPassword.length < 6) { setAccessError('Mot de passe : 6 caracteres minimum.'); return }
+    if (accessPassword.length < 6) { setAccessError('Mot de passe : 6 caractères minimum.'); return }
     setAccessSaving(true); setAccessError('')
     try {
       const res = await fetch('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'enable_access', employe_id: empId, email: accessEmail, password: accessPassword }) })
       const data = await res.json()
       if (data.success) {
         setLocalEmployes(prev => prev.map(e => e.id === empId ? { ...e, email: accessEmail, acces_agenda: true } : e))
-        setAccessSuccess('Acces active ! Le collaborateur peut maintenant se connecter.')
+        setAccessSuccess('Accès activé ! Le collaborateur peut maintenant se connecter.')
         setTimeout(() => { setAccessFormId(null); setAccessSuccess('') }, 2000)
       } else { setAccessError(data.error || 'Erreur.') }
-    } catch { setAccessError('Erreur reseau.') }
+    } catch { setAccessError('Erreur réseau.') }
     setAccessSaving(false)
   }
 
   async function handleDisableAccess(empId: number) {
-    if (!confirm('Retirer l\'acces agenda de ce collaborateur ?')) return
+    if (!confirm("Retirer l'accès agenda de ce collaborateur ?")) return
     setAccessSaving(true)
     try {
       const res = await fetch('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'disable_access', employe_id: empId }) })
@@ -591,8 +589,8 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 
   return (
     <div>
-      <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 8 }}>Votre equipe</h3>
-      <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Gerez vos collaborateurs et donnez-leur acces a l'agenda pour gerer les RDV.</p>
+      <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 8 }}>Votre équipe</h3>
+      <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Gérez vos collaborateurs et donnez-leur accès à l&apos;agenda pour gérer les RDV.</p>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 25, flexWrap: 'wrap' }}>
         <input type="text" placeholder="Nom du collaborateur" value={nom} onChange={(e) => setNom(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdd()} style={{ ...inputStyle, flex: '1 1 200px' }} />
@@ -600,7 +598,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
       </div>
 
       {localEmployes.length === 0 ? (
-        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888', fontSize: 14 }}>Aucun collaborateur. Ajoutez votre equipe pour assigner les rendez-vous.</div>
+        <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888', fontSize: 14 }}>Aucun collaborateur. Ajoutez votre équipe pour assigner les rendez-vous.</div>
       ) : (
         <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
           {localEmployes.map((emp, i) => (
@@ -612,13 +610,13 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
                     <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block' }}>{emp.nom}</span>
                     {emp.acces_agenda && emp.email && (<span style={{ fontSize: 12, color: '#888' }}>{emp.email}</span>)}
                   </div>
-                  {emp.acces_agenda && (<span style={{ background: '#d4edda', color: '#155724', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 3, textTransform: 'uppercase' }}>Acces agenda</span>)}
+                  {emp.acces_agenda && (<span style={{ background: '#d4edda', color: '#155724', fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 3, textTransform: 'uppercase' }}>Accès agenda</span>)}
                 </div>
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                   {emp.acces_agenda ? (
-                    <button onClick={() => handleDisableAccess(emp.id)} disabled={accessSaving} style={{ background: '#fff0f0', border: '1px solid #ffcccb', color: '#d32f2f', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Retirer acces</button>
+                    <button onClick={() => handleDisableAccess(emp.id)} disabled={accessSaving} style={{ background: '#fff0f0', border: '1px solid #ffcccb', color: '#d32f2f', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Retirer accès</button>
                   ) : (
-                    <button onClick={() => openAccessForm(emp)} style={{ background: 'transparent', border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Donner acces</button>
+                    <button onClick={() => openAccessForm(emp)} style={{ background: 'transparent', border: `1px solid ${OR}`, color: OR, padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontWeight: 600 }}>Donner accès</button>
                   )}
                   <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
                 </div>
@@ -626,8 +624,8 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 
               {accessFormId === emp.id && !emp.acces_agenda && (
                 <div style={{ padding: '16px 20px', background: '#FAFAF5', borderTop: `1px dashed ${OR}` }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: NOIR, marginBottom: 12 }}>Creer un acces agenda pour {emp.nom}</div>
-                  <p style={{ fontSize: 12, color: '#888', marginBottom: 14, lineHeight: 1.5 }}>Le collaborateur pourra se connecter sur la page Pro pour voir et gerer l'agenda, annuler ou modifier des RDV. Il ne pourra pas modifier les tarifs, promos ni les parametres du salon.</p>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: NOIR, marginBottom: 12 }}>Créer un accès agenda pour {emp.nom}</div>
+                  <p style={{ fontSize: 12, color: '#888', marginBottom: 14, lineHeight: 1.5 }}>Le collaborateur pourra se connecter sur la page Pro pour voir et gérer l&apos;agenda, annuler ou modifier des RDV. Il ne pourra pas modifier les tarifs, promos ni les paramètres du salon.</p>
                   {accessError && (<div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#b91c1c' }}>{accessError}</div>)}
                   {accessSuccess && (<div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#166534' }}>{accessSuccess}</div>)}
                   <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
@@ -637,11 +635,11 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
                     </div>
                     <div style={{ flex: '1 1 200px' }}>
                       <label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Mot de passe</label>
-                      <input type="text" value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Min. 6 caracteres" style={{ ...inputStyle, fontSize: 14 }} />
+                      <input type="text" value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Min. 6 caractères" style={{ ...inputStyle, fontSize: 14 }} />
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => handleEnableAccess(emp.id)} disabled={accessSaving || !accessEmail || !accessPassword} style={{ background: OR, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: accessSaving || !accessEmail || !accessPassword ? 0.5 : 1 }}>{accessSaving ? 'Activation...' : "Activer l'acces"}</button>
+                    <button onClick={() => handleEnableAccess(emp.id)} disabled={accessSaving || !accessEmail || !accessPassword} style={{ background: OR, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: accessSaving || !accessEmail || !accessPassword ? 0.5 : 1 }}>{accessSaving ? 'Activation...' : "Activer l'accès"}</button>
                     <button onClick={() => { setAccessFormId(null); setAccessError('') }} style={{ background: '#eee', color: '#666', border: 'none', padding: '10px 16px', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Annuler</button>
                   </div>
                 </div>
@@ -693,8 +691,8 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
       const publicUrl = urlData.publicUrl
       const res = await fetch('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, image: publicUrl }) })
       const data = await res.json()
-      if (data.success) { setForm({ ...form, image: publicUrl }); onUpdate({ ...form, image: publicUrl }); setUploadMsg('Photo mise a jour !') }
-    } catch (err: any) { setUploadMsg('Erreur : ' + (err.message || 'Upload echoue')) }
+      if (data.success) { setForm({ ...form, image: publicUrl }); onUpdate({ ...form, image: publicUrl }); setUploadMsg('Photo mise à jour !') }
+    } catch (err: any) { setUploadMsg('Erreur : ' + (err.message || 'Upload échoué')) }
     setUploading(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -752,7 +750,7 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
     try {
       const res = await fetch('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, image: '' }) })
       const data = await res.json()
-      if (data.success) { setForm({ ...form, image: '' }); onUpdate({ ...form, image: '' }); setUploadMsg('Photo supprimee.') }
+      if (data.success) { setForm({ ...form, image: '' }); onUpdate({ ...form, image: '' }); setUploadMsg('Photo supprimée.') }
     } catch (e) {}
     setSaving(false)
   }
@@ -773,12 +771,12 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
       <div style={{ background: '#fff', borderRadius: 8, overflow: 'hidden', marginBottom: 30, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
         <div style={{ position: 'relative', height: 220, background: '#eee' }}>
           <img src={displayImage} alt="Couverture" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e: any) => { e.target.src = DEFAULT_IMAGES['Coiffure'] }} />
-          {!form.image && (<div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 4 }}>Image par defaut</div>)}
+          {!form.image && (<div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 4 }}>Image par défaut</div>)}
         </div>
         <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: 'none' }} />
           <button onClick={() => fileInputRef.current?.click()} disabled={uploading} style={{ background: OR, color: '#fff', border: 'none', padding: '10px 22px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: uploading ? 0.5 : 1 }}>{uploading ? 'Envoi en cours...' : 'Changer la photo'}</button>
-          {form.image && (<button onClick={handleRemoveImage} style={{ background: 'transparent', border: '1px solid #ddd', color: '#888', padding: '10px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Image par defaut</button>)}
+          {form.image && (<button onClick={handleRemoveImage} style={{ background: 'transparent', border: '1px solid #ddd', color: '#888', padding: '10px 18px', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Image par défaut</button>)}
           <span style={{ fontSize: 12, color: '#aaa' }}>JPG, PNG ou WebP — max 5 Mo</span>
           {uploadMsg && (<span style={{ fontSize: 13, fontWeight: 600, color: uploadMsg.includes('Erreur') ? '#d32f2f' : '#2e7d32' }}>{uploadMsg}</span>)}
         </div>
@@ -786,7 +784,7 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
 
       {/* --- NOUVELLE SECTION GALERIE PHOTOS --- */}
       <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 10 }}>Galerie Photos</h3>
-      <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Ajoutez d'autres photos de votre salon ou de vos réalisations pour donner envie à vos clients.</p>
+      <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Ajoutez d&apos;autres photos de votre salon ou de vos réalisations pour donner envie à vos clients.</p>
       
       <div style={{ background: '#fff', padding: 24, borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.03)', marginBottom: 30 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
@@ -834,15 +832,15 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
           <div><label style={labelStyle}>Type</label><select name="type_salon" value={form.type_salon} onChange={handleChange} style={inputStyle}>{TYPES_SALON.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
           <div><label style={labelStyle}>Ville</label><input name="ville" value={form.ville} onChange={handleChange} style={inputStyle} /></div>
           <div><label style={labelStyle}>Adresse</label><input name="adresse" value={form.adresse} onChange={handleChange} style={inputStyle} /></div>
-          <div><label style={labelStyle}>Telephone</label><input name="telephone" value={form.telephone} onChange={handleChange} placeholder="+213 XXX XXX XXX" style={inputStyle} /></div>
+          <div><label style={labelStyle}>Téléphone</label><input name="telephone" value={form.telephone} onChange={handleChange} placeholder="+213 XXX XXX XXX" style={inputStyle} /></div>
           <div><label style={labelStyle}>Jour de fermeture</label><select name="jour_off" value={form.jour_off} onChange={handleChange} style={inputStyle}><option value={0}>Aucun (ouvert 7j/7)</option>{JOURS_SEMAINE.slice(1).map((j, i) => <option key={i + 1} value={i + 1}>{j}</option>)}</select></div>
-          <div><label style={labelStyle}>Heure ouverture</label><input name="ouverture" type="time" value={form.ouverture} onChange={handleChange} style={inputStyle} /></div>
-          <div><label style={labelStyle}>Heure fermeture</label><input name="fermeture" type="time" value={form.fermeture} onChange={handleChange} style={inputStyle} /></div>
-          <div><label style={labelStyle}>Seuil de fidelite (RDV requis)</label><select name="seuil_fidelite" value={form.seuil_fidelite || 4} onChange={handleChange} style={inputStyle}><option value={5}>5 rendez-vous</option><option value={10}>10 rendez-vous</option><option value={15}>15 rendez-vous</option><option value={20}>20 rendez-vous</option></select></div>
+          <div><label style={labelStyle}>Heure d&apos;ouverture</label><input name="ouverture" type="time" value={form.ouverture} onChange={handleChange} style={inputStyle} /></div>
+          <div><label style={labelStyle}>Heure de fermeture</label><input name="fermeture" type="time" value={form.fermeture} onChange={handleChange} style={inputStyle} /></div>
+          <div><label style={labelStyle}>Seuil de fidélité (RDV requis)</label><select name="seuil_fidelite" value={form.seuil_fidelite || 4} onChange={handleChange} style={inputStyle}><option value={5}>5 rendez-vous</option><option value={10}>10 rendez-vous</option><option value={15}>15 rendez-vous</option><option value={20}>20 rendez-vous</option></select></div>
           <div style={{ gridColumn: '1 / -1', background: '#FAFAF5', padding: 16, borderRadius: 6, border: `1px dashed ${OR}` }}>
             <label style={{ ...labelStyle, color: OR }}>Email du compte pro (pour recevoir les notifications)</label>
             <input type="email" value={emailValue} onChange={e => setEmailValue(e.target.value)} placeholder="contact@votre-salondz" style={inputStyle} />
-            <p style={{ fontSize: 11, color: '#888', marginTop: 6, margin: 0 }}>C'est sur cette adresse que vous recevrez les confirmations de RDV.</p>
+            <p style={{ fontSize: 11, color: '#888', marginTop: 6, margin: 0 }}>C&apos;est sur cette adresse que vous recevrez les confirmations de RDV.</p>
           </div>
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description</label><textarea name="description" value={form.description || ''} onChange={handleChange} rows={4} style={{ ...inputStyle, resize: 'vertical' }} /></div>
         </div>
