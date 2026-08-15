@@ -1,5 +1,18 @@
 {
 
+  "contact": {
+    "titre": "Contactez-nous",
+    "sousTitre": "Une question, un partenariat ? N'hésitez pas à nous écrire.",
+    "nom": "Nom complet",
+    "email": "Adresse email",
+    "sujet": "Sujet de votre message",
+    "message": "Votre message",
+    "envoyer": "Envoyer le message",
+    "envoiEnCours": "Envoi en cours...",
+    "succes": "Votre message a été envoyé avec succès ! Nous vous répondrons très vite.",
+    "erreur": "Une erreur est survenue lors de l'envoi."
+  },
+  
   "dashboard": {
     "chargement": "Chargement de votre espace...",
     "nouvelleReservation": "Nouvelle réservation",
