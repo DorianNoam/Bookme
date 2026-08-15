@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
 import { createClient } from '@supabase/supabase-js'
+import AbonnementGuard from '@/components/AbonnementGuard'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
@@ -36,7 +37,7 @@ type Salon = {
   type_salon: string; image: string; seuil_fidelite: number;
 }
 type CatalogueItem = { id: number; categorie: string; nom: string }
-type GalleryImage = { id: number; image_path: string } // Nouveau type
+type GalleryImage = { id: number; image_path: string }
 
 export default function ProSettingsPage() {
   const [tab, setTab] = useState<'services' | 'vip' | 'employes' | 'salon'>('services')
@@ -45,13 +46,14 @@ export default function ProSettingsPage() {
   const [ventesPrivees, setVentesPrivees] = useState<VentePrivee[]>([])
   const [employes, setEmployes] = useState<Employe[]>([])
   const [catalogue, setCatalogue] = useState<CatalogueItem[]>([])
-  const [gallery, setGallery] = useState<GalleryImage[]>([]) // Nouvel état pour la galerie
+  const [gallery, setGallery] = useState<GalleryImage[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [proEmail, setProEmail] = useState('')
 
   useEffect(() => {
-    fetch('/api/pro/settings')
+    // Le paramètre ?t=... évite que Next.js serve une version en cache des paramètres
+    fetch('/api/pro/settings?t=' + new Date().getTime())
       .then(r => r.json())
       .then(data => {
         setSalon(data.salon)
@@ -60,7 +62,7 @@ export default function ProSettingsPage() {
         setVentesPrivees(data.ventes_privees || [])
         setEmployes(data.employes || [])
         setCatalogue(data.catalogue || [])
-        setGallery(data.gallery || []) // Stocker la galerie récupérée
+        setGallery(data.gallery || [])
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -87,70 +89,77 @@ export default function ProSettingsPage() {
   ]
 
   return (
-    <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
+    <AbonnementGuard>
+      <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
 
-      <style dangerouslySetInnerHTML={{__html: `
-        .responsive-row { display: flex; justify-content: space-between; align-items: center; }
-        .responsive-info { display: flex; align-items: center; gap: 20px; }
-        .responsive-actions { display: flex; align-items: center; gap: 8px; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        @media (max-width: 768px) {
-          .responsive-row { flex-direction: column; align-items: stretch !important; gap: 12px; }
-          .responsive-info { width: 100%; justify-content: space-between; align-items: flex-start; }
-          .responsive-actions { width: 100%; justify-content: flex-end; border-top: 1px dashed #eee; padding-top: 12px; flex-wrap: wrap; }
-          .responsive-edit-grid { grid-template-columns: 1fr !important; }
-          .pro-header-container { flex-direction: column; align-items: flex-start; gap: 12px; }
-          .pro-header-nav { width: 100%; overflow-x: auto; gap: 24px; }
-        }
-      `}} />
+        <style dangerouslySetInnerHTML={{__html: `
+          .responsive-row { display: flex; justify-content: space-between; align-items: center; }
+          .responsive-info { display: flex; align-items: center; gap: 20px; }
+          .responsive-actions { display: flex; align-items: center; gap: 8px; }
+          
+          /* Style élégant pour les barres de défilement (remplace hide-scrollbar) */
+          .custom-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #E0D8CE transparent; }
+          .custom-scroll::-webkit-scrollbar { height: 6px; }
+          .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+          .custom-scroll::-webkit-scrollbar-thumb { background-color: #E0D8CE; border-radius: 10px; }
+          .custom-scroll::-webkit-scrollbar-thumb:hover { background-color: ${OR}; }
 
-      <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
-        <div className="pro-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
-          <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
-            Bookme<span style={{ color: OR }}>dz</span>
-            <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
+          @media (max-width: 768px) {
+            .responsive-row { flex-direction: column; align-items: stretch !important; gap: 12px; }
+            .responsive-info { width: 100%; justify-content: space-between; align-items: flex-start; }
+            .responsive-actions { width: 100%; justify-content: flex-end; border-top: 1px dashed #eee; padding-top: 12px; flex-wrap: wrap; }
+            .responsive-edit-grid { grid-template-columns: 1fr !important; }
+            .pro-header-container { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .pro-header-nav { width: 100%; overflow-x: auto; gap: 24px; padding-bottom: 8px; }
+          }
+        `}} />
+
+        <header style={{ background: NOIR, color: '#fff', padding: '12px 16px', position: 'sticky', top: 0, zIndex: 50 }}>
+          <div className="pro-header-container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto' }}>
+            <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
+              Bookme<span style={{ color: OR }}>dz</span>
+              <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
+            </div>
+            <nav className="pro-header-nav custom-scroll" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
+              <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
+              <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Agenda</Link>
+              <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Parametres</Link>
+              <div style={{ whiteSpace: 'nowrap' }}><LogoutButton /></div>
+            </nav>
           </div>
-          <nav className="pro-header-nav" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-            <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
-            <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Agenda</Link>
-            <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Parametres</Link>
-            <div style={{ whiteSpace: 'nowrap' }}><LogoutButton /></div>
-          </nav>
-        </div>
-      </header>
+        </header>
 
-      <main style={{ maxWidth: 900, margin: '0 auto', padding: '30px 20px' }}>
+        <main style={{ maxWidth: 900, margin: '0 auto', padding: '30px 20px' }}>
 
-        {message && (
-          <div style={{ background: '#d4edda', color: '#155724', padding: '12px 20px', borderRadius: 6, marginBottom: 20, fontSize: 14, fontWeight: 600, border: '1px solid #c3e6cb' }}>
-            {message}
+          {message && (
+            <div style={{ background: '#d4edda', color: '#155724', padding: '12px 20px', borderRadius: 6, marginBottom: 20, fontSize: 14, fontWeight: 600, border: '1px solid #c3e6cb' }}>
+              {message}
+            </div>
+          )}
+
+          <div className="custom-scroll" style={{ display: 'flex', gap: 0, marginBottom: 30, overflowX: 'auto', paddingBottom: 8 }}>
+            {tabs.map((t, i) => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{
+                padding: '12px 28px', fontSize: 14, fontWeight: tab === t.key ? 800 : 600,
+                color: tab === t.key ? '#fff' : NOIR,
+                background: tab === t.key ? (t.key === 'vip' ? OR : NOIR) : '#fff',
+                border: `1px solid ${tab === t.key ? (t.key === 'vip' ? OR : NOIR) : '#ddd'}`,
+                cursor: 'pointer', borderRadius: i === 0 ? '6px 0 0 6px' : i === tabs.length - 1 ? '0 6px 6px 0' : '0',
+                marginLeft: i === 0 ? 0 : -1, fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap'
+              }}>
+                {t.label} {t.count !== null && <span style={{ color: tab === t.key ? (t.key === 'vip' ? '#fff' : OR) : '#999', marginLeft: 6 }}>({t.count})</span>}
+              </button>
+            ))}
           </div>
-        )}
 
-        <div className="hide-scrollbar" style={{ display: 'flex', gap: 0, marginBottom: 30, overflowX: 'auto' }}>
-          {tabs.map((t, i) => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={{
-              padding: '12px 28px', fontSize: 14, fontWeight: tab === t.key ? 800 : 600,
-              color: tab === t.key ? '#fff' : NOIR,
-              background: tab === t.key ? (t.key === 'vip' ? OR : NOIR) : '#fff',
-              border: `1px solid ${tab === t.key ? (t.key === 'vip' ? OR : NOIR) : '#ddd'}`,
-              cursor: 'pointer', borderRadius: i === 0 ? '6px 0 0 6px' : i === tabs.length - 1 ? '0 6px 6px 0' : '0',
-              marginLeft: i === 0 ? 0 : -1, fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap'
-            }}>
-              {t.label} {t.count !== null && <span style={{ color: tab === t.key ? (t.key === 'vip' ? '#fff' : OR) : '#999', marginLeft: 6 }}>({t.count})</span>}
-            </button>
-          ))}
-        </div>
-
-        {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
-        {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
-        {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
-        
-        {/* On passe `gallery` et les fonctions de maj au SalonTab */}
-        {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} gallery={gallery} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} onAddGalleryImage={(img) => setGallery([...gallery, img])} onDeleteGalleryImage={(id) => setGallery(gallery.filter(g => g.id !== id))} />}
-      </main>
-    </div>
+          {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
+          {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
+          {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
+          
+          {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} gallery={gallery} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} onAddGalleryImage={(img) => setGallery([...gallery, img])} onDeleteGalleryImage={(id) => setGallery(gallery.filter(g => g.id !== id))} />}
+        </main>
+      </div>
+    </AbonnementGuard>
   )
 }
 
