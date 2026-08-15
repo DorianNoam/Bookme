@@ -59,7 +59,7 @@ function LoginContent() {
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '15px 0' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 20px', textAlign: 'center' }}>
           <Link href="/" style={{ fontSize: 22, fontWeight: 900, color: NOIR, textDecoration: 'none' }}>
-            Bookme<span style={{ color: OR }}>.dz</span>
+            Bookme<span style={{ color: OR }}>dz</span>
           </Link>
         </div>
       </header>
