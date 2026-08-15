@@ -1,4 +1,25 @@
 {
+
+  "dashboard": {
+    "chargement": "Loading your account...",
+    "nouvelleReservation": "New booking",
+    "deconnexion": "Log out",
+    "bonjour": "Hello,",
+    "gererRdv": "Manage your bookings and favourite salons.",
+    "rdv": "Appointments",
+    "favoris": "Favourites",
+    "profil": "Profile",
+    "aVenir": "Upcoming",
+    "passes": "Past",
+    "aucunRdv": "You have no upcoming appointments.",
+    "reserverMaintenant": "Book now",
+    "aucunFavori": "You don't have any favourite salons yet.",
+    "decouvrirSalons": "Discover salons",
+    "mesInfos": "My information",
+    "enregistrer": "Save changes",
+    "enregistrement": "Saving..."
+  },
+  
   "nav": {
     "coiffure": "Hair Salon",
     "ongles": "Nail Care",
