@@ -206,3 +206,55 @@ export async function sendBookingReminder({
     return { success: false, error: err.message }
   }
 }
+export async function sendPasswordReset({
+  email,
+  name,
+  resetUrl,
+}: {
+  email: string
+  name: string
+  resetUrl: string
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F8F5F0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F5F0;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;border:1px solid #E0D8CE;overflow:hidden;">
+        <tr><td style="background:#0A0A0A;padding:20px;text-align:center;">
+          <span style="color:#ffffff;font-size:24px;font-weight:bold;">Bookmedz</span><span style="color:#B8922A;font-size:24px;font-weight:bold;">.com</span>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="color:#0A0A0A;font-size:24px;font-weight:bold;margin:0 0 20px;">Reinitialisation de mot de passe</h1>
+          <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 16px;">Bonjour ${name},</p>
+          <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 24px;">Vous avez demande a reinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau :</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+            <tr><td align="center">
+              <a href="${resetUrl}" style="display:inline-block;background:#B8922A;color:#ffffff;padding:14px 36px;border-radius:6px;font-size:16px;font-weight:bold;text-decoration:none;">Choisir un nouveau mot de passe</a>
+            </td></tr>
+          </table>
+          <p style="color:#888;font-size:14px;line-height:20px;margin:0 0 16px;">Ce lien expire dans 1 heure. Si vous n'avez pas fait cette demande, ignorez cet email.</p>
+          <hr style="border:none;border-top:1px solid #E0D8CE;margin:30px 0;" />
+          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">Bookmedz.com</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    await resend.emails.send({
+      from: 'Bookmedz <noreply@bookmedz.com>',
+      to: [email],
+      subject: 'Reinitialisation de votre mot de passe Bookmedz',
+      html,
+    })
+    return { success: true }
+  } catch (err: any) {
+    console.error('Erreur envoi reset password:', err.message)
+    return { success: false, error: err.message }
+  }
+}
