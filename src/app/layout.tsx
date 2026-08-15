@@ -1,3 +1,4 @@
+import LanguageProvider from '@/components/LanguageProvider'
 import type { Metadata } from 'next'
 import './globals.css'
 
