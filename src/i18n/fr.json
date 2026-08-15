@@ -1,0 +1,93 @@
+{
+  "nav": {
+    "coiffure": "Coiffure",
+    "ongles": "Beauté des ongles",
+    "bienetre": "Massage et bien-être",
+    "barbier": "Barbier",
+    "hammam": "Hammam & Spa",
+    "chirurgie": "Chirurgie esthétique",
+    "connexion": "Connexion",
+    "inscription": "Inscription",
+    "monEspace": "Mon espace",
+    "espacePro": "Espace Pro",
+    "retourSalons": "Retour aux salons"
+  },
+  "hero": {
+    "subtitle": "Plateforme N°1 en Algérie",
+    "title": "Réservez votre beauté en ligne",
+    "desc": "Les meilleurs salons, instituts et spas partout en Algérie.",
+    "prestation": "Prestation",
+    "ville": "Ville",
+    "rechercher": "Rechercher",
+    "placeholder": "Coiffure, massage, ongles...",
+    "toutesVilles": "Toutes les villes"
+  },
+  "search": {
+    "selectEtablissement": "Sélectionnez un établissement",
+    "rechercheEnCours": "Recherche en cours...",
+    "meilleursSalons": "Les meilleurs salons et instituts",
+    "enAlgerie": "en Algérie",
+    "reservation": "Réservation en ligne",
+    "autourDeMoi": "Autour de moi",
+    "toutesVilles": "Toutes les villes (Algérie)",
+    "toutesPrestations": "Toutes les prestations",
+    "aucunResultat": "Aucun établissement ne correspond à votre recherche.",
+    "voirTous": "Voir tous les établissements",
+    "prestations": "Prestations",
+    "carte": "Carte",
+    "liste": "Liste",
+    "ville": "Ville",
+    "tous": "Tous",
+    "matin": "MATIN",
+    "apresMidi": "APRÈS-MIDI",
+    "plusInfos": "Plus d'informations",
+    "prendreRdv": "Prendre RDV",
+    "nouveau": "Nouveau",
+    "avis": "avis"
+  },
+  "salon": {
+    "prestations": "Prestations",
+    "avis": "Avis",
+    "informations": "Informations",
+    "offresSpeciales": "OFFRES SPÉCIALES",
+    "reserver": "Réserver",
+    "choisir": "Choisir",
+    "ferme": "Fermé le",
+    "aPropos": "À propos du salon",
+    "horaires": "Horaires & Accès",
+    "adresse": "Adresse",
+    "telephone": "Téléphone",
+    "fermeture": "Fermeture",
+    "instagram": "Instagram"
+  },
+  "booking": {
+    "confirmation": "Rendez-vous confirmé !",
+    "prixSurPlace": "Prix à régler sur place",
+    "mesRdv": "Mes rendez-vous"
+  },
+  "auth": {
+    "bonRetour": "Bon retour !",
+    "connectezVous": "Connectez-vous pour gérer vos réservations.",
+    "email": "Email",
+    "motDePasse": "Mot de passe",
+    "seConnecter": "Se connecter",
+    "mdpOublie": "Mot de passe oublié ?",
+    "pasDeCompte": "Pas encore de compte ?",
+    "inscrivezVous": "Inscrivez-vous"
+  },
+  "common": {
+    "chargement": "Chargement...",
+    "da": "DA",
+    "min": "min",
+    "jours": ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  "features": {
+    "title1": "24h/24, 7j/7",
+    "desc1": "Réservez à n'importe quel moment, où que vous soyez en Algérie.",
+    "title2": "Confirmation immédiate",
+    "desc2": "Votre créneau est bloqué instantanément, sans appel téléphonique.",
+    "title3": "Avis vérifiés",
+    "desc3": "Seuls les clients ayant eu un rendez-vous effectif peuvent noter."
+  },
+  "footer": "Bookmedz.com — La beauté à portée de clic en Algérie"
+}
