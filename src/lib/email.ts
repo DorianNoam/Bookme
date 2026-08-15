@@ -414,3 +414,61 @@ export async function sendProWelcome({
     return { success: false, error: err.message }
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// EMAIL ADMIN : Alerte nouvelle inscription pro
+// ═══════════════════════════════════════════════════════════════
+
+export async function sendAdminNewProNotification({
+  proName,
+  proEmail,
+  proPhone,
+}: {
+  proName: string
+  proEmail: string
+  proPhone: string
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F8F5F0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F5F0;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;border:1px solid #E0D8CE;overflow:hidden;">
+        <tr><td style="background:#0A0A0A;padding:20px;text-align:center;">
+          <span style="color:#ffffff;font-size:24px;font-weight:bold;">Bookmedz</span><span style="color:#B8922A;font-size:24px;font-weight:bold;">.com</span>
+          <span style="color:#888;font-size:14px;margin-left:8px;">Admin</span>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="color:#0A0A0A;font-size:24px;font-weight:bold;margin:0 0 20px;">Nouvelle Inscription Pro 🎉</h1>
+          <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 24px;">Un nouveau professionnel vient de créer son compte sur la plateforme.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAFAFA;border:1px solid #E0D8CE;border-radius:6px;margin:0 0 24px;">
+            <tr><td style="padding:20px;">
+              <p style="color:#0A0A0A;font-size:15px;line-height:28px;margin:0;"><strong>Nom :</strong> ${proName}</p>
+              <p style="color:#0A0A0A;font-size:15px;line-height:28px;margin:0;"><strong>Email :</strong> ${proEmail}</p>
+              <p style="color:#0A0A0A;font-size:15px;line-height:28px;margin:0;"><strong>Téléphone :</strong> ${proPhone}</p>
+            </td></tr>
+          </table>
+          <hr style="border:none;border-top:1px solid #E0D8CE;margin:30px 0;" />
+          <p style="color:#888;font-size:14px;line-height:20px;text-align:center;margin:0;">Notification automatique administrateur.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    await resend.emails.send({
+      from: 'Bookmedz <noreply@bookmedz.com>', // Utilise la même adresse d'envoi
+      to: ['contact@bookmedz.com'], // Ton adresse de réception
+      subject: `🎉 Nouveau pro inscrit : ${proName}`,
+      html,
+    })
+    return { success: true }
+  } catch (err: any) {
+    console.error('Erreur envoi email admin:', err.message)
+    return { success: false, error: err.message }
+  }
+}
