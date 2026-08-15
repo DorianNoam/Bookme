@@ -12,7 +12,6 @@
     "espacePro": "Espace Pro",
     "retourSalons": "Retour aux salons"
   },
-
   "navShort": {
     "coiffure": "Coiffure",
     "ongles": "Ongles",
@@ -21,7 +20,6 @@
     "hammam": "Hammam",
     "chirurgie": "Chirurgie"
   },
-  
   "hero": {
     "subtitle": "Plateforme N°1 en Algérie",
     "title": "Réservez votre beauté en ligne",
@@ -91,8 +89,15 @@
     "min": "min",
     "jours": ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
   },
-
-"carousel": {
+  "features": {
+    "title1": "24h/24, 7j/7",
+    "desc1": "Réservez à n'importe quel moment, où que vous soyez en Algérie.",
+    "title2": "Confirmation immédiate",
+    "desc2": "Votre créneau est bloqué instantanément, sans appel téléphonique.",
+    "title3": "Avis vérifiés",
+    "desc3": "Seuls les clients ayant eu un rendez-vous effectif peuvent noter."
+  },
+  "carousel": {
     "subtitle": "Sélectionné pour vous",
     "title": "Découvrez nos Univers",
     "voirEtablissements": "Voir les établissements",
@@ -110,15 +115,6 @@
     "title": "Vous êtes un professionnel de la beauté ?",
     "desc": "Rejoignez Bookmedz Pro pour digitaliser votre agenda, éliminer les no-shows et développer votre clientèle à travers toute l'Algérie.",
     "button": "Découvrir notre offre Pro"
-  }
-  
-  "features": {
-    "title1": "24h/24, 7j/7",
-    "desc1": "Réservez à n'importe quel moment, où que vous soyez en Algérie.",
-    "title2": "Confirmation immédiate",
-    "desc2": "Votre créneau est bloqué instantanément, sans appel téléphonique.",
-    "title3": "Avis vérifiés",
-    "desc3": "Seuls les clients ayant eu un rendez-vous effectif peuvent noter."
   },
   "footer": "Bookmedz.com — La beauté à portée de clic en Algérie"
 }
