@@ -475,3 +475,60 @@ export async function sendAdminNewProNotification({
     return { success: false, error: err.message }
   }
 }
+// ═══════════════════════════════════════════════════════════════
+// EMAIL ADMIN : Formulaire de contact
+// ═══════════════════════════════════════════════════════════════
+
+export async function sendContactMessage({
+  nom,
+  email,
+  sujet,
+  message
+}: {
+  nom: string
+  email: string
+  sujet: string
+  message: string
+}) {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F8F5F0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F5F0;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;border:1px solid #E0D8CE;overflow:hidden;">
+        <tr><td style="background:#0A0A0A;padding:20px;text-align:center;">
+          <span style="color:#ffffff;font-size:24px;font-weight:bold;">Bookmedz</span><span style="color:#B8922A;font-size:24px;font-weight:bold;">.com</span>
+        </td></tr>
+        <tr><td style="padding:40px;">
+          <h1 style="color:#0A0A0A;font-size:24px;font-weight:bold;margin:0 0 20px;">Nouveau message de contact</h1>
+          <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 8px;"><strong>De :</strong> ${nom} (<a href="mailto:${email}" style="color:#B8922A;">${email}</a>)</p>
+          <p style="color:#333;font-size:16px;line-height:24px;margin:0 0 24px;"><strong>Sujet :</strong> ${sujet}</p>
+          
+          <div style="background:#FAFAFA;border:1px solid #E0D8CE;border-radius:6px;padding:20px;">
+            <p style="color:#0A0A0A;font-size:15px;line-height:24px;margin:0;">
+              ${message.replace(/\n/g, '<br/>')}
+            </p>
+          </div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  try {
+    await resend.emails.send({
+      from: 'Bookmedz Contact <noreply@bookmedz.com>',
+      to: ['contact@bookmedz.com'],
+      reply_to: email, // Permet de répondre directement au client depuis ta boîte mail
+      subject: `Contact : ${sujet}`,
+      html,
+    })
+    return { success: true }
+  } catch (err: any) {
+    console.error('Erreur envoi email contact:', err.message)
+    return { success: false, error: err.message }
+  }
+}
