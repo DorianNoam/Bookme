@@ -12,6 +12,16 @@
     "espacePro": "فضاء المحترفين",
     "retourSalons": "العودة إلى الصالونات"
   },
+
+"navShort": {
+    "coiffure": "شعر",
+    "ongles": "أظافر",
+    "bienetre": "استرخاء",
+    "barbier": "حلاق",
+    "hammam": "حمام",
+    "chirurgie": "تجميل"
+  },
+  
   "hero": {
     "subtitle": "المنصة رقم 1 في الجزائر",
     "title": "احجز جمالك عبر الإنترنت",
