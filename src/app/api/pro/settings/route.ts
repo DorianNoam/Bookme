@@ -113,18 +113,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, image: data })
   }
 
-  if (body.action === 'add_service') {
-    const { nom, prix, duree, categorie_service } = body
+if (body.action === 'add_service') {
+    const { nom, description, prix, duree, categorie_service } = body
     if (!nom || !prix || !duree) return NextResponse.json({ error: 'Nom, prix et duree requis' }, { status: 400 })
-    const { data, error } = await supabase.from('services').insert({ salon_id: salonId, nom, prix: parseInt(prix), duree: parseInt(duree), categorie_service: categorie_service || 'General' }).select().single()
+    const { data, error } = await supabase.from('services').insert({ salon_id: salonId, nom, description: description || '', prix: parseInt(prix), duree: parseInt(duree), categorie_service: categorie_service || 'General' }).select().single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, service: data })
   }
 
-  if (body.action === 'update_service') {
-    const { id, prix, duree, categorie_service } = body
+if (body.action === 'update_service') {
+    const { id, nom, description, prix, duree, categorie_service } = body
     if (!id || !prix || !duree) return NextResponse.json({ error: 'ID, prix et duree requis' }, { status: 400 })
-    const { data, error } = await supabase.from('services').update({ prix: parseInt(prix), duree: parseInt(duree), categorie_service: categorie_service || undefined }).eq('id', id).eq('salon_id', salonId).select().single()
+    const updateFields: any = { prix: parseInt(prix), duree: parseInt(duree) }
+    if (nom) updateFields.nom = nom
+    if (description !== undefined) updateFields.description = description
+    if (categorie_service) updateFields.categorie_service = categorie_service
+    const { data, error } = await supabase.from('services').update(updateFields).eq('id', id).eq('salon_id', salonId).select().single()
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ success: true, service: data })
   }
