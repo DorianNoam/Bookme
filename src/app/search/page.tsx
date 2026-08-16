@@ -111,7 +111,7 @@ function SearchContent() {
       const params = new URLSearchParams();
       if (q) params.set('q', q);
       if (l) params.set('loc', l);
-      const res = await fetch('/api/salons?' + params.toString());
+      const res = await fetch('/api/salons?' + params.toString(), { cache: 'no-store' });
       const data = await res.json();
       setSalons(data.salons || []);
     } catch {
