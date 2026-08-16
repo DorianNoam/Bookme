@@ -24,7 +24,9 @@ export async function GET(req: NextRequest) {
 
     const salon    = salonRes.data
     const duree    = serviceRes.data.duree
-    const employes = employesRes.data || []
+    const employes = (employesRes.data && employesRes.data.length > 0) 
+      ? employesRes.data 
+      : [{ id: 0, nom: 'Patron', salon_id: salon_id }]
 
     // Verifier jour de fermeture
     const dateObj    = new Date(date + 'T00:00:00')
