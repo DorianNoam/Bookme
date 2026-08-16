@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
     // Récupérer le salon et le service
     const [salonRes, serviceRes, employesRes] = await Promise.all([
-      supabase.from('salons').select('ouverture, fermeture, jour_off').eq('id', salon_id).single(),
+     supabase.from('salons').select('ouverture, fermeture, jour_off, pause_active, pause_debut, pause_fin').eq('id', salon_id).single(),
       supabase.from('services').select('duree').eq('id', service_id).single(),
       supabase.from('employes').select('*').eq('salon_id', salon_id),
     ])
