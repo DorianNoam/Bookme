@@ -10,6 +10,16 @@ import { format, addDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { VILLES_ALGERIE } from '@/data/villes';
 
+const DEFAULT_IMAGES: Record<string, string> = {
+  'Coiffure': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+  'Barbier': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800',
+  'Beaute des ongles': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
+  'Massage et bien-etre': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+  'Hammam & Spa': 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800',
+  'Chirurgie esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
+  'Institut': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
+}
+
 const SearchMap = dynamic(() => import('@/components/SearchMap'), { 
   ssr: false, 
   loading: () => <div style={{ width: '100%', height: '100%', background: '#e5e3df', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#999', fontSize: 14 }}>...</div> 
@@ -349,7 +359,7 @@ function SearchContent() {
                     <div style={{ display: 'flex', flexWrap: 'wrap' }}>
                       <div style={{ width: '260px', minHeight: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
                         <img
-                          src={salon.image}
+                         src={salon.image || DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure']}
                           alt={salon.nom}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
