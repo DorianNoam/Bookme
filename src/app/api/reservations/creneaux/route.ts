@@ -11,22 +11,22 @@ export async function GET(req: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Récupérer le salon et le service
+    // Recuperer le salon et le service
     const [salonRes, serviceRes, employesRes] = await Promise.all([
-     supabase.from('salons').select('ouverture, fermeture, jour_off, pause_active, pause_debut, pause_fin').eq('id', salon_id).single(),
+      supabase.from('salons').select('ouverture, fermeture, jour_off, pause_active, pause_debut, pause_fin').eq('id', salon_id).single(),
       supabase.from('services').select('duree').eq('id', service_id).single(),
       supabase.from('employes').select('*').eq('salon_id', salon_id),
     ])
 
     if (!salonRes.data || !serviceRes.data) {
-      return NextResponse.json({ error: 'Données introuvables' }, { status: 404 })
+      return NextResponse.json({ error: 'Donnees introuvables' }, { status: 404 })
     }
 
     const salon    = salonRes.data
     const duree    = serviceRes.data.duree
     const employes = employesRes.data || []
 
-    // Vérifier jour de fermeture
+    // Verifier jour de fermeture
     const dateObj    = new Date(date + 'T00:00:00')
     const jourSemaine = dateObj.getDay() || 7 // 1=Lun ... 7=Dim
 
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ creneaux: [], ferme: true })
     }
 
-    // Récupérer les réservations existantes du jour
+    // Recuperer les reservations existantes du jour
     const { data: reservations } = await supabase
       .from('reservations')
       .select('employe_id, date_rdv, services(duree)')
@@ -43,17 +43,32 @@ export async function GET(req: NextRequest) {
       .lt('date_rdv',  date + 'T23:59:59')
       .neq('statut', 'annule')
 
-    // Générer les créneaux
+    // Generer les creneaux
     const [hOuv, mOuv] = salon.ouverture.split(':').map(Number)
     const [hFer, mFer] = salon.fermeture.split(':').map(Number)
     const startMin = hOuv * 60 + mOuv
     const endMin   = hFer * 60 + mFer
+
+    // Pause midi
+    let pauseStartMin = 0
+    let pauseEndMin = 0
+    if (salon.pause_active && salon.pause_debut && salon.pause_fin) {
+      const [hPD, mPD] = salon.pause_debut.split(':').map(Number)
+      const [hPF, mPF] = salon.pause_fin.split(':').map(Number)
+      pauseStartMin = hPD * 60 + mPD
+      pauseEndMin = hPF * 60 + mPF
+    }
 
     const creneaux: { heure: string; emp_id: number }[] = []
 
     for (let t = startMin; t + duree <= endMin; t += 30) {
       const tsDebut = t
       const tsFin   = t + duree
+
+      // Verifier si le creneau chevauche la pause
+      if (salon.pause_active && pauseEndMin > pauseStartMin) {
+        if (tsDebut < pauseEndMin && tsFin > pauseStartMin) continue
+      }
 
       const empsToCheck = emp_id === -1 ? employes : employes.filter(e => e.id === emp_id)
 
