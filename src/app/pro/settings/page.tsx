@@ -167,7 +167,7 @@ export default function ProSettingsPage() {
             ))}
           </div>
 
-          {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
+          {tab === 'services' && <ServicesTab services={services} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
           {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
           {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
           
@@ -332,7 +332,7 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
 // COMPOSANT : Services
 // ═══════════════════════════════════════════════════════════════════
 
-function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { services: Service[]; catalogue: CatalogueItem[]; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
+function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Service[]; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
   const [showForm, setShowForm] = useState(false)
   const [nom, setNom] = useState('')
   const [descriptionService, setDescriptionService] = useState('')
@@ -356,7 +356,6 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
   const [promoFin, setPromoFin] = useState('')
 
   const grouped = services.reduce((acc, s) => { const cat = s.categorie_service || 'Autres'; if (!acc[cat]) acc[cat] = []; acc[cat].push(s); return acc }, {} as Record<string, Service[]>)
-  const catalogueGrouped = catalogue.reduce((acc, c) => { if (!acc[c.categorie]) acc[c.categorie] = []; acc[c.categorie].push(c); return acc }, {} as Record<string, CatalogueItem[]>)
 
   function startEdit(s: Service) { setEditingId(s.id); setEditNom(s.nom); setEditDescription(s.description || ''); setEditPrix(String(s.prix)); setEditDuree(String(s.duree)); setEditCategorie(s.categorie_service || CATEGORIES_SERVICES[0]) }
   function cancelEdit() { setEditingId(null); setEditNom(''); setEditDescription(''); setEditPrix(''); setEditDuree(''); setEditCategorie('') }
@@ -432,13 +431,7 @@ function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { servi
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Nom de la prestation *</label>
-              <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
-                <select value="" onChange={(e) => { const item = catalogue.find(c => c.nom === e.target.value); if (item) { setNom(item.nom); setCategorie(item.categorie) } }} style={inputStyle}>
-                  <option value="">Choisir du catalogue...</option>
-                  {Object.entries(catalogueGrouped).map(([cat, items]) => (<optgroup key={cat} label={cat}>{items.map(item => (<option key={item.id} value={item.nom}>{item.nom}</option>))}</optgroup>))}
-                </select>
-                <input type="text" placeholder="Ex: Balayage californien, Pose gel UV..." value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} />
-              </div>
+              <input type="text" placeholder="Ex: Balayage californien, Pose gel UV..." value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} />
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Description (optionnelle)</label>
