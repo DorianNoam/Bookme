@@ -10,19 +10,10 @@ const OR = '#B8922A'
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
 const VILLES = ['Alger', 'Oran', 'Constantine', 'Annaba', 'Setif', 'Blida', 'Tlemcen', 'Batna', 'Bejaia', 'Tizi Ouzou', 'Djelfa', 'Biskra', 'Sidi Bel Abbes', 'Mostaganem', 'Skikda', 'Chlef', 'Bordj Bou Arreridj', 'Medea', 'El Oued', 'Bouira', 'Boumerdes', 'Tipaza', 'Ghardaia', 'Ouargla', 'Autre']
 
-type NominatimResult = {
-  display_name: string
-  lat: string
-  lon: string
-  address?: {
-    road?: string
-    house_number?: string
-    neighbourhood?: string
-    suburb?: string
-    city?: string
-    town?: string
-    village?: string
-    state?: string
+declare global {
+  interface Window {
+    google: any
+    initGooglePlaces: () => void
   }
 }
 
@@ -42,72 +33,97 @@ function ProRegisterContent() {
   const [adresse, setAdresse] = useState('')
   const [instagram, setInstagram] = useState('')
 
-  const [suggestions, setSuggestions] = useState<NominatimResult[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
   const [latitude, setLatitude] = useState<number | null>(null)
   const [longitude, setLongitude] = useState<number | null>(null)
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
-  const suggestionsRef = useRef<HTMLDivElement>(null)
+  const [googleLoaded, setGoogleLoaded] = useState(false)
+  const autocompleteRef = useRef<any>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Charger Google Maps script
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  function handleAdresseChange(value: string) {
-    setAdresse(value)
-    setLatitude(null)
-    setLongitude(null)
-
-    if (searchTimeout) clearTimeout(searchTimeout)
-
-    if (value.length < 3) {
-      setSuggestions([])
-      setShowSuggestions(false)
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+    if (!apiKey || window.google) {
+      if (window.google) setGoogleLoaded(true)
       return
     }
 
-    const timeout = setTimeout(async () => {
-      try {
-        const q = encodeURIComponent(value + (ville ? ', ' + ville + ', Algerie' : ', Algerie'))
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${q}&countrycodes=dz&limit=5&addressdetails=1`,
-          { headers: { 'Accept-Language': 'fr' } }
-        )
-        const data: NominatimResult[] = await res.json()
-        setSuggestions(data)
-        setShowSuggestions(data.length > 0)
-      } catch {
-        setSuggestions([])
-        setShowSuggestions(false)
-      }
-    }, 400)
+    window.initGooglePlaces = () => {
+      setGoogleLoaded(true)
+    }
 
-    setSearchTimeout(timeout)
-  }
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlaces&language=fr`
+    script.async = true
+    script.defer = true
+    document.head.appendChild(script)
 
-  function selectSuggestion(result: NominatimResult) {
-    const a = result.address
-    const parts: string[] = []
-    if (a?.house_number) parts.push(a.house_number)
-    if (a?.road) parts.push(a.road)
-    if (!a?.road && a?.neighbourhood) parts.push(a.neighbourhood)
-    if (!a?.road && !a?.neighbourhood && a?.suburb) parts.push(a.suburb)
-    const short = parts.length > 0 ? parts.join(' ') : result.display_name.split(',')[0].trim()
-    setAdresse(short)
-    setLatitude(parseFloat(result.lat))
-    setLongitude(parseFloat(result.lon))
-    setSuggestions([])
-    setShowSuggestions(false)
-  }
+    return () => {
+      delete window.initGooglePlaces
+    }
+  }, [])
+
+  // Initialiser l'autocomplete quand Google est charge et qu'on est a l'etape 2
+  useEffect(() => {
+    if (!googleLoaded || step !== 2 || !inputRef.current) return
+    if (autocompleteRef.current) return
+
+    // Petit delai pour s'assurer que l'input est monte
+    const timer = setTimeout(() => {
+      if (!inputRef.current || !window.google) return
+
+      const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+        componentRestrictions: { country: 'dz' },
+        fields: ['formatted_address', 'geometry', 'address_components'],
+        types: ['address']
+      })
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace()
+        if (!place.geometry) return
+
+        // Extraire l'adresse sans la ville ni le pays (deja dans le select)
+        const components = place.address_components || []
+        const streetNumber = components.find((c: any) => c.types.includes('street_number'))?.long_name || ''
+        const route = components.find((c: any) => c.types.includes('route'))?.long_name || ''
+        const sublocality = components.find((c: any) => c.types.includes('sublocality') || c.types.includes('sublocality_level_1'))?.long_name || ''
+        const neighborhood = components.find((c: any) => c.types.includes('neighborhood'))?.long_name || ''
+
+        let shortAddress = ''
+        if (streetNumber && route) {
+          shortAddress = `${streetNumber} ${route}`
+        } else if (route) {
+          shortAddress = route
+        } else if (sublocality) {
+          shortAddress = sublocality
+        } else if (neighborhood) {
+          shortAddress = neighborhood
+        } else {
+          // Prendre le formatted_address et retirer ville + pays
+          const formatted = place.formatted_address || ''
+          const parts = formatted.split(',')
+          shortAddress = parts.slice(0, Math.max(1, parts.length - 2)).join(',').trim()
+        }
+
+        setAdresse(shortAddress)
+        setLatitude(place.geometry.location.lat())
+        setLongitude(place.geometry.location.lng())
+      })
+
+      autocompleteRef.current = autocomplete
+    }, 200)
+
+    return () => clearTimeout(timer)
+  }, [googleLoaded, step])
+
+  // Reset autocomplete quand on change d'etape
+  useEffect(() => {
+    if (step !== 2) {
+      autocompleteRef.current = null
+    }
+  }, [step])
 
   function handleUsePosition() {
     if (!navigator.geolocation) {
@@ -120,21 +136,25 @@ function ProRegisterContent() {
         const lng = position.coords.longitude
         setLatitude(lat)
         setLongitude(lng)
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
-            { headers: { 'Accept-Language': 'fr' } }
-          )
-          const data = await res.json()
-          if (data.address) {
-            const a = data.address
-            const parts: string[] = []
-            if (a.house_number) parts.push(a.house_number)
-            if (a.road) parts.push(a.road)
-            if (!a.road && a.neighbourhood) parts.push(a.neighbourhood)
-            if (parts.length > 0) setAdresse(parts.join(' '))
-          }
-        } catch {}
+
+        // Reverse geocoding avec Google
+        if (window.google) {
+          const geocoder = new window.google.maps.Geocoder()
+          geocoder.geocode({ location: { lat, lng } }, (results: any[], status: string) => {
+            if (status === 'OK' && results[0]) {
+              const components = results[0].address_components || []
+              const streetNumber = components.find((c: any) => c.types.includes('street_number'))?.long_name || ''
+              const route = components.find((c: any) => c.types.includes('route'))?.long_name || ''
+              if (streetNumber && route) {
+                setAdresse(`${streetNumber} ${route}`)
+              } else if (route) {
+                setAdresse(route)
+              } else {
+                setAdresse(results[0].formatted_address.split(',')[0].trim())
+              }
+            }
+          })
+        }
       },
       () => {
         alert('Impossible de recuperer votre position.')
@@ -215,6 +235,60 @@ function ProRegisterContent() {
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: NOIR, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Style pour le dropdown Google Places Autocomplete */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .pac-container {
+          background: #1a1a1a !important;
+          border: 1px solid #333 !important;
+          border-top: none !important;
+          border-radius: 0 0 6px 6px !important;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
+          font-family: Inter, sans-serif !important;
+          z-index: 10000 !important;
+        }
+        .pac-item {
+          padding: 10px 16px !important;
+          border-top: 1px solid #222 !important;
+          color: #fff !important;
+          font-size: 14px !important;
+          cursor: pointer !important;
+          line-height: 1.5 !important;
+        }
+        .pac-item:first-child {
+          border-top: none !important;
+        }
+        .pac-item:hover, .pac-item-selected {
+          background: #222 !important;
+        }
+        .pac-item-query {
+          color: #fff !important;
+          font-weight: 700 !important;
+          font-size: 14px !important;
+        }
+        .pac-matched {
+          color: ${OR} !important;
+          font-weight: 700 !important;
+        }
+        .pac-item .pac-item-query + span {
+          color: #888 !important;
+          font-weight: 400 !important;
+        }
+        .pac-icon {
+          display: none !important;
+        }
+        .pac-item::before {
+          content: "📍";
+          margin-right: 10px;
+          font-size: 14px;
+        }
+        .pac-logo::after {
+          display: none !important;
+        }
+        .hdpi.pac-logo::after {
+          display: none !important;
+        }
+      `}} />
 
       <header style={{ padding: '15px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 16px', textAlign: 'center' }}>
@@ -337,7 +411,7 @@ function ProRegisterContent() {
                 </select>
               </div>
 
-              <div style={{ position: 'relative' }} ref={suggestionsRef}>
+              <div>
                 <label style={labelStyle}>Adresse *</label>
 
                 <button
@@ -358,62 +432,21 @@ function ProRegisterContent() {
                 </button>
 
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#666' }}>&#128204;</span>
+                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#666', zIndex: 1 }}>&#128204;</span>
                   <input
+                    ref={inputRef}
                     type="text"
                     value={adresse}
-                    onChange={e => handleAdresseChange(e.target.value)}
-                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
+                    onChange={e => { setAdresse(e.target.value); setLatitude(null); setLongitude(null) }}
                     placeholder="Tapez votre adresse..."
                     style={{ ...inputStyle, paddingLeft: 40, border: latitude ? `1px solid ${OR}` : '1px solid #333' }}
                     required
+                    autoComplete="off"
                   />
                   {latitude && (
-                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: 16 }}>&#10003;</span>
+                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: 16, zIndex: 1 }}>&#10003;</span>
                   )}
                 </div>
-
-                {showSuggestions && suggestions.length > 0 && (
-                  <div style={{
-                    position: 'absolute', top: '100%', left: 0, right: 0,
-                    background: '#1a1a1a', border: '1px solid #333',
-                    borderRadius: '0 0 6px 6px', zIndex: 100,
-                    maxHeight: 220, overflowY: 'auto',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
-                  }}>
-                    {suggestions.map((s, i) => {
-                      const a = s.address
-                      const road = [a?.house_number, a?.road].filter(Boolean).join(' ')
-                      const commune = a?.suburb || a?.neighbourhood || a?.town || a?.village || a?.city || ''
-                      const main = road || commune || s.display_name.split(',')[0].trim()
-                      const secondary = road ? [commune, 'Algerie'].filter(Boolean).join(', ') : 'Algerie'
-                      return (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => selectSuggestion(s)}
-                          style={{
-                            width: '100%', padding: '12px 16px',
-                            background: 'transparent', border: 'none',
-                            borderBottom: i < suggestions.length - 1 ? '1px solid #222' : 'none',
-                            color: '#fff', fontSize: 14, textAlign: 'left',
-                            cursor: 'pointer', fontFamily: 'Inter, sans-serif',
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            transition: 'background 0.15s'
-                          }}
-                          onMouseEnter={e => (e.currentTarget.style.background = '#222')}
-                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                        >
-                          <span style={{ color: OR, fontSize: 14, flexShrink: 0 }}>&#128205;</span>
-                          <span>
-                            <strong>{main}</strong>{' '}
-                            <span style={{ color: '#888', fontWeight: 400 }}>{secondary}</span>
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
 
                 {latitude && longitude && (
                   <div style={{ fontSize: 11, color: '#4ade80', marginTop: 4, fontWeight: 600 }}>
