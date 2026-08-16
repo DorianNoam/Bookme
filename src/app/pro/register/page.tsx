@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'
+import React, { useState, useEffect, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -14,6 +14,16 @@ type NominatimResult = {
   display_name: string
   lat: string
   lon: string
+  address?: {
+    road?: string
+    house_number?: string
+    neighbourhood?: string
+    suburb?: string
+    city?: string
+    town?: string
+    village?: string
+    state?: string
+  }
 }
 
 function ProRegisterContent() {
@@ -32,7 +42,6 @@ function ProRegisterContent() {
   const [adresse, setAdresse] = useState('')
   const [instagram, setInstagram] = useState('')
 
-  // Autocompletion adresse
   const [suggestions, setSuggestions] = useState<NominatimResult[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [latitude, setLatitude] = useState<number | null>(null)
@@ -43,7 +52,6 @@ function ProRegisterContent() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Fermer les suggestions quand on clique ailleurs
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
@@ -54,7 +62,6 @@ function ProRegisterContent() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Recherche Nominatim avec debounce
   function handleAdresseChange(value: string) {
     setAdresse(value)
     setLatitude(null)
@@ -88,9 +95,13 @@ function ProRegisterContent() {
   }
 
   function selectSuggestion(result: NominatimResult) {
-    // Extraire une adresse courte (avant la premiere virgule ou les 2 premiers segments)
-    const parts = result.display_name.split(',')
-    const short = parts.slice(0, 2).map(p => p.trim()).join(', ')
+    const a = result.address
+    const parts: string[] = []
+    if (a?.house_number) parts.push(a.house_number)
+    if (a?.road) parts.push(a.road)
+    if (!a?.road && a?.neighbourhood) parts.push(a.neighbourhood)
+    if (!a?.road && !a?.neighbourhood && a?.suburb) parts.push(a.suburb)
+    const short = parts.length > 0 ? parts.join(' ') : result.display_name.split(',')[0].trim()
     setAdresse(short)
     setLatitude(parseFloat(result.lat))
     setLongitude(parseFloat(result.lon))
@@ -98,10 +109,9 @@ function ProRegisterContent() {
     setShowSuggestions(false)
   }
 
-  // Geolocalisation
   function handleUsePosition() {
     if (!navigator.geolocation) {
-      alert('La geolocalisation n\'est pas supportee par votre navigateur.')
+      alert("La geolocalisation n'est pas supportee par votre navigateur.")
       return
     }
     navigator.geolocation.getCurrentPosition(
@@ -110,16 +120,19 @@ function ProRegisterContent() {
         const lng = position.coords.longitude
         setLatitude(lat)
         setLongitude(lng)
-        // Reverse geocoding pour remplir l'adresse
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
             { headers: { 'Accept-Language': 'fr' } }
           )
           const data = await res.json()
-          if (data.display_name) {
-            const parts = data.display_name.split(',')
-            setAdresse(parts.slice(0, 2).map((p: string) => p.trim()).join(', '))
+          if (data.address) {
+            const a = data.address
+            const parts: string[] = []
+            if (a.house_number) parts.push(a.house_number)
+            if (a.road) parts.push(a.road)
+            if (!a.road && a.neighbourhood) parts.push(a.neighbourhood)
+            if (parts.length > 0) setAdresse(parts.join(' '))
           }
         } catch {}
       },
@@ -147,7 +160,7 @@ function ProRegisterContent() {
     e.preventDefault()
     setError('')
     if (!salonNom || !ville || !adresse) {
-      setError('Le nom du salon, la ville et l\'adresse sont obligatoires.')
+      setError("Le nom du salon, la ville et l'adresse sont obligatoires.")
       return
     }
     setLoading(true)
@@ -324,11 +337,9 @@ function ProRegisterContent() {
                 </select>
               </div>
 
-              {/* ADRESSE AVEC AUTOCOMPLETION NOMINATIM */}
               <div style={{ position: 'relative' }} ref={suggestionsRef}>
                 <label style={labelStyle}>Adresse *</label>
 
-                {/* Bouton geolocalisation */}
                 <button
                   type="button"
                   onClick={handleUsePosition}
@@ -343,11 +354,11 @@ function ProRegisterContent() {
                   onMouseEnter={e => (e.currentTarget.style.borderColor = OR)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = '#444')}
                 >
-                  <span style={{ fontSize: 16 }}>📍</span> Utiliser ma position
+                  <span style={{ fontSize: 16 }}>&#128205;</span> Utiliser ma position
                 </button>
 
                 <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>📌</span>
+                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: '#666' }}>&#128204;</span>
                   <input
                     type="text"
                     value={adresse}
@@ -362,7 +373,6 @@ function ProRegisterContent() {
                   )}
                 </div>
 
-                {/* Suggestions dropdown */}
                 {showSuggestions && suggestions.length > 0 && (
                   <div style={{
                     position: 'absolute', top: '100%', left: 0, right: 0,
@@ -372,9 +382,11 @@ function ProRegisterContent() {
                     boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
                   }}>
                     {suggestions.map((s, i) => {
-                      const parts = s.display_name.split(',')
-                      const main = parts.slice(0, 2).join(',').trim()
-                      const secondary = parts.slice(2, 4).join(',').trim()
+                      const a = s.address
+                      const road = [a?.house_number, a?.road].filter(Boolean).join(' ')
+                      const commune = a?.suburb || a?.neighbourhood || a?.town || a?.village || a?.city || ''
+                      const main = road || commune || s.display_name.split(',')[0].trim()
+                      const secondary = road ? [commune, 'Algerie'].filter(Boolean).join(', ') : 'Algerie'
                       return (
                         <button
                           key={i}
@@ -392,11 +404,11 @@ function ProRegisterContent() {
                           onMouseEnter={e => (e.currentTarget.style.background = '#222')}
                           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                         >
-                          <span style={{ color: OR, fontSize: 14, flexShrink: 0 }}>📍</span>
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{main}</div>
-                            {secondary && <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{secondary}</div>}
-                          </div>
+                          <span style={{ color: OR, fontSize: 14, flexShrink: 0 }}>&#128205;</span>
+                          <span>
+                            <strong>{main}</strong>{' '}
+                            <span style={{ color: '#888', fontWeight: 400 }}>{secondary}</span>
+                          </span>
                         </button>
                       )
                     })}
