@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, Suspense } from 'react'
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -10,26 +10,124 @@ const OR = '#B8922A'
 const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
 const VILLES = ['Alger', 'Oran', 'Constantine', 'Annaba', 'Setif', 'Blida', 'Tlemcen', 'Batna', 'Bejaia', 'Tizi Ouzou', 'Djelfa', 'Biskra', 'Sidi Bel Abbes', 'Mostaganem', 'Skikda', 'Chlef', 'Bordj Bou Arreridj', 'Medea', 'El Oued', 'Bouira', 'Boumerdes', 'Tipaza', 'Ghardaia', 'Ouargla', 'Autre']
 
+type NominatimResult = {
+  display_name: string
+  lat: string
+  lon: string
+}
+
 function ProRegisterContent() {
   const router = useRouter()
   const [step, setStep] = useState(1)
 
-  // Etape 1 : infos personnelles
   const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
   const [email, setEmail] = useState('')
   const [telephone, setTelephone] = useState('')
   const [password, setPassword] = useState('')
 
-  // Etape 2 : infos salon
   const [salonNom, setSalonNom] = useState('')
   const [typeSalon, setTypeSalon] = useState('Coiffure')
   const [ville, setVille] = useState('')
   const [adresse, setAdresse] = useState('')
   const [instagram, setInstagram] = useState('')
 
+  // Autocompletion adresse
+  const [suggestions, setSuggestions] = useState<NominatimResult[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [latitude, setLatitude] = useState<number | null>(null)
+  const [longitude, setLongitude] = useState<number | null>(null)
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
+
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Fermer les suggestions quand on clique ailleurs
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // Recherche Nominatim avec debounce
+  function handleAdresseChange(value: string) {
+    setAdresse(value)
+    setLatitude(null)
+    setLongitude(null)
+
+    if (searchTimeout) clearTimeout(searchTimeout)
+
+    if (value.length < 3) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const q = encodeURIComponent(value + (ville ? ', ' + ville + ', Algerie' : ', Algerie'))
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${q}&countrycodes=dz&limit=5&addressdetails=1`,
+          { headers: { 'Accept-Language': 'fr' } }
+        )
+        const data: NominatimResult[] = await res.json()
+        setSuggestions(data)
+        setShowSuggestions(data.length > 0)
+      } catch {
+        setSuggestions([])
+        setShowSuggestions(false)
+      }
+    }, 400)
+
+    setSearchTimeout(timeout)
+  }
+
+  function selectSuggestion(result: NominatimResult) {
+    // Extraire une adresse courte (avant la premiere virgule ou les 2 premiers segments)
+    const parts = result.display_name.split(',')
+    const short = parts.slice(0, 2).map(p => p.trim()).join(', ')
+    setAdresse(short)
+    setLatitude(parseFloat(result.lat))
+    setLongitude(parseFloat(result.lon))
+    setSuggestions([])
+    setShowSuggestions(false)
+  }
+
+  // Geolocalisation
+  function handleUsePosition() {
+    if (!navigator.geolocation) {
+      alert('La geolocalisation n\'est pas supportee par votre navigateur.')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        setLatitude(lat)
+        setLongitude(lng)
+        // Reverse geocoding pour remplir l'adresse
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'fr' } }
+          )
+          const data = await res.json()
+          if (data.display_name) {
+            const parts = data.display_name.split(',')
+            setAdresse(parts.slice(0, 2).map((p: string) => p.trim()).join(', '))
+          }
+        } catch {}
+      },
+      () => {
+        alert('Impossible de recuperer votre position.')
+      }
+    )
+  }
 
   function goToStep2(e: React.FormEvent) {
     e.preventDefault()
@@ -48,8 +146,8 @@ function ProRegisterContent() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!salonNom || !ville) {
-      setError('Le nom du salon et la ville sont obligatoires.')
+    if (!salonNom || !ville || !adresse) {
+      setError('Le nom du salon, la ville et l\'adresse sont obligatoires.')
       return
     }
     setLoading(true)
@@ -64,7 +162,9 @@ function ProRegisterContent() {
           type_salon: typeSalon,
           ville,
           adresse,
-          instagram: instagram.replace('@', '').trim()
+          instagram: instagram.replace('@', '').trim(),
+          latitude,
+          longitude
         }),
       })
 
@@ -122,7 +222,6 @@ function ProRegisterContent() {
           maxWidth: 520
         }}>
 
-          {/* Indicateur d'etape */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
@@ -165,7 +264,6 @@ function ProRegisterContent() {
             </div>
           )}
 
-          {/* ══════ ETAPE 1 : INFOS PERSONNELLES ══════ */}
           {step === 1 && (
             <form onSubmit={goToStep2} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -204,7 +302,6 @@ function ProRegisterContent() {
             </form>
           )}
 
-          {/* ══════ ETAPE 2 : INFOS SALON ══════ */}
           {step === 2 && (
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -213,7 +310,7 @@ function ProRegisterContent() {
               </div>
 
               <div>
-                <label style={labelStyle}>Type d'etablissement *</label>
+                <label style={labelStyle}>Type d&apos;etablissement *</label>
                 <select value={typeSalon} onChange={e => setTypeSalon(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
                   {TYPES_SALON.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
@@ -227,9 +324,90 @@ function ProRegisterContent() {
                 </select>
               </div>
 
-              <div>
-                <label style={labelStyle}>Adresse (optionnel)</label>
-                <input type="text" value={adresse} onChange={e => setAdresse(e.target.value)} placeholder="Rue, quartier..." style={inputStyle} />
+              {/* ADRESSE AVEC AUTOCOMPLETION NOMINATIM */}
+              <div style={{ position: 'relative' }} ref={suggestionsRef}>
+                <label style={labelStyle}>Adresse *</label>
+
+                {/* Bouton geolocalisation */}
+                <button
+                  type="button"
+                  onClick={handleUsePosition}
+                  style={{
+                    width: '100%', padding: '10px 16px', marginBottom: 8,
+                    background: 'transparent', border: '1px dashed #444',
+                    borderRadius: 4, color: '#888', fontSize: 13, fontWeight: 600,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', gap: 8, fontFamily: 'Inter, sans-serif',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = OR)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#444')}
+                >
+                  <span style={{ fontSize: 16 }}>📍</span> Utiliser ma position
+                </button>
+
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>📌</span>
+                  <input
+                    type="text"
+                    value={adresse}
+                    onChange={e => handleAdresseChange(e.target.value)}
+                    onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true) }}
+                    placeholder="Tapez votre adresse..."
+                    style={{ ...inputStyle, paddingLeft: 40, border: latitude ? `1px solid ${OR}` : '1px solid #333' }}
+                    required
+                  />
+                  {latitude && (
+                    <span style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#4ade80', fontSize: 16 }}>&#10003;</span>
+                  )}
+                </div>
+
+                {/* Suggestions dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0,
+                    background: '#1a1a1a', border: '1px solid #333',
+                    borderRadius: '0 0 6px 6px', zIndex: 100,
+                    maxHeight: 220, overflowY: 'auto',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
+                  }}>
+                    {suggestions.map((s, i) => {
+                      const parts = s.display_name.split(',')
+                      const main = parts.slice(0, 2).join(',').trim()
+                      const secondary = parts.slice(2, 4).join(',').trim()
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => selectSuggestion(s)}
+                          style={{
+                            width: '100%', padding: '12px 16px',
+                            background: 'transparent', border: 'none',
+                            borderBottom: i < suggestions.length - 1 ? '1px solid #222' : 'none',
+                            color: '#fff', fontSize: 14, textAlign: 'left',
+                            cursor: 'pointer', fontFamily: 'Inter, sans-serif',
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.background = '#222')}
+                          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <span style={{ color: OR, fontSize: 14, flexShrink: 0 }}>📍</span>
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{main}</div>
+                            {secondary && <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{secondary}</div>}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {latitude && longitude && (
+                  <div style={{ fontSize: 11, color: '#4ade80', marginTop: 4, fontWeight: 600 }}>
+                    Position detectee &#10003;
+                  </div>
+                )}
               </div>
 
               <div>
