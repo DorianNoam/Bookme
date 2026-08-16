@@ -7,7 +7,7 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
-type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number; ouverture?: string; fermeture?: string }
+type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number; ouverture?: string; fermeture?: string; pause_active?: boolean; pause_debut?: string; pause_fin?: string }
 // Mise à jour du type Service pour inclure les champs de promotion
 type Service = { 
   id: number; nom: string; prix: number; duree: number;
@@ -16,12 +16,26 @@ type Service = {
 type Creneau = { heure: string; emp_id: number }
 type UserInfo = { id: number; prenom: string; nom: string; email: string; telephone: string }
 
-function generateAllSlots(startStr = "09:00", endStr = "19:00") {
+function generateAllSlots(startStr = "09:00", endStr = "19:00", pauseActive = false, pauseDebut = "12:00", pauseFin = "14:00") {
   const slots = []
   let [h, m] = startStr.substring(0, 5).split(':').map(Number)
   const [endH, endM] = endStr.substring(0, 5).split(':').map(Number)
+  
+  // Pause en minutes
+  let pStartMin = 0, pEndMin = 0
+  if (pauseActive && pauseDebut && pauseFin) {
+    const [pH, pM] = pauseDebut.substring(0, 5).split(':').map(Number)
+    const [pFH, pFM] = pauseFin.substring(0, 5).split(':').map(Number)
+    pStartMin = pH * 60 + pM
+    pEndMin = pFH * 60 + pFM
+  }
+  
   while (h < endH || (h === endH && m < endM)) {
-    slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+    const currentMin = h * 60 + m
+    // Sauter les créneaux pendant la pause
+    if (!(pauseActive && pEndMin > pStartMin && currentMin >= pStartMin && currentMin < pEndMin)) {
+      slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`)
+    }
     m += 30
     if (m >= 60) { h += 1; m -= 60 }
   }
@@ -130,7 +144,7 @@ function BookingContent() {
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate()
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay()
   const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1
-  const monthNames = ["Janvier", "Fevrier", "Mars", "Avril", "Mai", "Juin", "Juillet", "Aout", "Septembre", "Octobre", "Novembre", "Decembre"]
+  const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"]
   function prevMonth() { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)) }
   function nextMonth() { setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)) }
   function formatDateFr(d: string) {
@@ -140,8 +154,8 @@ function BookingContent() {
 
   if (!salonId || !serviceId) return (
     <div style={{ textAlign: 'center', padding: 60, fontFamily: 'Inter, sans-serif' }}>
-      <p style={{ color: '#888', marginBottom: 20 }}>Parametres manquants.</p>
-      <Link href="/search" style={{ color: OR, fontWeight: 700 }}>Retour a la recherche</Link>
+      <p style={{ color: '#888', marginBottom: 20 }}>Paramètres manquants.</p>
+      <Link href="/search" style={{ color: OR, fontWeight: 700 }}>Retour à la recherche</Link>
     </div>
   )
 
@@ -157,20 +171,20 @@ function BookingContent() {
       <div style={{ maxWidth: 600, margin: '40px auto', padding: '0 16px', textAlign: 'center' }}>
         <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: '40px 24px' }}>
           <div style={{ fontSize: 50, marginBottom: 16 }}>{'✅'}</div>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: NOIR, marginBottom: 10 }}>Reservation confirmee !</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: NOIR, marginBottom: 10 }}>Réservation confirmée !</h1>
           <p style={{ color: '#888', fontSize: 14, marginBottom: 6, lineHeight: 1.6 }}>
-            Votre rendez-vous au <strong>{salon?.nom}</strong> a ete enregistre.
+            Votre rendez-vous au <strong>{salon?.nom}</strong> a été enregistré.
           </p>
           <p style={{ color: '#666', fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>
-            <strong>{formatDateFr(date)}</strong> a <strong>{selectedCreneau?.heure.substring(0, 5)}</strong>
+            <strong>{formatDateFr(date)}</strong> à <strong>{selectedCreneau?.heure.substring(0, 5)}</strong>
             <br />{service?.nom} — {promoPrice?.toLocaleString()} DA
           </p>
-          <p style={{ color: '#999', fontSize: 12, marginBottom: 24 }}>Paiement sur place. Presentez-vous 5 min avant.</p>
+          <p style={{ color: '#999', fontSize: 12, marginBottom: 24 }}>Paiement sur place. Présentez-vous 5 min avant.</p>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
             {loggedUser && (
               <Link href="/dashboard" style={{ display: 'inline-block', background: OR, color: '#fff', padding: '12px 24px', borderRadius: 4, fontWeight: 700, fontSize: 14 }}>Mes rendez-vous</Link>
             )}
-            <Link href="/search" style={{ display: 'inline-block', background: NOIR, color: '#fff', padding: '12px 24px', borderRadius: 4, fontWeight: 700, fontSize: 14 }}>Retour a la recherche</Link>
+            <Link href="/search" style={{ display: 'inline-block', background: NOIR, color: '#fff', padding: '12px 24px', borderRadius: 4, fontWeight: 700, fontSize: 14 }}>Retour à la recherche</Link>
           </div>
         </div>
       </div>
@@ -213,7 +227,7 @@ function BookingContent() {
         {/* Indicateur connecte */}
         {!checkingAuth && loggedUser && (
           <div style={{ background: '#d4edda', border: '1px solid #c3e6cb', borderRadius: 4, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#155724' }}>
-            {'✓'} Connecte en tant que <strong>{loggedUser.prenom} {loggedUser.nom}</strong>
+            {'✓'} Connecté en tant que <strong>{loggedUser.prenom} {loggedUser.nom}</strong>
           </div>
         )}
 
@@ -256,19 +270,19 @@ function BookingContent() {
 
             {/* Creneaux */}
             <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: '24px 20px' }}>
-              <h2 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 16 }}>2. Choisissez un creneau</h2>
-              {!date && <p style={{ color: '#bbb', fontSize: 13 }}>Selectionnez une date</p>}
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: NOIR, marginBottom: 16 }}>2. Choisissez un créneau</h2>
+              {!date && <p style={{ color: '#bbb', fontSize: 13 }}>Sélectionnez une date</p>}
               {date && loadingCreneaux && <p style={{ color: '#999', fontSize: 13 }}>Chargement...</p>}
               {date && !loadingCreneaux && ferme && (
                 <div style={{ background: '#FFF5F5', padding: 16, borderRadius: 4, textAlign: 'center' }}>
-                  <p style={{ color: '#d32f2f', fontWeight: 600, fontSize: 13 }}>Ferme ce jour-la</p>
+                  <p style={{ color: '#d32f2f', fontWeight: 600, fontSize: 13 }}>Fermé ce jour-là</p>
                 </div>
               )}
-              {date && !loadingCreneaux && !ferme && creneaux.length === 0 && <p style={{ color: '#999', fontSize: 13 }}>Aucun creneau disponible.</p>}
+              {date && !loadingCreneaux && !ferme && creneaux.length === 0 && <p style={{ color: '#999', fontSize: 13 }}>Aucun créneau disponible.</p>}
               {date && !loadingCreneaux && !ferme && creneaux.length > 0 && (
                 <div className="slots-grid">
                   {(() => {
-                    const allSlots = generateAllSlots(salon?.ouverture || "09:00", salon?.fermeture || "19:00")
+                    const allSlots = generateAllSlots(salon?.ouverture || "09:00", salon?.fermeture || "19:00", salon?.pause_active, salon?.pause_debut, salon?.pause_fin)
                     const availableSet = new Set(creneaux.map(c => c.heure.substring(0, 5)))
                     return allSlots.map(time => {
                       const isAvailable = availableSet.has(time)
@@ -292,7 +306,7 @@ function BookingContent() {
         {step === 3 && (
           <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, padding: '28px 20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 10 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, margin: 0 }}>3. Vos coordonnees</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, margin: 0 }}>3. Vos coordonnées</h2>
               <button onClick={() => setStep(2)} style={{ color: OR, background: 'none', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>{'← Modifier'}</button>
             </div>
 
@@ -300,7 +314,7 @@ function BookingContent() {
             <div className="booking-recap" style={{ background: BG, borderRadius: 4, padding: '16px', marginBottom: 24 }}>
               <div>
                 <div style={{ fontSize: 11, color: '#888', marginBottom: 3 }}>Date</div>
-                <div style={{ fontWeight: 700, color: NOIR, fontSize: 14, textTransform: 'capitalize' }}>{formatDateFr(date)} a {selectedCreneau?.heure.substring(0, 5)}</div>
+                <div style={{ fontWeight: 700, color: NOIR, fontSize: 14, textTransform: 'capitalize' }}>{formatDateFr(date)} à {selectedCreneau?.heure.substring(0, 5)}</div>
               </div>
               <div style={{ marginTop: 10 }}>
                 <div style={{ fontSize: 11, color: '#888', marginBottom: 3 }}>Prestation</div>
@@ -320,11 +334,11 @@ function BookingContent() {
             {loggedUser ? (
               <div>
                 <div style={{ background: '#d4edda', border: '1px solid #c3e6cb', borderRadius: 4, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#155724' }}>
-                  {'✓'} Reservation au nom de <strong>{loggedUser.prenom} {loggedUser.nom}</strong>
+                  {'✓'} Réservation au nom de <strong>{loggedUser.prenom} {loggedUser.nom}</strong>
                 </div>
                 <div className="form-grid-2col" style={{ marginBottom: 24 }}>
                   <div>
-                    <label style={labelSt}>Prenom</label>
+                    <label style={labelSt}>Prénom</label>
                     <input value={clientPrenom} onChange={e => setClientPrenom(e.target.value)} style={inputStyle} />
                   </div>
                   <div>
@@ -336,7 +350,7 @@ function BookingContent() {
                     <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} style={inputStyle} />
                   </div>
                   <div>
-                    <label style={labelSt}>Telephone</label>
+                    <label style={labelSt}>Téléphone</label>
                     <input type="tel" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} placeholder="0555 12 34 56" style={inputStyle} />
                   </div>
                 </div>
@@ -344,14 +358,14 @@ function BookingContent() {
             ) : (
               <div>
                 <div style={{ marginBottom: 20, textAlign: 'center', padding: '16px', background: '#FDFBF7', borderRadius: 4, border: `1px dashed ${OR}40` }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: NOIR, marginBottom: 6 }}>Vous avez deja un compte ?</p>
-                  <p style={{ fontSize: 12, color: '#888', marginBottom: 10 }}>Connectez-vous pour pre-remplir vos infos.</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: NOIR, marginBottom: 6 }}>Vous avez déjà un compte ?</p>
+                  <p style={{ fontSize: 12, color: '#888', marginBottom: 10 }}>Connectez-vous pour pré-remplir vos infos.</p>
                   <Link href={`/login?redirect=/booking?salon=${salonId}&service=${serviceId}`} style={{ display: 'inline-block', background: OR, color: '#fff', padding: '10px 20px', borderRadius: 4, fontWeight: 700, fontSize: 13 }}>Se connecter</Link>
-                  <span style={{ display: 'block', marginTop: 10, fontSize: 12, color: '#aaa' }}>ou renseignez vos coordonnees ci-dessous</span>
+                  <span style={{ display: 'block', marginTop: 10, fontSize: 12, color: '#aaa' }}>ou renseignez vos coordonnées ci-dessous</span>
                 </div>
                 <div className="form-grid-2col" style={{ marginBottom: 24 }}>
                   <div>
-                    <label style={labelSt}>Prenom</label>
+                    <label style={labelSt}>Prénom</label>
                     <input value={clientPrenom} onChange={e => setClientPrenom(e.target.value)} placeholder="Amina" style={inputStyle} />
                   </div>
                   <div>
@@ -363,7 +377,7 @@ function BookingContent() {
                     <input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="amina@emaildz" style={inputStyle} />
                   </div>
                   <div>
-                    <label style={labelSt}>Telephone</label>
+                    <label style={labelSt}>Téléphone</label>
                     <input type="tel" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} placeholder="0555 12 34 56" style={inputStyle} />
                   </div>
                 </div>
@@ -376,7 +390,7 @@ function BookingContent() {
               {submitting ? 'Enregistrement...' : 'Confirmer le rendez-vous'}
             </button>
 
-            <p style={{ textAlign: 'center', marginTop: 14, fontSize: 11, color: '#aaa' }}>Paiement sur place. Aucun prelevement en ligne.</p>
+            <p style={{ textAlign: 'center', marginTop: 14, fontSize: 11, color: '#aaa' }}>Paiement sur place. Aucun prélèvement en ligne.</p>
           </div>
         )}
       </div>
