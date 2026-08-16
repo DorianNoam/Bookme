@@ -30,13 +30,18 @@ type Salon = {
   longitude?: number;
 };
 
-const CATEGORY_KEYS = [
-  { val: 'Coiffure', key: 'coiffure' as const },
-  { val: 'Beauté des ongles', key: 'ongles' as const },
-  { val: 'Massage et bien-être', key: 'bienetre' as const },
-  { val: 'Barbier', key: 'barbier' as const },
-  { val: 'Hammam & Spa', key: 'hammam' as const },
-  { val: 'Chirurgie esthétique', key: 'chirurgie' as const },
+const CATEGORIES = [
+  { val: 'Coiffure & soin cheveux', label: 'Coiffure & soin cheveux' },
+  { val: 'Onglerie Main & pieds', label: 'Onglerie Main & pieds' },
+  { val: 'Beaute du regard', label: 'Beauté du regard' },
+  { val: 'Soin visage & corps', label: 'Soin visage & corps' },
+  { val: 'Make up', label: 'Make up' },
+  { val: 'Epilation', label: 'Épilation' },
+  { val: 'Piercing et tatouage', label: 'Piercing et tatouage' },
+  { val: 'Barbier', label: 'Barbier' },
+  { val: 'Esthetique', label: 'Esthétique' },
+  { val: 'Massage', label: 'Massage' },
+  { val: 'SPA', label: 'SPA' },
 ];
 
 const NOIR = '#0A0A0A';
@@ -156,10 +161,10 @@ function SearchContent() {
 
   const hasMappable = salons.some(s => s.latitude && s.longitude);
 
-  // Trouver le label traduit pour une catégorie
+  // Trouver le label pour une catégorie (remplacé pour correspondre aux nouvelles CATEGORIES)
   function getCatLabel(val: string) {
-    const found = CATEGORY_KEYS.find(c => c.val === val);
-    return found ? t.nav[found.key] : val;
+    const found = CATEGORIES.find(c => c.val === val);
+    return found ? found.label : val;
   }
 
   return (
@@ -178,13 +183,13 @@ function SearchContent() {
             >
               {t.search.toutesPrestations}
             </button>
-            {CATEGORY_KEYS.map(cat => (
+            {CATEGORIES.map(cat => (
               <button 
                 key={cat.val} 
                 onClick={() => applyFilters(cat.val, loc)} 
                 style={{ padding: '16px', textAlign: 'left', background: query === cat.val ? NOIR : BG, color: query === cat.val ? '#fff' : NOIR, borderRadius: 8, fontSize: 16, fontWeight: 600, border: 'none' }}
               >
-                {t.nav[cat.key]}
+                {cat.label}
               </button>
             ))}
           </div>
@@ -230,13 +235,13 @@ function SearchContent() {
       <header style={{ background: '#fff', borderBottom: '1px solid #F0EAE0', padding: '10px 0', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Link href="/" style={{ fontSize: 'clamp(18px, 3vw, 22px)', fontWeight: 900, color: NOIR, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            Bookmedz<span style={{ color: OR }}>.com</span>
+            Bookme<span style={{ color: OR }}>dz</span>
           </Link>
 
           <form onSubmit={handleSearch} className="hide-mobile" style={{ flex: 1, display: 'flex', gap: 8, minWidth: 0 }}>
             <select value={query} onChange={e => setQuery(e.target.value)} style={{ flex: '1 1 140px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, cursor: 'pointer' }}>
               <option value="">{t.search.toutesPrestations}</option>
-              {CATEGORY_KEYS.map(c => <option key={c.val} value={c.val}>{t.nav[c.key]}</option>)}
+              {CATEGORIES.map(c => <option key={c.val} value={c.val}>{c.label}</option>)}
             </select>
             
             <select value={loc} onChange={e => setLoc(e.target.value)} style={{ flex: '1 1 120px', padding: '8px 12px', border: '1px solid #E0D8CE', borderRadius: 4, fontSize: 14, background: 'white', fontFamily: 'Inter, sans-serif', color: NOIR, minWidth: 0, cursor: 'pointer' }}>
@@ -290,8 +295,8 @@ function SearchContent() {
       <div className="hide-mobile" style={{ background: '#fff', borderBottom: '1px solid #EDE5D8', padding: '8px 0' }}>
         <div style={{ padding: '0 16px', display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
           <button onClick={() => applyFilters('', loc)} style={{ background: !query ? NOIR : 'transparent', color: !query ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: !query ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{t.search.tous}</button>
-          {CATEGORY_KEYS.map(cat => (
-            <button key={cat.val} onClick={() => applyFilters(cat.val, loc)} style={{ background: query === cat.val ? NOIR : 'transparent', color: query === cat.val ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: query === cat.val ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: query === cat.val ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{t.nav[cat.key]}</button>
+          {CATEGORIES.map(cat => (
+            <button key={cat.val} onClick={() => applyFilters(cat.val, loc)} style={{ background: query === cat.val ? NOIR : 'transparent', color: query === cat.val ? '#fff' : '#555', padding: '6px 14px', borderRadius: 3, border: query === cat.val ? 'none' : '1px solid #DDD5C8', fontSize: 12, fontWeight: query === cat.val ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{cat.label}</button>
           ))}
         </div>
       </div>
