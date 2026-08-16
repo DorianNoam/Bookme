@@ -137,7 +137,7 @@ export default async function SalonPage({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
               <h1 style={{ fontSize: 36, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>{salon.nom}</h1>
-             <FavoriteButton salonId={parseInt(salonId)} />
+            <FavoriteButton salonId={salonId} />
             </div>
           </div>
         </div>
