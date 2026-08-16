@@ -75,7 +75,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // NOUVEAU : Ajout conditionnel de la latitude et de la longitude au tableau des données du salon
     const salonData: any = {
       pro_id: newPro.id,
       nom: salon_nom,
@@ -91,9 +90,10 @@ export async function POST(req: NextRequest) {
       jour_off: 5
     }
 
+    // NOUVEAU : Ajout des coordonnées si elles ont été trouvées
     if (latitude && longitude) {
-        salonData.latitude = latitude
-        salonData.longitude = longitude
+      salonData.latitude = latitude
+      salonData.longitude = longitude
     }
 
     const { error: salonError } = await supabase
