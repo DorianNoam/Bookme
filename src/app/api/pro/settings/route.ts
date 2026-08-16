@@ -21,10 +21,6 @@ async function getSalonId(proId: number): Promise<number | null> {
   return data?.id || null
 }
 
-// ══════════════════════════════════════════════════════════════════
-// GET
-// ══════════════════════════════════════════════════════════════════
-
 export async function GET(req: NextRequest) {
   const proId = await getProId(req)
   if (!proId) return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
@@ -39,7 +35,7 @@ export async function GET(req: NextRequest) {
     supabase.from('employes').select('*').eq('salon_id', salon.id).order('nom'),
     supabase.from('catalogue_services').select('*').order('categorie').order('nom'),
     supabase.from('ventes_privees').select('*').eq('salon_id', salon.id).order('created_at', { ascending: false }),
-    supabase.from('salon_images').select('*').eq('salon_id', salon.id) // Récupération de la galerie
+    supabase.from('salon_images').select('*').eq('salon_id', salon.id)
   ])
 
   return NextResponse.json({
@@ -53,10 +49,6 @@ export async function GET(req: NextRequest) {
   })
 }
 
-// ══════════════════════════════════════════════════════════════════
-// PATCH
-// ══════════════════════════════════════════════════════════════════
-
 export async function PATCH(req: NextRequest) {
   const proId = await getProId(req)
   if (!proId) return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
@@ -66,7 +58,6 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json()
   
-  // NOUVEAU : Ajout des 3 champs de pause dans la déstructuration
   const { 
     nom, adresse, ville, telephone, description, ouverture, fermeture, 
     jour_off, type_salon, image, seuil_fidelite, pro_email,
@@ -77,7 +68,6 @@ export async function PATCH(req: NextRequest) {
     await supabase.from('pros').update({ email: pro_email }).eq('id', proId)
   }
 
-  // NOUVEAU : Ajout des 3 champs de pause dans l'objet de mise à jour
   const updateData: any = { 
     nom, adresse, ville, telephone, description, ouverture, fermeture, 
     jour_off, type_salon, pause_active, pause_debut, pause_fin 
@@ -85,15 +75,24 @@ export async function PATCH(req: NextRequest) {
   if (image !== undefined) updateData.image = image
   if (seuil_fidelite !== undefined) updateData.seuil_fidelite = parseInt(seuil_fidelite)
 
-  // --- NOUVEAU : GEOCODAGE AUTOMATIQUE OPENSTREETMAP ---
+  // --- GEOCODAGE AVEC FILET DE SECURITE (FALLBACK) ---
   if (adresse && ville) {
     try {
       const queryStr = `${adresse}, ${ville}, Algérie`
-      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}`, {
+      let geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}`, {
         headers: { 'User-Agent': 'Bookmedz/1.0' }
       })
-      const geoData = await geoRes.json()
+      let geoData = await geoRes.json()
       
+      // 2ème essai : Si la carte ne trouve pas l'adresse exacte, on cherche juste la ville
+      if (!geoData || geoData.length === 0) {
+        const fallbackQuery = `${ville}, Algérie`
+        geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackQuery)}`, {
+          headers: { 'User-Agent': 'Bookmedz/1.0' }
+        })
+        geoData = await geoRes.json()
+      }
+
       if (geoData && geoData.length > 0) {
         updateData.latitude = parseFloat(geoData[0].lat)
         updateData.longitude = parseFloat(geoData[0].lon)
@@ -109,10 +108,6 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ success: true })
 }
 
-// ══════════════════════════════════════════════════════════════════
-// POST
-// ══════════════════════════════════════════════════════════════════
-
 export async function POST(req: NextRequest) {
   const proId = await getProId(req)
   if (!proId) return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
@@ -122,7 +117,6 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json()
 
-  // --- NOUVEAU : Ajouter une image à la galerie ---
   if (body.action === 'add_gallery_image') {
     const { image_path } = body
     if (!image_path) return NextResponse.json({ error: 'Image requise' }, { status: 400 })
@@ -191,10 +185,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 })
 }
 
-// ══════════════════════════════════════════════════════════════════
-// DELETE
-// ══════════════════════════════════════════════════════════════════
-
 export async function DELETE(req: NextRequest) {
   const proId = await getProId(req)
   if (!proId) return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
@@ -204,7 +194,6 @@ export async function DELETE(req: NextRequest) {
 
   const body = await req.json()
 
-  // --- NOUVEAU : Supprimer une image de la galerie ---
   if (body.action === 'delete_gallery_image') {
     const { error } = await supabase.from('salon_images').delete().eq('id', body.id).eq('salon_id', salonId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
