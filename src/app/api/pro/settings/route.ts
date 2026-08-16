@@ -65,13 +65,23 @@ export async function PATCH(req: NextRequest) {
   if (!salonId) return NextResponse.json({ error: 'Salon introuvable' }, { status: 404 })
 
   const body = await req.json()
-  const { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon, image, seuil_fidelite, pro_email } = body
+  
+  // NOUVEAU : Ajout des 3 champs de pause dans la déstructuration
+  const { 
+    nom, adresse, ville, telephone, description, ouverture, fermeture, 
+    jour_off, type_salon, image, seuil_fidelite, pro_email,
+    pause_active, pause_debut, pause_fin
+  } = body
 
   if (pro_email !== undefined) {
     await supabase.from('pros').update({ email: pro_email }).eq('id', proId)
   }
 
-  const updateData: any = { nom, adresse, ville, telephone, description, ouverture, fermeture, jour_off, type_salon }
+  // NOUVEAU : Ajout des 3 champs de pause dans l'objet de mise à jour
+  const updateData: any = { 
+    nom, adresse, ville, telephone, description, ouverture, fermeture, 
+    jour_off, type_salon, pause_active, pause_debut, pause_fin 
+  }
   if (image !== undefined) updateData.image = image
   if (seuil_fidelite !== undefined) updateData.seuil_fidelite = parseInt(seuil_fidelite)
 
