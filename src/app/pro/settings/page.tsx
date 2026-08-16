@@ -35,6 +35,9 @@ type Salon = {
   id: number; nom: string; adresse: string; ville: string; telephone: string;
   description: string; ouverture: string; fermeture: string; jour_off: number;
   type_salon: string; image: string; seuil_fidelite: number;
+  pause_active?: boolean;
+  pause_debut?: string;
+  pause_fin?: string;
 }
 type CatalogueItem = { id: number; categorie: string; nom: string }
 type GalleryImage = { id: number; image_path: string }
@@ -657,7 +660,12 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 // ═══════════════════════════════════════════════════════════════════
 
 function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDeleteGalleryImage }: { salon: Salon; proEmail: string; gallery: GalleryImage[]; onUpdate: (s: Salon, email?: string) => void; onAddGalleryImage: (img: GalleryImage) => void; onDeleteGalleryImage: (id: number) => void }) {
-  const [form, setForm] = useState({ ...salon })
+  const [form, setForm] = useState({ 
+    ...salon,
+    pause_active: salon.pause_active || false,
+    pause_debut: salon.pause_debut?.substring(0, 5) || '12:00',
+    pause_fin: salon.pause_fin?.substring(0, 5) || '14:00'
+  })
   const [emailValue, setEmailValue] = useState(proEmail)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -836,6 +844,53 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
           <div><label style={labelStyle}>Jour de fermeture</label><select name="jour_off" value={form.jour_off} onChange={handleChange} style={inputStyle}><option value={0}>Aucun (ouvert 7j/7)</option>{JOURS_SEMAINE.slice(1).map((j, i) => <option key={i + 1} value={i + 1}>{j}</option>)}</select></div>
           <div><label style={labelStyle}>Heure d&apos;ouverture</label><input name="ouverture" type="time" value={form.ouverture} onChange={handleChange} style={inputStyle} /></div>
           <div><label style={labelStyle}>Heure de fermeture</label><input name="fermeture" type="time" value={form.fermeture} onChange={handleChange} style={inputStyle} /></div>
+          
+          {/* PAUSE MIDI - NOUVEAU BLOC */}
+          <div style={{ gridColumn: '1 / -1', marginTop: 10, padding: 20, background: '#FAFAF5', border: '1px solid #EDE5D8', borderRadius: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.pause_active ? 16 : 0 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: NOIR }}>Pause midi</div>
+                <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>Bloquer les réservations sur une plage horaire</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, pause_active: !form.pause_active })}
+                style={{
+                  width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer',
+                  background: form.pause_active ? OR : '#ccc',
+                  position: 'relative', transition: 'background 0.2s'
+                }}
+              >
+                <div style={{
+                  width: 22, height: 22, borderRadius: '50%', background: '#fff',
+                  position: 'absolute', top: 2,
+                  left: form.pause_active ? 24 : 2,
+                  transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                }} />
+              </button>
+            </div>
+            {form.pause_active && (
+              <div style={{ display: 'flex', gap: 15, flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 200px' }}>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: NOIR, display: 'block', marginBottom: 6 }}>Début de la pause</label>
+                  <input
+                    type="time" value={form.pause_debut}
+                    onChange={e => setForm({ ...form, pause_debut: e.target.value })}
+                    style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif' }}
+                  />
+                </div>
+                <div style={{ flex: '1 1 200px' }}>
+                  <label style={{ fontSize: 13, fontWeight: 700, color: NOIR, display: 'block', marginBottom: 6 }}>Fin de la pause</label>
+                  <input
+                    type="time" value={form.pause_fin}
+                    onChange={e => setForm({ ...form, pause_fin: e.target.value })}
+                    style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif' }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           <div><label style={labelStyle}>Seuil de fidélité (RDV requis)</label><select name="seuil_fidelite" value={form.seuil_fidelite || 4} onChange={handleChange} style={inputStyle}><option value={5}>5 rendez-vous</option><option value={10}>10 rendez-vous</option><option value={15}>15 rendez-vous</option><option value={20}>20 rendez-vous</option></select></div>
           <div style={{ gridColumn: '1 / -1', background: '#FAFAF5', padding: 16, borderRadius: 6, border: `1px dashed ${OR}` }}>
             <label style={{ ...labelStyle, color: OR }}>Email du compte pro (pour recevoir les notifications)</label>
