@@ -17,6 +17,16 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
+const DEFAULT_IMAGES: Record<string, string> = {
+  'Coiffure': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+  'Barbier': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800',
+  'Beaute des ongles': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
+  'Massage et bien-etre': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+  'Hammam & Spa': 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800',
+  'Chirurgie esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
+  'Institut': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
+}
+
 // Ajout du type Salon avec les champs de pause
 type Salon = {
   id: number;
@@ -129,7 +139,12 @@ export default async function SalonPage({
       </header>
 
       <div style={{ width: '100%', height: 380, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-        <img src={salon.image} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img 
+          src={salon.image || DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure']} 
+          alt={salon.nom} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          onError={e => { (e.target as HTMLImageElement).src = DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure'] }} 
+        />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 30px 24px 30px' }}>
           <div style={{ maxWidth: 1040, margin: '0 auto' }}>
             <div style={{ color: OR, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
