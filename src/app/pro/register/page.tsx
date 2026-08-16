@@ -61,7 +61,7 @@ function ProRegisterContent() {
     document.head.appendChild(script)
 
     return () => {
-      delete window.initGooglePlaces
+      window.initGooglePlaces = undefined as any
     }
   }, [])
 
