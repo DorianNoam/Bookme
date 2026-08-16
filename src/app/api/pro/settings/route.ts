@@ -85,6 +85,24 @@ export async function PATCH(req: NextRequest) {
   if (image !== undefined) updateData.image = image
   if (seuil_fidelite !== undefined) updateData.seuil_fidelite = parseInt(seuil_fidelite)
 
+  // --- NOUVEAU : GEOCODAGE AUTOMATIQUE OPENSTREETMAP ---
+  if (adresse && ville) {
+    try {
+      const queryStr = `${adresse}, ${ville}, Algérie`
+      const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}`, {
+        headers: { 'User-Agent': 'Bookmedz/1.0' }
+      })
+      const geoData = await geoRes.json()
+      
+      if (geoData && geoData.length > 0) {
+        updateData.latitude = parseFloat(geoData[0].lat)
+        updateData.longitude = parseFloat(geoData[0].lon)
+      }
+    } catch (err) {
+      console.error('Erreur de géocodage :', err)
+    }
+  }
+
   const { error } = await supabase.from('salons').update(updateData).eq('id', salonId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
@@ -113,7 +131,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, image: data })
   }
 
-if (body.action === 'add_service') {
+  if (body.action === 'add_service') {
     const { nom, description, prix, duree, categorie_service } = body
     if (!nom || !prix || !duree) return NextResponse.json({ error: 'Nom, prix et duree requis' }, { status: 400 })
     const { data, error } = await supabase.from('services').insert({ salon_id: salonId, nom, description: description || '', prix: parseInt(prix), duree: parseInt(duree), categorie_service: categorie_service || 'General' }).select().single()
@@ -121,7 +139,7 @@ if (body.action === 'add_service') {
     return NextResponse.json({ success: true, service: data })
   }
 
-if (body.action === 'update_service') {
+  if (body.action === 'update_service') {
     const { id, nom, description, prix, duree, categorie_service } = body
     if (!id || !prix || !duree) return NextResponse.json({ error: 'ID, prix et duree requis' }, { status: 400 })
     const updateFields: any = { prix: parseInt(prix), duree: parseInt(duree) }
