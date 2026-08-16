@@ -9,12 +9,17 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 import MobileMenu from '@/components/MobileMenu'
 
 const CATEGORIES = [
-  { val: 'Coiffure', key: 'coiffure' as const },
-  { val: 'Beauté des ongles', key: 'ongles' as const },
-  { val: 'Massage et bien-être', key: 'bienetre' as const },
-  { val: 'Barbier', key: 'barbier' as const },
-  { val: 'Hammam & Spa', key: 'hammam' as const },
-  { val: 'Chirurgie esthétique', key: 'chirurgie' as const },
+  { val: 'Coiffure & soin cheveux', label: 'Coiffure & soin cheveux' },
+  { val: 'Onglerie Main & pieds', label: 'Onglerie Main & pieds' },
+  { val: 'Beaute du regard', label: 'Beauté du regard' },
+  { val: 'Soin visage & corps', label: 'Soin visage & corps' },
+  { val: 'Make up', label: 'Make up' },
+  { val: 'Epilation', label: 'Épilation' },
+  { val: 'Piercing et tatouage', label: 'Piercing et tatouage' },
+  { val: 'Barbier', label: 'Barbier' },
+  { val: 'Esthetique', label: 'Esthétique' },
+  { val: 'Massage', label: 'Massage' },
+  { val: 'SPA', label: 'SPA' },
 ]
 
 const NOIR = '#0A0A0A'
@@ -29,20 +34,20 @@ export default function HomePage() {
   const [loc, setLoc] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-const NAV_LINKS = [
-    { label: t.navShort.coiffure, val: 'Coiffure' },
-    { label: t.navShort.ongles, val: 'Beauté des ongles' },
-    { label: t.navShort.bienetre, val: 'Massage et bien-être' },
+  const NAV_LINKS = [
+    { label: t.navShort.coiffure, val: 'Coiffure & soin cheveux' },
+    { label: t.navShort.ongles, val: 'Onglerie Main & pieds' },
+    { label: t.navShort.bienetre, val: 'Soin visage & corps' },
     { label: t.navShort.barbier, val: 'Barbier' },
-    { label: t.navShort.hammam, val: 'Hammam & Spa' },
-    { label: t.navShort.chirurgie, val: 'Chirurgie esthétique' },
+    { label: t.navShort.hammam, val: 'SPA' },
+    { label: t.navShort.chirurgie, val: 'Esthetique' },
   ]
 
-const SLIDES = [
-    { cat: t.nav.coiffure, title: t.carousel.slide1Title, desc: t.carousel.slide1Desc, img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=Coiffure' },
-    { cat: t.nav.ongles, title: t.carousel.slide2Title, desc: t.carousel.slide2Desc, img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800', link: '/search?q=Beauté+des+ongles' },
-    { cat: t.nav.hammam, title: t.carousel.slide3Title, desc: t.carousel.slide3Desc, img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=Hammam+%26+Spa' },
-    { cat: t.nav.chirurgie, title: t.carousel.slide4Title, desc: t.carousel.slide4Desc, img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', link: '/search?q=Chirurgie+esthétique' },
+  const SLIDES = [
+    { cat: t.nav.coiffure, title: t.carousel.slide1Title, desc: t.carousel.slide1Desc, img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=Coiffure+%26+soin+cheveux' },
+    { cat: t.nav.ongles, title: t.carousel.slide2Title, desc: t.carousel.slide2Desc, img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800', link: '/search?q=Onglerie+Main+%26+pieds' },
+    { cat: t.nav.hammam, title: t.carousel.slide3Title, desc: t.carousel.slide3Desc, img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=SPA' },
+    { cat: t.nav.chirurgie, title: t.carousel.slide4Title, desc: t.carousel.slide4Desc, img: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800', link: '/search?q=Esthetique' },
   ]
 
   const current = SLIDES[slide]
@@ -127,7 +132,7 @@ const SLIDES = [
               <div style={{ fontSize: 9, fontWeight: 700, color: OR, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 4 }}>{t.hero.prestation}</div>
               <select value={query} onChange={e => setQuery(e.target.value)} style={{ border: 'none', outline: 'none', fontSize: 14, fontWeight: 500, color: NOIR, width: '100%', fontFamily: 'Inter, sans-serif', background: 'transparent', cursor: 'pointer' }}>
                 <option value="">{t.hero.placeholder}</option>
-                {CATEGORIES.map(c => <option key={c.val} value={c.val}>{t.nav[c.key]}</option>)}
+                {CATEGORIES.map(c => <option key={c.val} value={c.val}>{c.label}</option>)}
               </select>
             </div>
 
@@ -160,7 +165,7 @@ const SLIDES = [
         }}>
           <button onClick={() => router.push('/search')} style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{t.search.tous}</button>
           {CATEGORIES.map(cat => (
-            <button key={cat.val} onClick={() => router.push(`/search?q=${encodeURIComponent(cat.val)}`)} style={{ color: '#444', border: '1px solid #DDD5C8', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 600, background: '#fff', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{t.nav[cat.key]}</button>
+            <button key={cat.val} onClick={() => router.push(`/search?q=${encodeURIComponent(cat.val)}`)} style={{ color: '#444', border: '1px solid #DDD5C8', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 600, background: '#fff', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{cat.label}</button>
           ))}
         </div>
       </div>
