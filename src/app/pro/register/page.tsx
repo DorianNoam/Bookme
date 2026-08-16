@@ -455,11 +455,15 @@ function ProRegisterContent() {
                 )}
               </div>
 
-              <div>
+             <div>
                 <label style={labelStyle}>Instagram (optionnel)</label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: 14 }}>@</span>
-                  <input type="text" value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="votre_compte_insta" style={{ ...inputStyle, paddingLeft: 32 }} />
+                  <input type="text" value={instagram} onChange={e => setInstagram(e.target.value.replace(/[\s@]/g, ''))} placeholder="votre_nom_instagram" style={{ ...inputStyle, paddingLeft: 32 }} />
+                </div>
+                <div style={{ fontSize: 11, color: '#666', marginTop: 6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+                  <span style={{ background: '#444', color: '#fff', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>i</span>
+                  <span>Entrez votre nom d&apos;utilisateur Instagram tel qu&apos;il apparait sur votre profil (ex: <strong style={{ color: '#aaa' }}>salon_yasmina</strong>), sans espaces ni @.</span>
                 </div>
               </div>
 
