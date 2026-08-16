@@ -167,7 +167,7 @@ export default function ProSettingsPage() {
             ))}
           </div>
 
-          {tab === 'services' && <ServicesTab services={services} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
+          {tab === 'services' && <ServicesTab services={services} catalogue={catalogue} onAdd={(s) => { setServices([...services, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
           {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
           {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
           
@@ -245,7 +245,22 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
           <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
             <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Nom de l&apos;offre VIP</label><input type="text" placeholder="Ex: Soin Keratine VIP" value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} /></div>
             <div><label style={labelStyle}>Prix special (DA)</label><input type="number" placeholder="1500" value={prix} onChange={(e) => setPrix(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>Duree (min)</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
+            <div><label style={labelStyle}>Duree (min)</label>
+              <select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">1h</option>
+                <option value="75">1h15</option>
+                <option value="90">1h30</option>
+                <option value="105">1h45</option>
+                <option value="120">2h</option>
+                <option value="135">2h15</option>
+                <option value="150">2h30</option>
+                <option value="165">2h45</option>
+                <option value="180">3h</option>
+              </select>
+            </div>
             <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description courte</label><textarea placeholder="Avantages de cette offre exclusive..." value={description} onChange={(e) => setDescription(e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} rows={2} /></div>
           </div>
           <button onClick={handleAdd} disabled={submitting || !nom || !prix} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 30px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1, width: '100%' }}>{submitting ? 'Creation...' : "Creer l'offre VIP"}</button>
@@ -262,7 +277,22 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
                 <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div style={{ gridColumn: '1 / -1' }}><input type="text" value={editNom} onChange={e => setEditNom(e.target.value)} style={inputStyle} /></div>
                   <div><input type="number" value={editPrix} onChange={e => setEditPrix(e.target.value)} style={inputStyle} /></div>
-                  <div><select value={editDuree} onChange={e => setEditDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
+                  <div>
+                    <select value={editDuree} onChange={e => setEditDuree(e.target.value)} style={inputStyle}>
+                      <option value="15">15 min</option>
+                      <option value="30">30 min</option>
+                      <option value="45">45 min</option>
+                      <option value="60">1h</option>
+                      <option value="75">1h15</option>
+                      <option value="90">1h30</option>
+                      <option value="105">1h45</option>
+                      <option value="120">2h</option>
+                      <option value="135">2h15</option>
+                      <option value="150">2h30</option>
+                      <option value="165">2h45</option>
+                      <option value="180">3h</option>
+                    </select>
+                  </div>
                   <div style={{ gridColumn: '1 / -1' }}><textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} style={inputStyle} rows={2} /></div>
                   <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
                     <button onClick={() => handleSaveEdit(v)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button>
@@ -302,7 +332,7 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
 // COMPOSANT : Services
 // ═══════════════════════════════════════════════════════════════════
 
-function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Service[]; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
+function ServicesTab({ services, catalogue, onAdd, onUpdate, onDelete }: { services: Service[]; catalogue: CatalogueItem[]; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
   const [showForm, setShowForm] = useState(false)
   const [nom, setNom] = useState('')
   const [descriptionService, setDescriptionService] = useState('')
@@ -326,6 +356,7 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
   const [promoFin, setPromoFin] = useState('')
 
   const grouped = services.reduce((acc, s) => { const cat = s.categorie_service || 'Autres'; if (!acc[cat]) acc[cat] = []; acc[cat].push(s); return acc }, {} as Record<string, Service[]>)
+  const catalogueGrouped = catalogue.reduce((acc, c) => { if (!acc[c.categorie]) acc[c.categorie] = []; acc[c.categorie].push(c); return acc }, {} as Record<string, CatalogueItem[]>)
 
   function startEdit(s: Service) { setEditingId(s.id); setEditNom(s.nom); setEditDescription(s.description || ''); setEditPrix(String(s.prix)); setEditDuree(String(s.duree)); setEditCategorie(s.categorie_service || CATEGORIES_SERVICES[0]) }
   function cancelEdit() { setEditingId(null); setEditNom(''); setEditDescription(''); setEditPrix(''); setEditDuree(''); setEditCategorie('') }
@@ -401,14 +432,35 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Nom de la prestation *</label>
-              <input type="text" placeholder="Ex: Balayage californien, Pose gel UV..." value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} />
+              <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
+                <select value="" onChange={(e) => { const item = catalogue.find(c => c.nom === e.target.value); if (item) { setNom(item.nom); setCategorie(item.categorie) } }} style={inputStyle}>
+                  <option value="">Choisir du catalogue...</option>
+                  {Object.entries(catalogueGrouped).map(([cat, items]) => (<optgroup key={cat} label={cat}>{items.map(item => (<option key={item.id} value={item.nom}>{item.nom}</option>))}</optgroup>))}
+                </select>
+                <input type="text" placeholder="Ex: Balayage californien, Pose gel UV..." value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} />
+              </div>
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Description (optionnelle)</label>
               <textarea placeholder="Decrivez la prestation en quelques mots..." value={descriptionService} onChange={(e) => setDescriptionService(e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} rows={2} />
             </div>
             <div><label style={labelStyle}>Prix (DA) *</label><input type="number" placeholder="1500" value={prix} onChange={(e) => setPrix(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>Duree *</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option></select></div>
+            <div><label style={labelStyle}>Duree *</label>
+              <select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+                <option value="45">45 min</option>
+                <option value="60">1h</option>
+                <option value="75">1h15</option>
+                <option value="90">1h30</option>
+                <option value="105">1h45</option>
+                <option value="120">2h</option>
+                <option value="135">2h15</option>
+                <option value="150">2h30</option>
+                <option value="165">2h45</option>
+                <option value="180">3h</option>
+              </select>
+            </div>
           </div>
           <button onClick={handleAdd} disabled={submitting || !nom || !prix || !categorie} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 30px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix || !categorie ? 0.5 : 1, width: '100%' }}>{submitting ? 'Ajout en cours...' : 'Ajouter la prestation'}</button>
         </div>
@@ -447,7 +499,20 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
                         </div>
                         <div>
                           <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Duree</label>
-                          <select value={editDuree} onChange={(e) => setEditDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option></select>
+                          <select value={editDuree} onChange={(e) => setEditDuree(e.target.value)} style={inputStyle}>
+                            <option value="15">15 min</option>
+                            <option value="30">30 min</option>
+                            <option value="45">45 min</option>
+                            <option value="60">1h</option>
+                            <option value="75">1h15</option>
+                            <option value="90">1h30</option>
+                            <option value="105">1h45</option>
+                            <option value="120">2h</option>
+                            <option value="135">2h15</option>
+                            <option value="150">2h30</option>
+                            <option value="165">2h45</option>
+                            <option value="180">3h</option>
+                          </select>
                         </div>
                         <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
                           <button onClick={() => handleSaveEdit(s)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button>
