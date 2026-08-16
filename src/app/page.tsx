@@ -34,15 +34,6 @@ export default function HomePage() {
   const [loc, setLoc] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  const NAV_LINKS = [
-    { label: t.navShort.coiffure, val: 'Coiffure & soin cheveux' },
-    { label: t.navShort.ongles, val: 'Onglerie Main & pieds' },
-    { label: t.navShort.bienetre, val: 'Soin visage & corps' },
-    { label: t.navShort.barbier, val: 'Barbier' },
-    { label: t.navShort.hammam, val: 'SPA' },
-    { label: t.navShort.chirurgie, val: 'Esthetique' },
-  ]
-
   const SLIDES = [
     { cat: t.nav.coiffure, title: t.carousel.slide1Title, desc: t.carousel.slide1Desc, img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=Coiffure+%26+soin+cheveux' },
     { cat: t.nav.ongles, title: t.carousel.slide2Title, desc: t.carousel.slide2Desc, img: 'https://images.unsplash.com/photo-1632345031435-8727f6897d52?w=800', link: '/search?q=Onglerie+Main+%26+pieds' },
@@ -76,13 +67,6 @@ export default function HomePage() {
           <Link href="/" style={{ fontSize: 'clamp(18px, 4vw, 22px)', fontWeight: 900, color: NOIR, whiteSpace: 'nowrap', textDecoration: 'none' }}>
             Bookme<span style={{ color: OR }}>dz</span>
           </Link>
-
-          {/* Nav desktop */}
-          <nav className="hide-mobile" style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-            {NAV_LINKS.map(c => (
-              <Link key={c.val} href={`/search?q=${encodeURIComponent(c.val)}`} style={{ color: '#444', fontWeight: 500, fontSize: 13, textDecoration: 'none' }}>{c.label}</Link>
-            ))}
-          </nav>
 
           {/* Actions desktop */}
           <div className="hide-mobile" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -173,7 +157,7 @@ export default function HomePage() {
       {/* ══════ CAROUSEL ══════ */}
       <section style={{ padding: 'clamp(40px, 8vw, 80px) 0', background: BG }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 16px' }}>
-  <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t.carousel.subtitle}</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 8 }}>{t.carousel.subtitle}</div>
           <div style={{ fontSize: 'clamp(22px, 4vw, 36px)', fontWeight: 900, color: NOIR, marginBottom: 'clamp(24px, 5vw, 40px)', letterSpacing: '-0.5px' }}>{t.carousel.title}</div>
 
           <div style={{
@@ -226,7 +210,7 @@ export default function HomePage() {
         </div>
       </section>
 
-{/* ══════ CTA PRO ══════ */}
+      {/* ══════ CTA PRO ══════ */}
       <section style={{ background: NOIR, color: '#fff', padding: 'clamp(50px, 10vw, 90px) 16px', textAlign: 'center' }}>
         <div style={{ width: 40, height: 2, background: OR, margin: '0 auto 18px' }} />
         <div style={{ fontSize: 11, fontWeight: 700, color: OR, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 14 }}>{t.cta.subtitle}</div>
@@ -237,7 +221,7 @@ export default function HomePage() {
         </Link>
       </section>
 
-    {/* ══════ FOOTER ══════ */}
+      {/* ══════ FOOTER ══════ */}
       <footer style={{ background: '#050505', padding: '24px 16px', borderTop: '1px solid #1a1a1a', textAlign: 'center', color: '#666', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
         <div>{t.footer}</div>
         <div>
