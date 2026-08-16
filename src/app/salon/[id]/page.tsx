@@ -4,18 +4,12 @@ import React from 'react'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
 
+
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
-const NOIR = '#0A0A0A'
-const OR = '#B8922A'
-const BG = '#F8F5F0'
 
 const DEFAULT_IMAGES: Record<string, string> = {
   'Coiffure': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
@@ -26,6 +20,15 @@ const DEFAULT_IMAGES: Record<string, string> = {
   'Chirurgie esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
   'Institut': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
 }
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+
+const NOIR = '#0A0A0A'
+const OR = '#B8922A'
+const BG = '#F8F5F0'
 
 // Ajout du type Salon avec les champs de pause
 type Salon = {
@@ -139,12 +142,7 @@ export default async function SalonPage({
       </header>
 
       <div style={{ width: '100%', height: 380, position: 'relative', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-        <img 
-          src={salon.image || DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure']} 
-          alt={salon.nom} 
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-          onError={e => { (e.target as HTMLImageElement).src = DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure'] }} 
-        />
+       <img src={salon.image || DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure']} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.9), transparent)', padding: '60px 30px 24px 30px' }}>
           <div style={{ maxWidth: 1040, margin: '0 auto' }}>
             <div style={{ color: OR, fontSize: 13, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
