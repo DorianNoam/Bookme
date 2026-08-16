@@ -54,18 +54,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Erreur lors de la creation du compte.' }, { status: 500 })
     }
 
-    // --- NOUVEAU : GEOCODAGE AUTOMATIQUE OPENSTREETMAP ---
+    // --- GEOCODAGE AVEC FILET DE SECURITE (FALLBACK) ---
     let latitude = null
     let longitude = null
 
     if (adresse && ville) {
       try {
         const queryStr = `${adresse}, ${ville}, Algérie`
-        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}`, {
+        let geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}`, {
           headers: { 'User-Agent': 'Bookmedz/1.0' }
         })
-        const geoData = await geoRes.json()
+        let geoData = await geoRes.json()
         
+        // 2ème essai : Si la carte ne trouve pas l'adresse exacte, on cherche juste la ville
+        if (!geoData || geoData.length === 0) {
+          const fallbackQuery = `${ville}, Algérie`
+          geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackQuery)}`, {
+            headers: { 'User-Agent': 'Bookmedz/1.0' }
+          })
+          geoData = await geoRes.json()
+        }
+
         if (geoData && geoData.length > 0) {
           latitude = parseFloat(geoData[0].lat)
           longitude = parseFloat(geoData[0].lon)
@@ -90,8 +99,7 @@ export async function POST(req: NextRequest) {
       jour_off: 5
     }
 
-    // NOUVEAU : Ajout des coordonnées si elles ont été trouvées
-    if (latitude && longitude) {
+    if (latitude !== null && longitude !== null) {
       salonData.latitude = latitude
       salonData.longitude = longitude
     }
@@ -104,12 +112,10 @@ export async function POST(req: NextRequest) {
       console.error('Erreur creation salon:', salonError.message)
     }
 
-    // Email de bienvenue ET notification Admin
     if (process.env.RESEND_API_KEY) {
       const finDate = new Date()
       finDate.setFullYear(finDate.getFullYear() + 1)
       
-      // 1. Envoi au professionnel
       sendProWelcome({
         proEmail: email,
         proName: prenom || nom,
@@ -117,7 +123,6 @@ export async function POST(req: NextRequest) {
         abonnementFin: finDate.toISOString().split('T')[0],
       }).catch(err => console.error('Email bienvenue pro echoue:', err))
 
-      // 2. Envoi a l'administrateur
       sendAdminNewProNotification({
         proName: `${prenom} ${nom}`,
         proEmail: email,
