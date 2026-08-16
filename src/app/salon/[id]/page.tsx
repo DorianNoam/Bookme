@@ -17,6 +17,25 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
+// Ajout du type Salon avec les champs de pause
+type Salon = {
+  id: number;
+  nom: string;
+  adresse: string;
+  ville: string;
+  telephone: string;
+  description: string;
+  ouverture: string;
+  fermeture: string;
+  jour_off: number;
+  type_salon: string;
+  image: string;
+  pause_active?: boolean;
+  pause_debut?: string;
+  pause_fin?: string;
+  instagram?: string;
+}
+
 export default async function SalonPage({ 
   params, 
   searchParams 
@@ -28,8 +47,10 @@ export default async function SalonPage({
   const activeTab = typeof searchParams.tab === 'string' ? searchParams.tab : 'prestations'
   const isGalleryOpen = searchParams.gallery === 'open'
 
-  const { data: salon } = await supabase.from('salons').select('*').eq('id', salonId).single()
-  if (!salon) return <div style={{ padding: 40, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>Salon introuvable</div>
+  const { data: salonData } = await supabase.from('salons').select('*').eq('id', salonId).single()
+  if (!salonData) return <div style={{ padding: 40, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>Salon introuvable</div>
+  
+  const salon = salonData as Salon // Typage explicite
 
   const [servicesRes, avisRes, galleryRes] = await Promise.all([
     supabase.from('services').select('*').eq('salon_id', salonId).order('categorie_service'),
@@ -116,7 +137,7 @@ export default async function SalonPage({
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
               <h1 style={{ fontSize: 36, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>{salon.nom}</h1>
-             <FavoriteButton salonId={salonId} />
+             <FavoriteButton salonId={parseInt(salonId)} />
             </div>
           </div>
         </div>
@@ -127,7 +148,10 @@ export default async function SalonPage({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, fontSize: 14, color: '#555', alignItems: 'center', marginBottom: 30 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, color: NOIR }}>{'\uD83D\uDCCD'} {salon.adresse}, {salon.ville}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{'\u2B50'} {safeAvis.length > 0 ? '4.8' : 'Nouveau'} ({safeAvis.length} avis)</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{'\uD83D\uDD52'} {salon.ouverture} - {salon.fermeture}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {'\uD83D\uDD52'} {salon.ouverture?.substring(0, 5)} - {salon.fermeture?.substring(0, 5)}
+            {salon.pause_active ? ` (pause ${salon.pause_debut?.substring(0, 5)} - ${salon.pause_fin?.substring(0, 5)})` : ''}
+          </span>
           {salon.jour_off > 0 && <span style={{ color: '#d32f2f', fontWeight: 700 }}>Ferme le {['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'][salon.jour_off]}</span>}
         </div>
 
@@ -278,7 +302,8 @@ export default async function SalonPage({
                   <span style={{ width: 36, height: 36, borderRadius: '50%', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>{'\uD83D\uDD52'}</span>
                   <div style={{ color: '#555', fontSize: 15, lineHeight: 1.5, paddingTop: 6 }}>
                     <strong style={{ color: NOIR }}>Horaires</strong><br/>
-                    {salon.ouverture} - {salon.fermeture}
+                    {salon.ouverture?.substring(0, 5)} - {salon.fermeture?.substring(0, 5)}
+                    {salon.pause_active ? ` (pause ${salon.pause_debut?.substring(0, 5)} - ${salon.pause_fin?.substring(0, 5)})` : ''}
                   </div>
                 </div>
 
