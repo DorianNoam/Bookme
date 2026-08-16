@@ -6,6 +6,12 @@ import LogoutButton from '@/app/pro/components/LogoutButton'
 import { createClient } from '@supabase/supabase-js'
 import AbonnementGuard from '@/components/AbonnementGuard'
 
+declare global {
+  interface Window {
+    google: any
+  }
+}
+
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
@@ -48,10 +54,12 @@ type VentePrivee = { id: number; nom: string; prix: number; duree: number; descr
 type Salon = {
   id: number; nom: string; adresse: string; ville: string; telephone: string;
   description: string; ouverture: string; fermeture: string; jour_off: number;
-  type_salon: string; image: string; seuil_fidelite: number; instagram?: string;
+  type_salon: string; image: string; seuil_fidelite: number;
   pause_active?: boolean;
   pause_debut?: string;
   pause_fin?: string;
+  latitude?: number;
+  longitude?: number;
 }
 type CatalogueItem = { id: number; categorie: string; nom: string }
 type GalleryImage = { id: number; image_path: string }
@@ -118,6 +126,24 @@ export default function ProSettingsPage() {
           .custom-scroll::-webkit-scrollbar-track { background: transparent; }
           .custom-scroll::-webkit-scrollbar-thumb { background-color: #E0D8CE; border-radius: 10px; }
           .custom-scroll::-webkit-scrollbar-thumb:hover { background-color: ${OR}; }
+
+          .pac-container {
+            background: #fff !important;
+            border: 1px solid #ddd !important;
+            border-top: none !important;
+            border-radius: 0 0 6px 6px !important;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1) !important;
+            font-family: Inter, sans-serif !important;
+            z-index: 10000 !important;
+          }
+          .pac-item { padding: 10px 16px !important; border-top: 1px solid #f0f0f0 !important; color: #333 !important; font-size: 14px !important; cursor: pointer !important; }
+          .pac-item:first-child { border-top: none !important; }
+          .pac-item:hover, .pac-item-selected { background: #F8F5F0 !important; }
+          .pac-item-query { color: #0A0A0A !important; font-weight: 700 !important; }
+          .pac-matched { color: #B8922A !important; font-weight: 700 !important; }
+          .pac-icon { display: none !important; }
+          .pac-item::before { content: "📍"; margin-right: 10px; font-size: 14px; }
+          .pac-logo::after, .hdpi.pac-logo::after { display: none !important; }
 
           @media (max-width: 768px) {
             .responsive-row { flex-direction: column; align-items: stretch !important; gap: 12px; }
@@ -245,22 +271,7 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
           <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 15, marginBottom: 15 }}>
             <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Nom de l&apos;offre VIP</label><input type="text" placeholder="Ex: Soin Keratine VIP" value={nom} onChange={(e) => setNom(e.target.value)} style={inputStyle} /></div>
             <div><label style={labelStyle}>Prix special (DA)</label><input type="number" placeholder="1500" value={prix} onChange={(e) => setPrix(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>Duree (min)</label>
-              <select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}>
-                <option value="15">15 min</option>
-                <option value="30">30 min</option>
-                <option value="45">45 min</option>
-                <option value="60">1h</option>
-                <option value="75">1h15</option>
-                <option value="90">1h30</option>
-                <option value="105">1h45</option>
-                <option value="120">2h</option>
-                <option value="135">2h15</option>
-                <option value="150">2h30</option>
-                <option value="165">2h45</option>
-                <option value="180">3h</option>
-              </select>
-            </div>
+            <div><label style={labelStyle}>Duree (min)</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
             <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description courte</label><textarea placeholder="Avantages de cette offre exclusive..." value={description} onChange={(e) => setDescription(e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} rows={2} /></div>
           </div>
           <button onClick={handleAdd} disabled={submitting || !nom || !prix} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 30px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix ? 0.5 : 1, width: '100%' }}>{submitting ? 'Creation...' : "Creer l'offre VIP"}</button>
@@ -277,22 +288,7 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
                 <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div style={{ gridColumn: '1 / -1' }}><input type="text" value={editNom} onChange={e => setEditNom(e.target.value)} style={inputStyle} /></div>
                   <div><input type="number" value={editPrix} onChange={e => setEditPrix(e.target.value)} style={inputStyle} /></div>
-                  <div>
-                    <select value={editDuree} onChange={e => setEditDuree(e.target.value)} style={inputStyle}>
-                      <option value="15">15 min</option>
-                      <option value="30">30 min</option>
-                      <option value="45">45 min</option>
-                      <option value="60">1h</option>
-                      <option value="75">1h15</option>
-                      <option value="90">1h30</option>
-                      <option value="105">1h45</option>
-                      <option value="120">2h</option>
-                      <option value="135">2h15</option>
-                      <option value="150">2h30</option>
-                      <option value="165">2h45</option>
-                      <option value="180">3h</option>
-                    </select>
-                  </div>
+                  <div><select value={editDuree} onChange={e => setEditDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option></select></div>
                   <div style={{ gridColumn: '1 / -1' }}><textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} style={inputStyle} rows={2} /></div>
                   <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
                     <button onClick={() => handleSaveEdit(v)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button>
@@ -438,22 +434,7 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
               <textarea placeholder="Decrivez la prestation en quelques mots..." value={descriptionService} onChange={(e) => setDescriptionService(e.target.value)} style={{ ...inputStyle, resize: 'vertical' }} rows={2} />
             </div>
             <div><label style={labelStyle}>Prix (DA) *</label><input type="number" placeholder="1500" value={prix} onChange={(e) => setPrix(e.target.value)} style={inputStyle} /></div>
-            <div><label style={labelStyle}>Duree *</label>
-              <select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}>
-                <option value="15">15 min</option>
-                <option value="30">30 min</option>
-                <option value="45">45 min</option>
-                <option value="60">1h</option>
-                <option value="75">1h15</option>
-                <option value="90">1h30</option>
-                <option value="105">1h45</option>
-                <option value="120">2h</option>
-                <option value="135">2h15</option>
-                <option value="150">2h30</option>
-                <option value="165">2h45</option>
-                <option value="180">3h</option>
-              </select>
-            </div>
+            <div><label style={labelStyle}>Duree *</label><select value={duree} onChange={(e) => setDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option></select></div>
           </div>
           <button onClick={handleAdd} disabled={submitting || !nom || !prix || !categorie} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 30px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom || !prix || !categorie ? 0.5 : 1, width: '100%' }}>{submitting ? 'Ajout en cours...' : 'Ajouter la prestation'}</button>
         </div>
@@ -471,46 +452,12 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
                   {editingId === s.id ? (
                     <div>
                       <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%' }}>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Categorie</label>
-                          <select value={editCategorie} onChange={e => setEditCategorie(e.target.value)} style={inputStyle}>
-                            {CATEGORIES_SERVICES.map(c => (<option key={c} value={c}>{c}</option>))}
-                            {!CATEGORIES_SERVICES.includes(editCategorie) && editCategorie && (<option value={editCategorie}>{editCategorie}</option>)}
-                          </select>
-                        </div>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom</label>
-                          <input type="text" value={editNom} onChange={e => setEditNom(e.target.value)} style={inputStyle} />
-                        </div>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Description (optionnelle)</label>
-                          <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="Description courte..." style={{ ...inputStyle, resize: 'vertical' }} rows={2} />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Prix (DA)</label>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="number" value={editPrix} onChange={(e) => setEditPrix(e.target.value)} style={{ ...inputStyle, textAlign: 'right' }} /><span style={{ fontSize: 13, color: '#888' }}>DA</span></div>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Duree</label>
-                          <select value={editDuree} onChange={(e) => setEditDuree(e.target.value)} style={inputStyle}>
-                            <option value="15">15 min</option>
-                            <option value="30">30 min</option>
-                            <option value="45">45 min</option>
-                            <option value="60">1h</option>
-                            <option value="75">1h15</option>
-                            <option value="90">1h30</option>
-                            <option value="105">1h45</option>
-                            <option value="120">2h</option>
-                            <option value="135">2h15</option>
-                            <option value="150">2h30</option>
-                            <option value="165">2h45</option>
-                            <option value="180">3h</option>
-                          </select>
-                        </div>
-                        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}>
-                          <button onClick={() => handleSaveEdit(s)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button>
-                          <button onClick={cancelEdit} style={{ background: '#eee', color: NOIR, border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer', flex: 1 }}>Annuler</button>
-                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Categorie</label><select value={editCategorie} onChange={e => setEditCategorie(e.target.value)} style={inputStyle}>{CATEGORIES_SERVICES.map(c => (<option key={c} value={c}>{c}</option>))}{!CATEGORIES_SERVICES.includes(editCategorie) && editCategorie && (<option value={editCategorie}>{editCategorie}</option>)}</select></div>
+                        <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom</label><input type="text" value={editNom} onChange={e => setEditNom(e.target.value)} style={inputStyle} /></div>
+                        <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Description (optionnelle)</label><textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="Description courte..." style={{ ...inputStyle, resize: 'vertical' }} rows={2} /></div>
+                        <div><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Prix (DA)</label><div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><input type="number" value={editPrix} onChange={(e) => setEditPrix(e.target.value)} style={{ ...inputStyle, textAlign: 'right' }} /><span style={{ fontSize: 13, color: '#888' }}>DA</span></div></div>
+                        <div><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Duree</label><select value={editDuree} onChange={(e) => setEditDuree(e.target.value)} style={inputStyle}><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1h</option><option value="90">1h30</option><option value="120">2h</option><option value="180">3h</option></select></div>
+                        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 10 }}><button onClick={() => handleSaveEdit(s)} disabled={savingEdit} style={{ background: OR, color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingEdit ? '...' : 'OK'}</button><button onClick={cancelEdit} style={{ background: '#eee', color: NOIR, border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 13, fontWeight: 600, cursor: 'pointer', flex: 1 }}>Annuler</button></div>
                       </div>
                     </div>
                   ) : (
@@ -527,29 +474,15 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
                               <div>
                                 <span style={{ fontSize: 12, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
                                 <div style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}>
-                                  <span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block' }}>-{s.promo_pourcentage}%</span>
-                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}><span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block' }}>-{s.promo_pourcentage}%</span></div>
                                 {s.promo_nom && <div style={{ fontSize: 11, fontWeight: 800, color: OR, marginTop: 2 }}>&#10024; {s.promo_nom}</div>}
-                                {s.promo_debut && s.promo_fin && (
-                                  <div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>{new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
-                                )}
+                                {s.promo_debut && s.promo_fin && (<div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>{new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>)}
                               </div>
-                            ) : (
-                              <span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>
-                            )}
+                            ) : (<span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>)}
                           </div>
                         </div>
                         <div className="responsive-actions">
-                          <button onClick={() => { 
-                            setPromoId(s.id); 
-                            setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); 
-                            setPromoNom(s.promo_nom || ''); 
-                            setPromoDebut(s.promo_debut || ''); 
-                            setPromoFin(s.promo_fin || '') 
-                          }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>
-                            {s.promo_active ? '% Promo' : '+ Promo'}
-                          </button>
+                          <button onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); setPromoNom(s.promo_nom || ''); setPromoDebut(s.promo_debut || ''); setPromoFin(s.promo_fin || '') }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>{s.promo_active ? '% Promo' : '+ Promo'}</button>
                           <button onClick={() => startEdit(s)} style={{ background: 'transparent', border: '1px solid #ddd', color: '#444', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Modifier</button>
                           <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Supprimer</button>
                         </div>
@@ -558,55 +491,11 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
                       {promoId === s.id && (
                         <div style={{ marginTop: 15, padding: '14px', background: '#FFF8F8', borderRadius: 6, border: '1px solid #ffcccb', display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <span style={{ fontSize: 13, fontWeight: 700, color: '#d32f2f' }}>Configurer la promotion :</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontSize: 13, color: '#888' }}>-</span>
-                            <input type="number" value={promoPct} onChange={(e) => setPromoPct(e.target.value)} placeholder="20" min="1" max="99" style={{ width: 80, padding: '8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }} />
-                            <span style={{ fontSize: 13, fontWeight: 700 }}>% de reduction</span>
-                          </div>
-                          
-                          <div style={{ width: '100%' }}>
-                            <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l&apos;offre (Optionnel)</label>
-                            <input 
-                              list="promo-events"
-                              type="text" 
-                              value={promoNom} 
-                              onChange={e => setPromoNom(e.target.value)} 
-                              placeholder="Choisissez dans la liste ou tapez un nom..." 
-                              style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} 
-                            />
-                            <datalist id="promo-events">
-                              <option value="Special Aid El Fitr" />
-                              <option value="Special Aid El Adha" />
-                              <option value="Promo Ramadan" />
-                              <option value="Offre Mariage" />
-                              <option value="Journee de la Femme (8 Mars)" />
-                              <option value="Soldes d'ete" />
-                              <option value="Soldes d'hiver" />
-                              <option value="Black Friday" />
-                              <option value="Nouvel An" />
-                              <option value="Yennayer" />
-                            </datalist>
-                          </div>
-
-                          {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (
-                            <span style={{ fontSize: 13, color: '#666' }}>Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong></span>
-                          )}
-                          
-                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%' }}>
-                            <div style={{ flex: '1 1 140px' }}>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Debut de la promo</label>
-                              <input type="date" value={promoDebut} onChange={e => setPromoDebut(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
-                            </div>
-                            <div style={{ flex: '1 1 140px' }}>
-                              <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Fin de la promo</label>
-                              <input type="date" value={promoFin} onChange={e => setPromoFin(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} />
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                            <button onClick={() => handlePromoSave(s)} disabled={savingPromo} style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingPromo ? '...' : 'Activer'}</button>
-                            {s.promo_active && (<button onClick={() => handlePromoRemove(s)} disabled={savingPromo} style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>Retirer</button>)}
-                            <button onClick={() => setPromoId(null)} style={{ background: '#eee', color: '#666', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Fermer</button>
-                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ fontSize: 13, color: '#888' }}>-</span><input type="number" value={promoPct} onChange={(e) => setPromoPct(e.target.value)} placeholder="20" min="1" max="99" style={{ width: 80, padding: '8px', border: '2px solid #d32f2f', borderRadius: 4, fontSize: 14, fontWeight: 700, textAlign: 'center', fontFamily: 'Inter, sans-serif' }} /><span style={{ fontSize: 13, fontWeight: 700 }}>% de reduction</span></div>
+                          <div style={{ width: '100%' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom de l&apos;offre (Optionnel)</label><input list="promo-events" type="text" value={promoNom} onChange={e => setPromoNom(e.target.value)} placeholder="Choisissez dans la liste ou tapez un nom..." style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} /><datalist id="promo-events"><option value="Special Aid El Fitr" /><option value="Special Aid El Adha" /><option value="Promo Ramadan" /><option value="Offre Mariage" /><option value="Journee de la Femme (8 Mars)" /><option value="Soldes d'ete" /><option value="Soldes d'hiver" /><option value="Black Friday" /><option value="Nouvel An" /><option value="Yennayer" /></datalist></div>
+                          {promoPct && parseInt(promoPct) > 0 && parseInt(promoPct) < 100 && (<span style={{ fontSize: 13, color: '#666' }}>Nouveau prix : <strong>{Math.round(s.prix - (s.prix * parseInt(promoPct) / 100))} DA</strong></span>)}
+                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', width: '100%' }}><div style={{ flex: '1 1 140px' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Debut de la promo</label><input type="date" value={promoDebut} onChange={e => setPromoDebut(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} /></div><div style={{ flex: '1 1 140px' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Fin de la promo</label><input type="date" value={promoFin} onChange={e => setPromoFin(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, fontFamily: 'Inter, sans-serif', boxSizing: 'border-box' }} /></div></div>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}><button onClick={() => handlePromoSave(s)} disabled={savingPromo} style={{ background: '#d32f2f', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>{savingPromo ? '...' : 'Activer'}</button>{s.promo_active && (<button onClick={() => handlePromoRemove(s)} disabled={savingPromo} style={{ background: '#fff', color: '#d32f2f', border: '1px solid #d32f2f', padding: '8px 14px', borderRadius: 4, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 1 }}>Retirer</button>)}<button onClick={() => setPromoId(null)} style={{ background: '#eee', color: '#666', border: 'none', padding: '8px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Fermer</button></div>
                         </div>
                       )}
                     </div>
@@ -658,9 +547,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
     } catch (e) {}
   }
 
-  function openAccessForm(emp: Employe) {
-    setAccessFormId(emp.id); setAccessEmail(emp.email || ''); setAccessPassword(''); setAccessError(''); setAccessSuccess('')
-  }
+  function openAccessForm(emp: Employe) { setAccessFormId(emp.id); setAccessEmail(emp.email || ''); setAccessPassword(''); setAccessError(''); setAccessSuccess('') }
 
   async function handleEnableAccess(empId: number) {
     if (!accessEmail || !accessPassword) { setAccessError('Email et mot de passe requis.'); return }
@@ -693,12 +580,10 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
     <div>
       <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 8 }}>Votre equipe</h3>
       <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Gerez vos collaborateurs et donnez-leur acces a l&apos;agenda pour gerer les RDV.</p>
-
       <div style={{ display: 'flex', gap: 10, marginBottom: 25, flexWrap: 'wrap' }}>
         <input type="text" placeholder="Nom du collaborateur" value={nom} onChange={(e) => setNom(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAdd()} style={{ ...inputStyle, flex: '1 1 200px' }} />
         <button onClick={handleAdd} disabled={submitting || !nom.trim()} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: submitting || !nom.trim() ? 0.5 : 1, whiteSpace: 'nowrap', flexShrink: 0 }}>{submitting ? '...' : '+ Ajouter'}</button>
       </div>
-
       {localEmployes.length === 0 ? (
         <div style={{ background: '#fff', padding: 40, borderRadius: 8, textAlign: 'center', color: '#888', fontSize: 14 }}>Aucun collaborateur. Ajoutez votre equipe pour assigner les rendez-vous.</div>
       ) : (
@@ -723,7 +608,6 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
                   <button onClick={() => handleDelete(emp.id)} style={{ background: 'transparent', border: '1px solid #e0e0e0', color: '#cc0000', padding: '6px 14px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Retirer</button>
                 </div>
               </div>
-
               {accessFormId === emp.id && !emp.acces_agenda && (
                 <div style={{ padding: '16px 20px', background: '#FAFAF5', borderTop: `1px dashed ${OR}` }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: NOIR, marginBottom: 12 }}>Creer un acces agenda pour {emp.nom}</div>
@@ -731,14 +615,8 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
                   {accessError && (<div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#b91c1c' }}>{accessError}</div>)}
                   {accessSuccess && (<div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 4, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#166534' }}>{accessSuccess}</div>)}
                   <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 200px' }}>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Email du collaborateur</label>
-                      <input type="email" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder="collaborateur@emaildz" style={{ ...inputStyle, fontSize: 14 }} />
-                    </div>
-                    <div style={{ flex: '1 1 200px' }}>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Mot de passe</label>
-                      <input type="text" value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Min. 6 caracteres" style={{ ...inputStyle, fontSize: 14 }} />
-                    </div>
+                    <div style={{ flex: '1 1 200px' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Email du collaborateur</label><input type="email" value={accessEmail} onChange={e => setAccessEmail(e.target.value)} placeholder="collaborateur@emaildz" style={{ ...inputStyle, fontSize: 14 }} /></div>
+                    <div style={{ flex: '1 1 200px' }}><label style={{ fontSize: 11, fontWeight: 700, color: '#555', display: 'block', marginBottom: 4 }}>Mot de passe</label><input type="text" value={accessPassword} onChange={e => setAccessPassword(e.target.value)} placeholder="Min. 6 caracteres" style={{ ...inputStyle, fontSize: 14 }} /></div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button onClick={() => handleEnableAccess(emp.id)} disabled={accessSaving || !accessEmail || !accessPassword} style={{ background: OR, color: '#fff', border: 'none', padding: '10px 20px', borderRadius: 4, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: accessSaving || !accessEmail || !accessPassword ? 0.5 : 1 }}>{accessSaving ? 'Activation...' : "Activer l'acces"}</button>
@@ -755,7 +633,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Infos salon (+ GALERIE)
+// COMPOSANT : Infos salon (+ GALERIE + GOOGLE PLACES)
 // ═══════════════════════════════════════════════════════════════════
 
 function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDeleteGalleryImage }: { salon: Salon; proEmail: string; gallery: GalleryImage[]; onUpdate: (s: Salon, email?: string) => void; onAddGalleryImage: (img: GalleryImage) => void; onDeleteGalleryImage: (id: number) => void }) {
@@ -773,6 +651,64 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
   
   const [uploadingGallery, setUploadingGallery] = useState(false)
   const galleryInputRef = useRef<HTMLInputElement>(null)
+
+  // Google Places Autocomplete
+  const adresseInputRef = useRef<HTMLInputElement>(null)
+  const autocompleteRef = useRef<any>(null)
+  const [googleLoaded, setGoogleLoaded] = useState(false)
+
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+    if (!apiKey) return
+    if (window.google) { setGoogleLoaded(true); return }
+
+    const script = document.createElement('script')
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=fr`
+    script.async = true
+    script.onload = () => setGoogleLoaded(true)
+    document.head.appendChild(script)
+  }, [])
+
+  useEffect(() => {
+    if (!googleLoaded || !adresseInputRef.current || autocompleteRef.current) return
+
+    const timer = setTimeout(() => {
+      if (!adresseInputRef.current || !window.google) return
+
+      const autocomplete = new window.google.maps.places.Autocomplete(adresseInputRef.current, {
+        componentRestrictions: { country: 'dz' },
+        fields: ['formatted_address', 'geometry', 'address_components'],
+        types: ['address']
+      })
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace()
+        if (!place.geometry) return
+
+        const components = place.address_components || []
+        const streetNumber = components.find((c: any) => c.types.includes('street_number'))?.long_name || ''
+        const route = components.find((c: any) => c.types.includes('route'))?.long_name || ''
+        const sublocality = components.find((c: any) => c.types.includes('sublocality'))?.long_name || ''
+
+        let shortAddress = ''
+        if (streetNumber && route) shortAddress = `${streetNumber} ${route}`
+        else if (route) shortAddress = route
+        else if (sublocality) shortAddress = sublocality
+        else shortAddress = place.formatted_address?.split(',')[0]?.trim() || ''
+
+        setForm(prev => ({
+          ...prev,
+          adresse: shortAddress,
+          latitude: place.geometry.location.lat(),
+          longitude: place.geometry.location.lng()
+        }))
+      })
+
+      autocompleteRef.current = autocomplete
+    }, 200)
+
+    return () => clearTimeout(timer)
+  }, [googleLoaded])
 
   const displayImage = form.image || DEFAULT_IMAGES[form.type_salon] || DEFAULT_IMAGES['Coiffure']
 
@@ -807,31 +743,18 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
     if (!file) return
     if (!file.type.startsWith('image/')) { alert('Fichier non valide.'); return }
     if (file.size > 5 * 1024 * 1024) { alert('Image trop lourde (max 5 Mo)'); return }
-    
     setUploadingGallery(true)
     try {
       const ext = file.name.split('.').pop() || 'jpg'
       const fileName = `gallery-${salon.id}-${Date.now()}.${ext}`
-      
       const { error: uploadError } = await supabaseClient.storage.from('salon-images').upload(fileName, file)
       if (uploadError) throw uploadError
-      
       const { data: urlData } = supabaseClient.storage.from('salon-images').getPublicUrl(fileName)
       const publicUrl = urlData.publicUrl
-
-      const res = await fetch('/api/pro/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add_gallery_image', image_path: publicUrl })
-      })
+      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_gallery_image', image_path: publicUrl }) })
       const data = await res.json()
-      
-      if (data.success) {
-        onAddGalleryImage(data.image)
-      }
-    } catch (err) {
-      alert("Erreur lors de l'envoi de l'image de la galerie.")
-    }
+      if (data.success) onAddGalleryImage(data.image)
+    } catch (err) { alert("Erreur lors de l'envoi de l'image de la galerie.") }
     setUploadingGallery(false)
     if (galleryInputRef.current) galleryInputRef.current.value = ''
   }
@@ -839,11 +762,7 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
   async function handleDeleteGallery(id: number) {
     if(!confirm("Supprimer cette photo de votre galerie ?")) return
     try {
-      const res = await fetch('/api/pro/settings', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete_gallery_image', id })
-      })
+      const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_gallery_image', id }) })
       if (res.ok) onDeleteGalleryImage(id)
     } catch(e) {}
   }
@@ -887,37 +806,17 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
 
       <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 10 }}>Galerie Photos</h3>
       <p style={{ fontSize: 13, color: '#888', marginBottom: 20 }}>Ajoutez d&apos;autres photos de votre salon ou de vos realisations pour donner envie a vos clients.</p>
-      
       <div style={{ background: '#fff', padding: 24, borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.03)', marginBottom: 30 }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-          <div 
-            onClick={() => !uploadingGallery && galleryInputRef.current?.click()}
-            style={{ 
-              width: 120, height: 120, background: '#FAFAF5', border: `2px dashed ${OR}`, 
-              borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', 
-              justifyContent: 'center', cursor: uploadingGallery ? 'not-allowed' : 'pointer',
-              opacity: uploadingGallery ? 0.5 : 1
-            }}
-          >
+          <div onClick={() => !uploadingGallery && galleryInputRef.current?.click()} style={{ width: 120, height: 120, background: '#FAFAF5', border: `2px dashed ${OR}`, borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: uploadingGallery ? 'not-allowed' : 'pointer', opacity: uploadingGallery ? 0.5 : 1 }}>
             <span style={{ fontSize: 24, color: OR, marginBottom: 8 }}>+</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: OR }}>Ajouter</span>
             <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleUploadGallery} style={{ display: 'none' }} />
           </div>
-
           {gallery.map(img => (
             <div key={img.id} style={{ position: 'relative', width: 120, height: 120, borderRadius: 8, overflow: 'hidden', border: '1px solid #ddd' }}>
               <img src={img.image_path} alt="Galerie" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <button 
-                onClick={() => handleDeleteGallery(img.id)}
-                style={{ 
-                  position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', 
-                  color: '#fff', border: 'none', width: 24, height: 24, borderRadius: '50%', 
-                  fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                  cursor: 'pointer' 
-                }}
-              >
-                &#10005;
-              </button>
+              <button onClick={() => handleDeleteGallery(img.id)} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', width: 24, height: 24, borderRadius: '50%', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>&#10005;</button>
             </div>
           ))}
         </div>
@@ -929,7 +828,24 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
           <div><label style={labelStyle}>Nom du salon</label><input name="nom" value={form.nom} onChange={handleChange} style={inputStyle} /></div>
           <div><label style={labelStyle}>Type</label><select name="type_salon" value={form.type_salon} onChange={handleChange} style={inputStyle}>{TYPES_SALON.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
           <div><label style={labelStyle}>Ville</label><input name="ville" value={form.ville} onChange={handleChange} style={inputStyle} /></div>
-          <div><label style={labelStyle}>Adresse</label><input name="adresse" value={form.adresse} onChange={handleChange} style={inputStyle} /></div>
+          
+          {/* ADRESSE AVEC GOOGLE PLACES AUTOCOMPLETE */}
+          <div>
+            <label style={labelStyle}>Adresse</label>
+            <input
+              ref={adresseInputRef}
+              name="adresse"
+              value={form.adresse}
+              onChange={handleChange}
+              style={inputStyle}
+              autoComplete="off"
+              placeholder="Tapez votre adresse..."
+            />
+            {form.latitude && form.longitude && (
+              <div style={{ fontSize: 11, color: '#4ade80', marginTop: 4, fontWeight: 600 }}>Position GPS detectee &#10003;</div>
+            )}
+          </div>
+
           <div><label style={labelStyle}>Telephone</label><input name="telephone" value={form.telephone} onChange={handleChange} placeholder="+213 XXX XXX XXX" style={inputStyle} /></div>
           <div><label style={labelStyle}>Jour de fermeture</label><select name="jour_off" value={form.jour_off} onChange={handleChange} style={inputStyle}><option value={0}>Aucun (ouvert 7j/7)</option>{JOURS_SEMAINE.slice(1).map((j, i) => <option key={i + 1} value={i + 1}>{j}</option>)}</select></div>
           <div><label style={labelStyle}>Heure d&apos;ouverture</label><input name="ouverture" type="time" value={form.ouverture} onChange={handleChange} style={inputStyle} /></div>
@@ -941,41 +857,14 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
                 <div style={{ fontWeight: 700, fontSize: 14, color: NOIR }}>Pause midi</div>
                 <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>Bloquer les reservations sur une plage horaire</div>
               </div>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, pause_active: !form.pause_active })}
-                style={{
-                  width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer',
-                  background: form.pause_active ? OR : '#ccc',
-                  position: 'relative', transition: 'background 0.2s'
-                }}
-              >
-                <div style={{
-                  width: 22, height: 22, borderRadius: '50%', background: '#fff',
-                  position: 'absolute', top: 2,
-                  left: form.pause_active ? 24 : 2,
-                  transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
-                }} />
+              <button type="button" onClick={() => setForm({ ...form, pause_active: !form.pause_active })} style={{ width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', background: form.pause_active ? OR : '#ccc', position: 'relative', transition: 'background 0.2s' }}>
+                <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: form.pause_active ? 24 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
               </button>
             </div>
             {form.pause_active && (
               <div style={{ display: 'flex', gap: 15, flexWrap: 'wrap' }}>
-                <div style={{ flex: '1 1 200px' }}>
-                  <label style={{ fontSize: 13, fontWeight: 700, color: NOIR, display: 'block', marginBottom: 6 }}>Debut de la pause</label>
-                  <input
-                    type="time" value={form.pause_debut}
-                    onChange={e => setForm({ ...form, pause_debut: e.target.value })}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif' }}
-                  />
-                </div>
-                <div style={{ flex: '1 1 200px' }}>
-                  <label style={{ fontSize: 13, fontWeight: 700, color: NOIR, display: 'block', marginBottom: 6 }}>Fin de la pause</label>
-                  <input
-                    type="time" value={form.pause_fin}
-                    onChange={e => setForm({ ...form, pause_fin: e.target.value })}
-                    style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif' }}
-                  />
-                </div>
+                <div style={{ flex: '1 1 200px' }}><label style={{ fontSize: 13, fontWeight: 700, color: NOIR, display: 'block', marginBottom: 6 }}>Debut de la pause</label><input type="time" value={form.pause_debut} onChange={e => setForm({ ...form, pause_debut: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif' }} /></div>
+                <div style={{ flex: '1 1 200px' }}><label style={{ fontSize: 13, fontWeight: 700, color: NOIR, display: 'block', marginBottom: 6 }}>Fin de la pause</label><input type="time" value={form.pause_fin} onChange={e => setForm({ ...form, pause_fin: e.target.value })} style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 14, outline: 'none', fontFamily: 'Inter, sans-serif' }} /></div>
               </div>
             )}
           </div>
@@ -986,19 +875,6 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
             <input type="email" value={emailValue} onChange={e => setEmailValue(e.target.value)} placeholder="contact@votre-salondz" style={inputStyle} />
             <p style={{ fontSize: 11, color: '#888', marginTop: 6, margin: 0 }}>C&apos;est sur cette adresse que vous recevrez les confirmations de RDV.</p>
           </div>
-
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Instagram</label>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 14, top: 11, color: '#888', fontSize: 14 }}>@</span>
-              <input name="instagram" value={(form as any).instagram || ''} onChange={e => setForm({ ...form, instagram: e.target.value.replace(/[\s@]/g, '') } as any)} placeholder="votre_nom_instagram" style={{ ...inputStyle, paddingLeft: 32 }} />
-            </div>
-            <div style={{ fontSize: 11, color: '#888', marginTop: 6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
-              <span style={{ background: OR, color: '#fff', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>i</span>
-              <span>Entrez votre nom d&apos;utilisateur Instagram tel qu&apos;il apparait sur votre profil (ex: <strong>salon_yasmina</strong>), sans espaces ni @.</span>
-            </div>
-          </div>
-
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description</label><textarea name="description" value={form.description || ''} onChange={handleChange} rows={4} style={{ ...inputStyle, resize: 'vertical' }} /></div>
         </div>
         <div style={{ marginTop: 25, display: 'flex', justifyContent: 'flex-end' }}>
