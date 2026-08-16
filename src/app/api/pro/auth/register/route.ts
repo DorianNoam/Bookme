@@ -54,22 +54,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Erreur lors de la creation du compte.' }, { status: 500 })
     }
 
+    // --- NOUVEAU : GEOCODAGE AUTOMATIQUE OPENSTREETMAP ---
+    let latitude = null
+    let longitude = null
+
+    if (adresse && ville) {
+      try {
+        const queryStr = `${adresse}, ${ville}, Algérie`
+        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}`, {
+          headers: { 'User-Agent': 'Bookmedz/1.0' }
+        })
+        const geoData = await geoRes.json()
+        
+        if (geoData && geoData.length > 0) {
+          latitude = parseFloat(geoData[0].lat)
+          longitude = parseFloat(geoData[0].lon)
+        }
+      } catch (err) {
+        console.error('Erreur de géocodage inscription:', err)
+      }
+    }
+
+    // NOUVEAU : Ajout conditionnel de la latitude et de la longitude au tableau des données du salon
+    const salonData: any = {
+      pro_id: newPro.id,
+      nom: salon_nom,
+      type_salon: type_salon || 'Coiffure',
+      ville,
+      adresse: adresse || '',
+      telephone,
+      instagram: instagram || '',
+      description: '',
+      image: '',
+      ouverture: '09:00',
+      fermeture: '19:00',
+      jour_off: 5
+    }
+
+    if (latitude && longitude) {
+        salonData.latitude = latitude
+        salonData.longitude = longitude
+    }
+
     const { error: salonError } = await supabase
       .from('salons')
-      .insert([{
-        pro_id: newPro.id,
-        nom: salon_nom,
-        type_salon: type_salon || 'Coiffure',
-        ville,
-        adresse: adresse || '',
-        telephone,
-        instagram: instagram || '',
-        description: '',
-        image: '',
-        ouverture: '09:00',
-        fermeture: '19:00',
-        jour_off: 5
-      }])
+      .insert([salonData])
 
     if (salonError) {
       console.error('Erreur creation salon:', salonError.message)
