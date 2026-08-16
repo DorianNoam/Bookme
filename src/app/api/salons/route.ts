@@ -6,12 +6,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const q   = searchParams.get('q')   || ''
     const loc = searchParams.get('loc') || ''
-
     const supabase = createAdminClient()
 
     let query = supabase
       .from('salons')
       .select('id, nom, adresse, image, type_salon, telephone, description, ville, ouverture, fermeture, jour_off, latitude, longitude, avis(note)')
+      .eq('visible', true)
 
     if (q) query = query.ilike('type_salon', '%' + q + '%')
     if (loc) query = query.ilike('ville', '%' + loc + '%')
