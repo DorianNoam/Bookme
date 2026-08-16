@@ -48,7 +48,7 @@ type VentePrivee = { id: number; nom: string; prix: number; duree: number; descr
 type Salon = {
   id: number; nom: string; adresse: string; ville: string; telephone: string;
   description: string; ouverture: string; fermeture: string; jour_off: number;
-  type_salon: string; image: string; seuil_fidelite: number;
+  type_salon: string; image: string; seuil_fidelite: number; instagram?: string;
   pause_active?: boolean;
   pause_debut?: string;
   pause_fin?: string;
@@ -986,6 +986,19 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
             <input type="email" value={emailValue} onChange={e => setEmailValue(e.target.value)} placeholder="contact@votre-salondz" style={inputStyle} />
             <p style={{ fontSize: 11, color: '#888', marginTop: 6, margin: 0 }}>C&apos;est sur cette adresse que vous recevrez les confirmations de RDV.</p>
           </div>
+
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Instagram</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 14, top: 11, color: '#888', fontSize: 14 }}>@</span>
+              <input name="instagram" value={(form as any).instagram || ''} onChange={e => setForm({ ...form, instagram: e.target.value.replace(/[\s@]/g, '') } as any)} placeholder="votre_nom_instagram" style={{ ...inputStyle, paddingLeft: 32 }} />
+            </div>
+            <div style={{ fontSize: 11, color: '#888', marginTop: 6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <span style={{ background: OR, color: '#fff', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>i</span>
+              <span>Entrez votre nom d&apos;utilisateur Instagram tel qu&apos;il apparait sur votre profil (ex: <strong>salon_yasmina</strong>), sans espaces ni @.</span>
+            </div>
+          </div>
+
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description</label><textarea name="description" value={form.description || ''} onChange={handleChange} rows={4} style={{ ...inputStyle, resize: 'vertical' }} /></div>
         </div>
         <div style={{ marginTop: 25, display: 'flex', justifyContent: 'flex-end' }}>
