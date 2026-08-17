@@ -197,7 +197,7 @@ export default async function SalonPage({
             {/* SECTION : A PROPOS */}
             {salon.description && (
               <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #E0D8CE', padding: 'clamp(20px, 4vw, 28px)', marginBottom: 32 }}>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, margin: '0 0 12px 0' }}>A propos</h2>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, margin: '0 0 12px 0' }}>Bio</h2>
                 <p style={{ color: '#555', fontSize: 15, lineHeight: 1.7, margin: 0 }}>{salon.description}</p>
               </div>
             )}
@@ -262,10 +262,10 @@ export default async function SalonPage({
               )}
             </div>
 
-            {/* SECTION : REALISATIONS / BOOK PRO */}
+            {/* SECTION : PHOTOS / BOOK PRO */}
             {safeGallery.length > 0 && (
               <div style={{ marginBottom: 32 }}>
-                <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 16 }}>Realisations</h2>
+                <h2 style={{ fontSize: 18, fontWeight: 800, color: NOIR, marginBottom: 16 }}>Photos</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
                   {safeGallery.map((img: any, i: number) => (
                     <Link key={img.id} href={`/salon/${salonId}?gallery=open`} scroll={false} style={{ display: 'block', borderRadius: 8, overflow: 'hidden', height: 160, border: '1px solid #E0D8CE' }}>
