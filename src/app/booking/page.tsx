@@ -152,10 +152,10 @@ function BookingContent() {
     return new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   }
 
-  if (!salonId || !serviceId) return (
+if (!salonId) return (
     <div style={{ textAlign: 'center', padding: 60, fontFamily: 'Inter, sans-serif' }}>
-      <p style={{ color: '#888', marginBottom: 20 }}>Paramètres manquants.</p>
-      <Link href="/search" style={{ color: OR, fontWeight: 700 }}>Retour à la recherche</Link>
+      <p style={{ color: '#888', marginBottom: 20 }}>Parametres manquants.</p>
+      <Link href="/search" style={{ color: OR, fontWeight: 700 }}>Retour a la recherche</Link>
     </div>
   )
 
