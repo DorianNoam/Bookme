@@ -10,6 +10,16 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
+const DEFAULT_IMAGES: Record<string, string> = {
+  'Coiffure': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+  'Barbier': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800',
+  'Beaute des ongles': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
+  'Massage et bien-etre': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+  'Hammam & Spa': 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800',
+  'Chirurgie esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
+  'Institut': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
+}
+
 type User = { prenom: string; nom: string; email: string; telephone: string }
 type SalonInfo = { id: number; nom: string; ville: string; image: string; type_salon?: string }
 type Reservation = {
@@ -241,7 +251,7 @@ export default function DashboardPage() {
                   <Link key={salon.id} href={"/salon/" + salon.id} style={{ textDecoration: 'none' }}>
                     <div style={{ background: '#fff', border: '1px solid #EDE5D8', borderRadius: 6, overflow: 'hidden', transition: 'transform 0.2s' }}>
                       <div style={{ height: 'clamp(120px, 25vw, 160px)', width: '100%', background: '#eee' }}>
-                        <img src={salon.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={salon.image || DEFAULT_IMAGES[salon.type_salon || ''] || DEFAULT_IMAGES['Coiffure']} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                       <div style={{ padding: 'clamp(12px, 3vw, 16px)' }}>
                         <div style={{ color: OR, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', marginBottom: 4 }}>
