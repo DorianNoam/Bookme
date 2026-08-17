@@ -19,7 +19,7 @@ async function getProId(req: NextRequest): Promise<number | null> {
 export async function POST(req: NextRequest) {
   try {
     const proId = await getProId(req)
-    if (!proId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    if (!proId) return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
 
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -32,13 +32,13 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes)
     const base64Data = buffer.toString('base64')
 
-    // Utilisation de Gemini 2.0 Flash (gratuit et ultra rapide)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
+    // Utilisation du modèle gratuit et ultra-rapide
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
     const prompt = `
-      Analyse ce document ou cette image qui contient la liste des prestations d'un salon de beauté/bien-être.
-      Extrait toutes les prestations, leur prix (en chiffres uniquement) et leur durée estimée (en minutes, par défaut 30 si non précisé).
-      Classe chaque prestation OBLIGATOIREMENT dans l'une de ces 11 catégories exactes de Bookme.dz :
+      Analyse ce document ou cette image qui contient la liste des prestations d'un salon de beauté/bien-être en Algérie.
+      Extrait toutes les prestations, leur prix (en chiffres uniquement, convertir en Dinars Algériens DA si nécessaire) et leur durée estimée (en minutes, par défaut 30 si non précisé).
+      Classe chaque prestation OBLIGATOIREMENT dans l'une de ces 11 catégories exactes :
       - Coiffure & soin cheveux
       - Onglerie Main & pieds
       - Beaute du regard
@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
     ])
 
     const responseText = result.response.text()
-    // Nettoyage du texte pour s'assurer d'obtenir un JSON pur
     const jsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim()
     const prestations = JSON.parse(jsonString)
 
