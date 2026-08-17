@@ -20,7 +20,7 @@ const nextConfig = {
               "img-src 'self' data: blob: https: http:",
               "font-src 'self' https://fonts.gstatic.com",
               "connect-src 'self' https://*.supabase.co https://maps.googleapis.com https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org",
-              "frame-src 'self' https://maps.googleapis.com https://maps.google.com",
+              "frame-src 'self' https://maps.googleapis.com https://maps.google.com https://www.openstreetmap.org",
             ].join('; ')
           }
         ]
