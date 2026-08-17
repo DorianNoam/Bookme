@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { jwtVerify } from 'jose'
 
-// 🌟 Demande à Vercel de ne pas couper avant 60 secondes
 export const maxDuration = 60;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
@@ -22,11 +21,10 @@ async function getProId(req: NextRequest): Promise<number | null> {
 export async function POST(req: NextRequest) {
   try {
     const proId = await getProId(req)
-    if (!proId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    if (!proId) return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
 
     const formData = await req.formData()
     const file = formData.get('file') as File
-
     if (!file) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 })
     }
@@ -39,13 +37,12 @@ export async function POST(req: NextRequest) {
       ? file.type 
       : (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
 
-    // 🌟 CORRECTION ICI : Utilisation de l'identifiant exact avec "-latest"
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `
-      Analyse ce document ou cette image qui contient la liste des prestations d'un salon de beauté/bien-être en Algérie.
-      Extrait toutes les prestations, leur prix (en chiffres uniquement, convertir en Dinars Algériens DA si nécessaire) et leur durée estimée (en minutes, par défaut 30 si non précisé).
-      Classe chaque prestation OBLIGATOIREMENT dans l'une de ces 11 catégories exactes :
+      Analyse ce document ou cette image qui contient la liste des prestations d'un salon de beaute/bien-etre en Algerie.
+      Extrait toutes les prestations, leur prix (en chiffres uniquement, convertir en Dinars Algeriens DA si necessaire) et leur duree estimee (en minutes, par defaut 30 si non precise).
+      Classe chaque prestation OBLIGATOIREMENT dans l'une de ces 11 categories exactes :
       - Coiffure & soin cheveux
       - Onglerie Main & pieds
       - Beaute du regard
@@ -57,14 +54,13 @@ export async function POST(req: NextRequest) {
       - Esthetique
       - Massage
       - SPA
-
-      Réponds UNIQUEMENT sous la forme d'un tableau JSON valide, sans texte autour, avec cette structure exacte :
+      Reponds UNIQUEMENT sous la forme d'un tableau JSON valide, sans texte autour, avec cette structure exacte :
       [
         {
           "nom": "Nom de la prestation",
           "prix": 1500,
           "duree": 30,
-          "categorie_service": "Nom exact de la catégorie parmi la liste"
+          "categorie_service": "Nom exact de la categorie parmi la liste"
         }
       ]
     `
