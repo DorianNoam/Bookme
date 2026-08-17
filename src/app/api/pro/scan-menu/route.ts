@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { jwtVerify } from 'jose'
 
+// 🌟 LA LIGNE MAGIQUE : Demande à Vercel de ne pas couper avant 60 secondes
+export const maxDuration = 60;
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 async function getProId(req: NextRequest): Promise<number | null> {
@@ -19,7 +22,7 @@ async function getProId(req: NextRequest): Promise<number | null> {
 export async function POST(req: NextRequest) {
   try {
     const proId = await getProId(req)
-    if (!proId) return NextResponse.json({ error: 'Non autorise' }, { status: 401 })
+    if (!proId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -31,8 +34,12 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
     const base64Data = buffer.toString('base64')
+    
+    // Détection stricte du type MIME pour aider l'IA
+    const mimeType = file.type && file.type !== 'application/octet-stream' 
+      ? file.type 
+      : (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
 
-    // Utilisation du modèle gratuit et ultra-rapide
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
     const prompt = `
@@ -67,7 +74,7 @@ export async function POST(req: NextRequest) {
       {
         inlineData: {
           data: base64Data,
-          mimeType: file.type || 'image/jpeg',
+          mimeType: mimeType,
         },
       },
     ])
@@ -79,6 +86,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, prestations })
   } catch (err: any) {
     console.error('Erreur scan IA :', err)
-    return NextResponse.json({ success: false, error: "Erreur lors de l'analyse du document par l'IA." }, { status: 500 })
+    // 🌟 On renvoie le VRAI message d'erreur pour savoir exactement ce qui bloque
+    return NextResponse.json({ 
+      success: false, 
+      error: err.message || "Erreur lors de l'analyse du document par l'IA." 
+    }, { status: 500 })
   }
 }
