@@ -481,7 +481,7 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
             disabled={scanning}
             style={{ background: '#fff', color: OR, border: `1.5px solid ${OR}`, padding: '10px 16px', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
           >
-            {scanning ? '✨ Analyse par IA...' : '✨ Importer mon menu (IA)'}
+            {scanning ? '✨ Analyse par IA...' : '✨ Importer ma fiche de prestation'}
           </button>
           <button onClick={() => setShowForm(!showForm)} style={{ background: showForm ? '#eee' : OR, color: showForm ? NOIR : '#fff', border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{showForm ? 'Annuler' : '+ Ajouter'}</button>
         </div>
