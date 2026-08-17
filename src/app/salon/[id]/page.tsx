@@ -141,34 +141,10 @@ export default async function SalonPage({
       </header>
 
       {/* ═══════════════ HERO PHOTOS ═══════════════ */}
-      {allImages.length >= 3 ? (
-        <div className="hero-grid" style={{ overflow: 'hidden', position: 'relative' }}>
-          <div className="hero-main" style={{ overflow: 'hidden' }}>
-            <img src={allImages[0]} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-          <div className="hero-extra" style={{ overflow: 'hidden' }}>
-            <img src={allImages[1]} alt="Photo 2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </div>
-          <div className="hero-extra" style={{ overflow: 'hidden', position: 'relative' }}>
-            <img src={allImages[2]} alt="Photo 3" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            {allImages.length > 3 && (
-              <Link href={`/salon/${salonId}?gallery=open`} scroll={false} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16, fontWeight: 800, textDecoration: 'none', gap: 8 }}>
-                Voir les {allImages.length} photos
-              </Link>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="hero-single" style={{ position: 'relative', overflow: 'hidden' }}>
-          <img src={heroImage} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          {allImages.length > 1 && (
-            <Link href={`/salon/${salonId}?gallery=open`} scroll={false} style={{ position: 'absolute', bottom: 16, right: 16, background: '#fff', color: NOIR, padding: '8px 16px', borderRadius: 6, fontSize: 13, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
-              Voir les {allImages.length} photos
-            </Link>
-          )}
-        </div>
-      )}
-
+<div className="hero-single" style={{ position: 'relative', overflow: 'hidden' }}>
+        <img src={heroImage} alt={salon.nom} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      </div>
+      
       {/* ═══════════════ CONTENU PRINCIPAL ═══════════════ */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '30px 20px' }}>
         <div className="salon-content">
