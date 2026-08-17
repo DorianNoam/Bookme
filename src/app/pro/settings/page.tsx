@@ -60,6 +60,7 @@ type Salon = {
   pause_fin?: string;
   latitude?: number;
   longitude?: number;
+  instagram?: string;
 }
 type CatalogueItem = { id: number; categorie: string; nom: string }
 type GalleryImage = { id: number; image_path: string }
@@ -344,6 +345,12 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
   const [editCategorie, setEditCategorie] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
   
+  // États pour l'IA
+  const [scanning, setScanning] = useState(false)
+  const [aiPrestations, setAiPrestations] = useState<any[]>([])
+  const [showAiModal, setShowAiModal] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const [promoId, setPromoId] = useState<number | null>(null)
   const [promoPct, setPromoPct] = useState('')
   const [promoNom, setPromoNom] = useState('') 
@@ -355,6 +362,60 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
 
   function startEdit(s: Service) { setEditingId(s.id); setEditNom(s.nom); setEditDescription(s.description || ''); setEditPrix(String(s.prix)); setEditDuree(String(s.duree)); setEditCategorie(s.categorie_service || CATEGORIES_SERVICES[0]) }
   function cancelEdit() { setEditingId(null); setEditNom(''); setEditDescription(''); setEditPrix(''); setEditDuree(''); setEditCategorie('') }
+
+  // Fonction d'envoi à l'IA
+  async function handleAiFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setScanning(true)
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const res = await fetch('/api/pro/scan-menu', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.success && data.prestations) {
+        setAiPrestations(data.prestations)
+        setShowAiModal(true)
+      } else {
+        alert(data.error || "Erreur lors de l'analyse.")
+      }
+    } catch (err) {
+      alert("Erreur réseau lors de l'envoi du fichier.")
+    }
+    setScanning(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  // Validation et enregistrement dans Supabase
+  async function handleConfirmAiImport() {
+    for (const p of aiPrestations) {
+      try {
+        const res = await fetch('/api/pro/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'add_service',
+            nom: p.nom,
+            description: p.description || '',
+            prix: p.prix,
+            duree: p.duree || 30,
+            categorie_service: p.categorie_service || CATEGORIES_SERVICES[0]
+          })
+        })
+        const data = await res.json()
+        if (data.success) {
+          onAdd(data.service)
+        }
+      } catch (e) {}
+    }
+    setShowAiModal(false)
+    setAiPrestations([])
+  }
 
   async function handlePromoSave(s: Service) {
     const pct = parseInt(promoPct)
@@ -411,10 +472,64 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
         <h3 style={{ fontSize: 18, fontWeight: 800, color: NOIR, margin: 0 }}>Vos prestations</h3>
-        <button onClick={() => setShowForm(!showForm)} style={{ background: showForm ? '#eee' : OR, color: showForm ? NOIR : '#fff', border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{showForm ? 'Annuler' : '+ Ajouter'}</button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <input ref={fileInputRef} type="file" accept="image/*,.pdf,.doc,.docx" onChange={handleAiFileChange} style={{ display: 'none' }} />
+          <button 
+            onClick={() => fileInputRef.current?.click()} 
+            disabled={scanning}
+            style={{ background: '#fff', color: OR, border: `1.5px solid ${OR}`, padding: '10px 16px', borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}
+          >
+            {scanning ? '✨ Analyse par IA...' : '✨ Importer mon menu (IA)'}
+          </button>
+          <button onClick={() => setShowForm(!showForm)} style={{ background: showForm ? '#eee' : OR, color: showForm ? NOIR : '#fff', border: 'none', padding: '10px 20px', borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{showForm ? 'Annuler' : '+ Ajouter'}</button>
+        </div>
       </div>
+
+      {/* MODALE DE PRÉVISUALISATION IA */}
+      {showAiModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: 30, maxWidth: 700, width: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
+            <h3 style={{ fontSize: 20, fontWeight: 900, color: NOIR, marginBottom: 8 }}>✨ Prestations détectées</h3>
+            <p style={{ fontSize: 13, color: '#666', marginBottom: 20 }}>Voici les prestations extraites. Vérifiez-les avant de les valider.</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 25 }}>
+              {aiPrestations.map((p, index) => (
+                <div key={index} style={{ background: BG, padding: 16, borderRadius: 8, border: '1px solid #E0D8CE', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  
+                  <div style={{ flex: '1 1 200px' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Nom</label>
+                    <input type="text" value={p.nom} onChange={e => { const updated = [...aiPrestations]; updated[index].nom = e.target.value; setAiPrestations(updated) }} style={inputStyle} />
+                  </div>
+                  
+                  <div style={{ flex: '1 1 150px' }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Catégorie</label>
+                    <select value={p.categorie_service} onChange={e => { const updated = [...aiPrestations]; updated[index].categorie_service = e.target.value; setAiPrestations(updated) }} style={inputStyle}>
+                      {CATEGORIES_SERVICES.map(c => <option key={c} value={c}>{c}</option>)}
+                      {!CATEGORIES_SERVICES.includes(p.categorie_service) && p.categorie_service && <option value={p.categorie_service}>{p.categorie_service}</option>}
+                    </select>
+                  </div>
+
+                  <div style={{ width: 100 }}>
+                    <label style={{ fontSize: 11, fontWeight: 700, color: '#888', display: 'block', marginBottom: 4 }}>Prix (DA)</label>
+                    <input type="number" value={p.prix} onChange={e => { const updated = [...aiPrestations]; updated[index].prix = Number(e.target.value); setAiPrestations(updated) }} style={{ ...inputStyle, textAlign: 'right' }} />
+                  </div>
+
+                  <button onClick={() => setAiPrestations(aiPrestations.filter((_, i) => i !== index))} style={{ background: '#fee2e2', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 14, padding: '0 12px', borderRadius: 6, fontWeight: 700, marginTop: 20 }}>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowAiModal(false)} style={{ background: '#eee', color: NOIR, border: 'none', padding: '12px 20px', borderRadius: 6, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Annuler</button>
+              <button onClick={handleConfirmAiImport} style={{ background: OR, color: '#fff', border: 'none', padding: '12px 24px', borderRadius: 6, fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif' }}>Valider et importer</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div style={{ background: '#fff', padding: 25, borderRadius: 8, marginBottom: 25, border: `2px solid ${OR}`, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
@@ -874,6 +989,17 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
             <label style={{ ...labelStyle, color: OR }}>Email du compte pro (pour recevoir les notifications)</label>
             <input type="email" value={emailValue} onChange={e => setEmailValue(e.target.value)} placeholder="contact@votre-salondz" style={inputStyle} />
             <p style={{ fontSize: 11, color: '#888', marginTop: 6, margin: 0 }}>C&apos;est sur cette adresse que vous recevrez les confirmations de RDV.</p>
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={labelStyle}>Instagram</label>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: 14, top: 11, color: '#888', fontSize: 14 }}>@</span>
+              <input name="instagram" value={(form as any).instagram || ''} onChange={e => setForm({ ...form, instagram: e.target.value.replace(/[\s@]/g, '') } as any)} placeholder="votre_nom_instagram" style={{ ...inputStyle, paddingLeft: 32 }} />
+            </div>
+            <div style={{ fontSize: 11, color: '#888', marginTop: 6, display: 'flex', alignItems: 'flex-start', gap: 6 }}>
+              <span style={{ background: OR, color: '#fff', borderRadius: '50%', width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, flexShrink: 0, marginTop: 1 }}>i</span>
+              <span>Entrez votre nom d&apos;utilisateur Instagram tel qu&apos;il apparait sur votre profil (ex: <strong>salon_yasmina</strong>), sans espaces ni @.</span>
+            </div>
           </div>
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description</label><textarea name="description" value={form.description || ''} onChange={handleChange} rows={4} style={{ ...inputStyle, resize: 'vertical' }} /></div>
         </div>
