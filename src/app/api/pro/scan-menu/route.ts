@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       ? file.type 
       : (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' })
 
     const prompt = `
       Analyse ce document ou cette image qui contient la liste des prestations d'un salon de beaute/bien-etre en Algerie.
