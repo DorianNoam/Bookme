@@ -160,7 +160,7 @@ export default async function SalonPage({
                 {!moyNote && <span style={{ color: '#bbb', fontSize: 13 }}>Nouveau</span>}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-                <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 900, color: NOIR, margin: 0 }}>{salon.nom}</h1>
+                <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 900, color: NOIR, margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{salon.nom}</h1>
                 <FavoriteButton salonId={salonId} />
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 12, fontSize: 14, color: '#666' }}>
