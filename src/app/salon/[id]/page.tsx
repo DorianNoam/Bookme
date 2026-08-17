@@ -161,7 +161,7 @@ export default async function SalonPage({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                 <h1 style={{ fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: 900, color: NOIR, margin: 0, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{salon.nom}</h1>
-                <FavoriteButton salonId={salonId} />
+               <div style={{ flexShrink: 0 }}><FavoriteButton salonId={salonId} /></div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginTop: 12, fontSize: 14, color: '#666' }}>
                 <span>&#128205; {salon.adresse}, {salon.ville}</span>
