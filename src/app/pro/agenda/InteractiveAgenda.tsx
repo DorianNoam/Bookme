@@ -28,7 +28,7 @@ function formatDateForUrl(d: Date) {
 
 type Props = {
   employes: any[];
-  services: any[]; // Nouvel argument
+  services: any[];
   reservations: any[];
   view: 'day' | 'week' | 'month';
   targetDateStr: string;
@@ -47,7 +47,9 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
   const [selectedDate, setSelectedDate] = useState(targetDateStr.split('T')[0])
   
   const [clientName, setClientName] = useState('')
-  // Nouveaux états pour la liste déroulante des prestations
+  const [clientEmail, setClientEmail] = useState('')
+  const [clientTelephone, setClientTelephone] = useState('')
+  
   const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id || '')
   const [serviceName, setServiceName] = useState(services[0]?.nom || '')
   const [servicePrice, setServicePrice] = useState(services[0]?.prix?.toString() || '0')
@@ -59,7 +61,8 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     setSelectedTime(heure.length === 4 ? `0${heure}` : heure)
     setSelectedDate(dateObj.toISOString().split('T')[0])
     setClientName('')
-    // Réinitialise avec le premier service de la base
+    setClientEmail('')
+    setClientTelephone('')
     setSelectedServiceId(services[0]?.id || '')
     setServiceName(services[0]?.nom || '')
     setServicePrice(services[0]?.prix?.toString() || '0')
@@ -76,7 +79,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     setIsEditModalOpen(true)
   }
 
-  // Gère le changement de prestation dans la modale
   const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const sId = Number(e.target.value)
     setSelectedServiceId(sId)
@@ -98,6 +100,8 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
       body: JSON.stringify({ 
         employe_id: selectedEmploye, 
         client_nom: clientName, 
+        client_email: clientEmail || null,
+        client_telephone: clientTelephone || null,
         service_id: selectedServiceId || null, 
         service_nom: serviceName, 
         service_prix: servicePrice, 
@@ -293,7 +297,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
       {isAddModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ background: '#fff', padding: 32, borderRadius: 12, width: '100%', maxWidth: 450 }}>
-            <h2 style={{ marginBottom: 24, color: NOIR, fontWeight: 900 }}>Bloquer un créneau</h2>
+            <h2 style={{ marginBottom: 24, color: NOIR, fontWeight: 900 }}>Bloquer un creneau</h2>
             <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%' }}>
                 {employes.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
@@ -304,8 +308,14 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               </div>
               <input type="text" placeholder="Nom du client (ou motif)" value={clientName} onChange={e => setClientName(e.target.value)} required style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               
+              {/* EMAIL + TELEPHONE pour les notifications de relance */}
               <div style={{ display: 'flex', gap: 12 }}>
-                {/* MENU DEROULANT DES PRESTATIONS */}
+                <input type="email" placeholder="Email du client (optionnel)" value={clientEmail} onChange={e => setClientEmail(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input type="tel" placeholder="Tel (optionnel)" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+              </div>
+              <p style={{ fontSize: 11, color: '#999', margin: '-8px 0 0 0' }}>Si renseignes, le client recevra un rappel automatique avant son RDV.</p>
+
+              <div style={{ display: 'flex', gap: 12 }}>
                 <select 
                   value={selectedServiceId} 
                   onChange={handleServiceChange} 
@@ -336,7 +346,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
             <h2 style={{ marginBottom: 8, color: NOIR, fontWeight: 900 }}>Modifier le rendez-vous</h2>
             <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>Client : <strong style={{ color: NOIR }}>{activeRdv.client_nom}</strong></p>
             <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Déplacer le créneau</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Deplacer le creneau</label>
               <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%' }}>
                 {employes.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
               </select>
