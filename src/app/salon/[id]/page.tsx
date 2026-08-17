@@ -271,7 +271,7 @@ export default async function SalonPage({
                             <div style={{ fontSize: 11, color: '#aaa' }}>Client verifie</div>
                           </div>
                         </div>
-                        <div style={{ color: OR, fontSize: 14 }}>{'&#9733;'.repeat(avis.note)}{'&#9734;'.repeat(5 - avis.note)}</div>
+                        <div style={{ color: OR, fontSize: 14 }}>{'\u2605'.repeat(avis.note)}{'\u2606'.repeat(5 - avis.note)}</div>
                       </div>
                       {avis.commentaire && <p style={{ color: '#555', fontSize: 14, lineHeight: 1.6, margin: 0 }}>{avis.commentaire}</p>}
                     </div>
