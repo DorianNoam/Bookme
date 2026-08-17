@@ -1,4 +1,5 @@
 'use client';
+import FavoriteButton from '@/components/FavoriteButton'
 import MobileMenu from '@/components/MobileMenu'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useLanguage } from '@/components/LanguageProvider'
@@ -364,7 +365,9 @@ function SearchContent() {
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
-                        <button style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#fff', fontSize: 24, cursor: 'pointer', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>♡</button>
+                        <div style={{ position: 'absolute', top: 12, right: 12 }}>
+  <FavoriteButton salonId={String(salon.id)} />
+</div>
                       </div>
 
                       <div style={{ flex: 1, padding: '20px', minWidth: '50%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
