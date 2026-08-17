@@ -16,6 +16,8 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
+const [scanMessage, setScanMessage] = useState('')
+
 const supabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -351,6 +353,31 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
   const [showAiModal, setShowAiModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+// ← ICI tu ajoutes ces deux blocs :
+const [scanMessage, setScanMessage] = useState('')
+
+useEffect(() => {
+  if (!scanning) return
+  const messages = [
+    'Lecture du document...',
+    'Detection des prestations...',
+    'Extraction des prix...',
+    'Classification par categorie...',
+    'Finalisation...'
+  ]
+  let i = 0
+  setScanMessage(messages[0])
+  const interval = setInterval(() => {
+    i = (i + 1) % messages.length
+    setScanMessage(messages[i])
+  }, 3500)
+  return () => clearInterval(interval)
+}, [scanning])
+
+const [promoId, setPromoId] = useState<number | null>(null)
+
   const [promoId, setPromoId] = useState<number | null>(null)
   const [promoPct, setPromoPct] = useState('')
   const [promoNom, setPromoNom] = useState('') 
@@ -488,6 +515,19 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
       </div>
 
       {/* MODALE DE PRÉVISUALISATION IA */}
+      {/* OVERLAY SPINNER IA */}
+      {scanning && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.85)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 28 }}>
+          <div style={{ width: 56, height: 56, border: '4px solid rgba(184,146,42,0.2)', borderTop: `4px solid ${OR}`, borderRadius: '50%', animation: 'spinIA 1s linear infinite' }} />
+          <div style={{ color: '#fff', fontSize: 18, fontWeight: 800, letterSpacing: 0.5 }}>Analyse en cours</div>
+          <div style={{ color: OR, fontSize: 15, fontWeight: 600, minHeight: 24, transition: 'opacity 0.3s' }}>{scanMessage}</div>
+          <div style={{ color: '#555', fontSize: 12, marginTop: 10 }}>Cela peut prendre jusqu&apos;a 30 secondes</div>
+          <style dangerouslySetInnerHTML={{__html: `@keyframes spinIA { to { transform: rotate(360deg) } }`}} />
+        </div>
+      )}
+
+      {/* MODALE DE PRÉVISUALISATION IA */}
+      {showAiModal && (
       {showAiModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           <div style={{ background: '#fff', borderRadius: 12, padding: 30, maxWidth: 700, width: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
