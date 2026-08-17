@@ -122,7 +122,7 @@ export default async function SalonPage({
           .hero-grid .hero-extra { display: none; }
           .hero-single { height: 280px; }
           .salon-content { grid-template-columns: 1fr; gap: 0; }
-          .salon-sidebar { position: relative; top: 0; order: -1; margin-bottom: 20px; }
+          .salon-sidebar { position: relative; top: 0; order: 1; margin-bottom: 20px; }
           .hide-mobile-flex { display: none !important; }
         }
       `}} />
