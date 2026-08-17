@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { jwtVerify } from 'jose'
 
-// 🌟 LA LIGNE MAGIQUE : Demande à Vercel de ne pas couper avant 60 secondes
+// 🌟 Demande à Vercel de ne pas couper avant 60 secondes
 export const maxDuration = 60;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
@@ -35,12 +35,12 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes)
     const base64Data = buffer.toString('base64')
     
-    // Détection stricte du type MIME pour aider l'IA
     const mimeType = file.type && file.type !== 'application/octet-stream' 
       ? file.type 
       : (file.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    // 🌟 CORRECTION ICI : Utilisation de l'identifiant exact avec "-latest"
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
 
     const prompt = `
       Analyse ce document ou cette image qui contient la liste des prestations d'un salon de beauté/bien-être en Algérie.
@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, prestations })
   } catch (err: any) {
     console.error('Erreur scan IA :', err)
-    // 🌟 On renvoie le VRAI message d'erreur pour savoir exactement ce qui bloque
     return NextResponse.json({ 
       success: false, 
       error: err.message || "Erreur lors de l'analyse du document par l'IA." 
