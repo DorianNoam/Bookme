@@ -22,7 +22,9 @@ export async function POST(req: NextRequest) {
       salon_id: salon.id,
       employe_id: body.employe_id,
       client_nom: body.client_nom,
-      service_id: body.service_id || null, // Enregistrement de l'ID de la prestation
+      client_email: body.client_email || null,
+      client_telephone: body.client_telephone || null,
+      service_id: body.service_id || null,
       service_nom: body.service_nom,
       service_prix: body.service_prix ? Number(body.service_prix) : 0,
       date_rdv: body.date_rdv,
@@ -30,6 +32,7 @@ export async function POST(req: NextRequest) {
     }])
 
     if (error) throw error
+
     return NextResponse.json({ success: true })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
