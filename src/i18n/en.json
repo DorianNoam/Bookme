@@ -32,27 +32,38 @@
     "enregistrer": "Save changes",
     "enregistrement": "Saving..."
   },
-  
+
   "nav": {
-    "coiffure": "Hair Salon",
-    "ongles": "Nail Care",
-    "bienetre": "Massage & Wellness",
+    "coiffure": "Hair & Hair Care",
+    "ongles": "Hand & Foot Nail Care",
+    "regard": "Brows & Lashes",
+    "soinVisage": "Face & Body Care",
+    "makeup": "Make up",
+    "epilation": "Hair Removal",
+    "piercing": "Piercing & Tattoo",
     "barbier": "Barber",
-    "hammam": "Hammam & Spa",
-    "chirurgie": "Aesthetic Surgery",
+    "esthetique": "Aesthetics",
+    "massage": "Massage",
+    "spa": "SPA",
     "connexion": "Login",
     "inscription": "Sign Up",
     "monEspace": "My Account",
+    "espaceClient": "Client Area",
     "espacePro": "Pro Area",
     "retourSalons": "Back to salons"
   },
   "navShort": {
     "coiffure": "Hair",
     "ongles": "Nails",
-    "bienetre": "Wellness",
+    "regard": "Brows",
+    "soinVisage": "Skincare",
+    "makeup": "Make up",
+    "epilation": "Waxing",
+    "piercing": "Piercing",
     "barbier": "Barber",
-    "hammam": "Hammam",
-    "chirurgie": "Surgery"
+    "esthetique": "Aesthetics",
+    "massage": "Massage",
+    "spa": "SPA"
   },
   "hero": {
     "subtitle": "N°1 Platform in Algeria",
@@ -61,103 +72,4 @@
     "prestation": "Service",
     "ville": "City",
     "rechercher": "Search",
-    "placeholder": "Hair, massage, nails...",
-    "toutesVilles": "All cities"
-  },
-  "search": {
-    "selectEtablissement": "Select an establishment",
-    "rechercheEnCours": "Searching...",
-    "meilleursSalons": "The best salons and institutes",
-    "enAlgerie": "in Algeria",
-    "reservation": "Online booking",
-    "autourDeMoi": "Near me",
-    "toutesVilles": "All cities (Algeria)",
-    "toutesPrestations": "All services",
-    "aucunResultat": "No establishment matches your search.",
-    "voirTous": "View all establishments",
-    "prestations": "Services",
-    "carte": "Map",
-    "liste": "List",
-    "ville": "City",
-    "tous": "All",
-    "matin": "MORNING",
-    "apresMidi": "AFTERNOON",
-    "plusInfos": "More information",
-    "prendreRdv": "Book Now",
-    "nouveau": "New",
-    "avis": "reviews"
-  },
-  "salon": {
-    "prestations": "Services",
-    "avis": "Reviews",
-    "informations": "Information",
-    "offresSpeciales": "SPECIAL OFFERS",
-    "reserver": "Book",
-    "choisir": "Select",
-    "ferme": "Closed on",
-    "aPropos": "About the salon",
-    "horaires": "Hours & Access",
-    "adresse": "Address",
-    "telephone": "Phone",
-    "fermeture": "Closing",
-    "instagram": "Instagram"
-  },
-  "booking": {
-    "confirmation": "Appointment confirmed!",
-    "prixSurPlace": "Price to pay on site",
-    "mesRdv": "My appointments"
-  },
-  "auth": {
-    "bonRetour": "Welcome back!",
-    "connectezVous": "Log in to manage your bookings.",
-    "email": "Email",
-    "motDePasse": "Password",
-    "seConnecter": "Log in",
-    "mdpOublie": "Forgot password?",
-    "pasDeCompte": "No account yet?",
-    "inscrivezVous": "Sign up",
-    "creerCompte": "Create a client account",
-    "rejoignez": "Join Bookmedz to book your beauty and wellness services.",
-    "prenom": "First name",
-    "nom": "Last name",
-    "telephone": "Phone",
-    "inscrire": "Sign up",
-    "creation": "Creating...",
-    "dejaCompte": "Already have an account?",
-    "connectezVousLink": "Log in"
-  },
-  "common": {
-    "chargement": "Loading...",
-    "da": "DA",
-    "min": "min",
-    "jours": ["", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-  },
-  "features": {
-    "title1": "24/7",
-    "desc1": "Book anytime, anywhere in Algeria.",
-    "title2": "Instant confirmation",
-    "desc2": "Your slot is locked instantly, no phone call needed.",
-    "title3": "Verified reviews",
-    "desc3": "Only clients who had an actual appointment can leave a review."
-  },
-  "carousel": {
-    "subtitle": "Selected for you",
-    "title": "Discover our Categories",
-    "voirEtablissements": "View establishments",
-    "slide1Title": "The art of the cut",
-    "slide1Desc": "Looking for a change or a simple refresh? Our hairstylists master all techniques: balayage, ombre, Brazilian blowout...",
-    "slide2Title": "Perfect hands",
-    "slide2Desc": "Polish, gel, nail art or pedicure. Find the ideal specialist for flawless nails.",
-    "slide3Title": "Total relaxation",
-    "slide3Desc": "Scrub, massage and traditional treatments. Treat yourself to a true wellness experience in the best hammams.",
-    "slide4Title": "Trusted professionals",
-    "slide4Desc": "Consultations and procedures performed by qualified doctors. Find the right clinic for you."
-  },
-  "cta": {
-    "subtitle": "Partner Area",
-    "title": "Are you a beauty professional?",
-    "desc": "Join Bookmedz Pro to digitalize your schedule, eliminate no-shows and grow your clientele across Algeria.",
-    "button": "Discover our Pro offer"
-  },
-  "footer": "Bookmedz.com — Beauty at your fingertips in Algeria"
-}
+    "placeholder": "Hair, massage,
