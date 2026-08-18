@@ -137,8 +137,7 @@ export default function HomePage() {
           overflowX: 'auto',
           alignItems: 'center',
           WebkitOverflowScrolling: 'touch',
-          msOverflowStyle: 'none',
-          scrollbarWidth: 'none'
+        
         }}>
           <button onClick={() => router.push('/search')} style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', fontFamily: 'Inter, sans-serif' }}>{t.search.tous}</button>
           {CATEGORIES.map(cat => (
