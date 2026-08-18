@@ -20,12 +20,24 @@ interface Rdv {
 }
 
 function formatPhoneForWhatsApp(phone: string): string {
-  // Nettoyer le numero
   let cleaned = phone.replace(/[\s\-\.\(\)]/g, '')
-  // +213 → 213
-  if (cleaned.startsWith('+')) cleaned = cleaned.slice(1)
-  // 0 → 213 (Algerie)
-  if (cleaned.startsWith('0')) cleaned = '213' + cleaned.slice(1)
+  // Deja au format international avec + → on enleve juste le +
+  if (cleaned.startsWith('+')) return cleaned.slice(1)
+  // Format 00XXX → on enleve les 00
+  if (cleaned.startsWith('00')) return cleaned.slice(2)
+  // Numeros locaux commencant par 0 → detection du pays par pattern
+  if (cleaned.startsWith('0') && cleaned.length >= 9) {
+    const afterZero = cleaned.slice(1)
+    // Algerie : 05/06/07 + 8 chiffres = 10 chiffres total
+    if (/^[567]\d{8}$/.test(afterZero)) return '213' + afterZero
+    // France : 06/07/01/02/03/04/05/09 + 8 chiffres = 10 chiffres total
+    if (/^[1-9]\d{8}$/.test(afterZero) && cleaned.length === 10) return '33' + afterZero
+    // Tunisie : 0 + 8 chiffres = 9 chiffres total
+    if (cleaned.length === 9) return '216' + afterZero
+    // Maroc : 06/07/05 + 8 chiffres = 10 chiffres total
+    return '212' + afterZero
+  }
+  // Deja un format international sans + ni 00
   return cleaned
 }
 
