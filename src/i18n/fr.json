@@ -12,7 +12,7 @@
     "succes": "Votre message a été envoyé avec succès ! Nous vous répondrons très vite.",
     "erreur": "Une erreur est survenue lors de l'envoi."
   },
-  
+
   "dashboard": {
     "chargement": "Chargement de votre espace...",
     "nouvelleReservation": "Nouvelle réservation",
@@ -32,27 +32,38 @@
     "enregistrer": "Enregistrer les modifications",
     "enregistrement": "Enregistrement..."
   },
-  
+
   "nav": {
-    "coiffure": "Coiffure",
-    "ongles": "Beauté des ongles",
-    "bienetre": "Massage et bien-être",
+    "coiffure": "Coiffure & soin cheveux",
+    "ongles": "Onglerie Main & pieds",
+    "regard": "Beauté du regard",
+    "soinVisage": "Soin visage & corps",
+    "makeup": "Make up",
+    "epilation": "Épilation",
+    "piercing": "Piercing et tatouage",
     "barbier": "Barbier",
-    "hammam": "Hammam & Spa",
-    "chirurgie": "Chirurgie esthétique",
+    "esthetique": "Esthétique",
+    "massage": "Massage",
+    "spa": "SPA",
     "connexion": "Connexion",
     "inscription": "Inscription",
     "monEspace": "Mon espace",
+    "espaceClient": "Espace Client",
     "espacePro": "Espace Pro",
     "retourSalons": "Retour aux salons"
   },
   "navShort": {
     "coiffure": "Coiffure",
     "ongles": "Ongles",
-    "bienetre": "Bien-être",
+    "regard": "Regard",
+    "soinVisage": "Soins",
+    "makeup": "Make up",
+    "epilation": "Épilation",
+    "piercing": "Piercing",
     "barbier": "Barbier",
-    "hammam": "Hammam",
-    "chirurgie": "Chirurgie"
+    "esthetique": "Esthétique",
+    "massage": "Massage",
+    "spa": "SPA"
   },
   "hero": {
     "subtitle": "Plateforme N°1 en Algérie",
@@ -108,56 +119,4 @@
     "mesRdv": "Mes rendez-vous"
   },
   "auth": {
-    "bonRetour": "Bon retour !",
-    "connectezVous": "Connectez-vous pour gérer vos réservations.",
-    "email": "Email",
-    "motDePasse": "Mot de passe",
-    "seConnecter": "Se connecter",
-    "mdpOublie": "Mot de passe oublié ?",
-    "pasDeCompte": "Pas encore de compte ?",
-    "inscrivezVous": "Inscrivez-vous",
-    "creerCompte": "Créer un compte client",
-    "rejoignez": "Rejoignez Bookmedz pour réserver vos prestations beauté et bien-être.",
-    "prenom": "Prénom",
-    "nom": "Nom",
-    "telephone": "Téléphone",
-    "inscrire": "M'inscrire",
-    "creation": "Création en cours...",
-    "dejaCompte": "Vous avez déjà un compte ?",
-    "connectezVousLink": "Connectez-vous"
-  },
-  "common": {
-    "chargement": "Chargement...",
-    "da": "DA",
-    "min": "min",
-    "jours": ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-  },
-  "features": {
-    "title1": "24h/24, 7j/7",
-    "desc1": "Réservez à n'importe quel moment, où que vous soyez en Algérie.",
-    "title2": "Confirmation immédiate",
-    "desc2": "Votre créneau est bloqué instantanément, sans appel téléphonique.",
-    "title3": "Avis vérifiés",
-    "desc3": "Seuls les clients ayant eu un rendez-vous effectif peuvent noter."
-  },
-  "carousel": {
-    "subtitle": "Sélectionné pour vous",
-    "title": "Découvrez nos Univers",
-    "voirEtablissements": "Voir les établissements",
-    "slide1Title": "L'art de la coupe",
-    "slide1Desc": "Envie d'un changement ou d'un simple rafraîchissement ? Nos coiffeurs maîtrisent toutes les techniques : balayage, ombré hair, lissage brésilien...",
-    "slide2Title": "Des mains parfaites",
-    "slide2Desc": "Pose de vernis, gel, nail art ou beauté des pieds. Trouvez la spécialiste idéale pour des ongles impeccables.",
-    "slide3Title": "Détente absolue",
-    "slide3Desc": "Gommage, massage et soins traditionnels. Offrez-vous une vraie parenthèse de bien-être dans les meilleurs hammams.",
-    "slide4Title": "Des professionnels de confiance",
-    "slide4Desc": "Consultations et interventions réalisées par des médecins qualifiés. Trouvez la clinique qu'il vous faut."
-  },
-  "cta": {
-    "subtitle": "Espace Partenaire",
-    "title": "Vous êtes un professionnel de la beauté ?",
-    "desc": "Rejoignez Bookmedz Pro pour digitaliser votre agenda, éliminer les no-shows et développer votre clientèle à travers toute l'Algérie.",
-    "button": "Découvrir notre offre Pro"
-  },
-  "footer": "Bookmedz.com — La beauté à portée de clic en Algérie"
-}
+    "bonRetour": "Bon
