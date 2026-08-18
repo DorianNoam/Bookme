@@ -276,7 +276,7 @@ export default async function ProDashboardPage() {
 
           {/* CA PAR JOUR */}
           <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 16, marginTop: 0 }}>Activite par jour (ce mois)</h3>
+            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 16, marginTop: 0 }}>Top jours du mois (CA)</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {JOURS.map((jour, i) => {
                 const pct = maxCaDow > 0 ? (caByDow[i] / maxCaDow) * 100 : 0
