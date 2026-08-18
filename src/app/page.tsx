@@ -35,12 +35,12 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const SLIDES = [
-    { cat: 'Coiffure & soin cheveux', title: t.carousel.slide1Title, desc: t.carousel.slide1Desc, img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=' + encodeURIComponent('Coiffure & soin cheveux') },
-    { cat: 'Onglerie Main & pieds', title: t.carousel.slide2Title, desc: t.carousel.slide2Desc, img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800', link: '/search?q=' + encodeURIComponent('Onglerie Main & pieds') },
-    { cat: 'Soin visage & corps', title: t.carousel.slide3Title, desc: t.carousel.slide3Desc, img: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800', link: '/search?q=' + encodeURIComponent('Soin visage & corps') },
-    { cat: 'Barbier', title: t.carousel.slide4Title, desc: t.carousel.slide4Desc, img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800', link: '/search?q=Barbier' },
-    { cat: 'Massage', title: t.carousel.slide5Title, desc: t.carousel.slide5Desc, img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=Massage' },
-    { cat: 'SPA', title: t.carousel.slide6Title, desc: t.carousel.slide6Desc, img: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800', link: '/search?q=SPA' },
+    { cat: t.carousel.slide1Cat, title: t.carousel.slide1Title, desc: t.carousel.slide1Desc, img: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800', link: '/search?q=' + encodeURIComponent('Coiffure & soin cheveux') },
+    { cat: t.carousel.slide2Cat, title: t.carousel.slide2Title, desc: t.carousel.slide2Desc, img: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800', link: '/search?q=' + encodeURIComponent('Onglerie Main & pieds') },
+    { cat: t.carousel.slide3Cat, title: t.carousel.slide3Title, desc: t.carousel.slide3Desc, img: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800', link: '/search?q=' + encodeURIComponent('Soin visage & corps') },
+    { cat: t.carousel.slide4Cat, title: t.carousel.slide4Title, desc: t.carousel.slide4Desc, img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800', link: '/search?q=Barbier' },
+    { cat: t.carousel.slide5Cat, title: t.carousel.slide5Title, desc: t.carousel.slide5Desc, img: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800', link: '/search?q=Massage' },
+    { cat: t.carousel.slide6Cat, title: t.carousel.slide6Title, desc: t.carousel.slide6Desc, img: 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800', link: '/search?q=SPA' },
   ]
 
   const current = SLIDES[slide]
