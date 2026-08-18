@@ -8,14 +8,13 @@ import { jwtVerify } from 'jose'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
+import DashboardCharts from './DashboardCharts'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
-const MOIS_LABELS = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec']
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-const PIE_COLORS = ['#B8922A', '#0A0A0A', '#d4a83a', '#888', '#E0D8CE', '#555', '#c4a35a', '#aaa', '#666', '#ddd']
 
 export default async function ProDashboardPage() {
   // 1. Auth
@@ -58,7 +57,7 @@ export default async function ProDashboardPage() {
     )
   }
 
-  // 3. Calculer les plages de dates
+  // 3. Plages de dates
   const now = new Date()
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString()
@@ -115,46 +114,55 @@ export default async function ProDashboardPage() {
   })
   const maxCaDow = Math.max(...caByDow, 1)
 
-  // 7. CA annuel par mois (pour le graphique en barres)
+  // 7. CA annuel par mois (pour le graphique interactif)
   const yearStart = new Date(now.getFullYear(), 0, 1).toISOString()
   const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59).toISOString()
 
-  const { data: yearResas } = await supabase
+  const { data: yearResasDetailed } = await supabase
     .from('reservations')
-    .select('service_prix, date_rdv, statut')
+    .select('service_nom, service_prix, date_rdv, statut')
     .eq('salon_id', salon.id)
     .gte('date_rdv', yearStart)
     .lte('date_rdv', yearEnd)
     .neq('statut', 'annule')
 
-  const caByMonth: number[] = Array(12).fill(0)
-  ;(yearResas || []).forEach(r => {
+  // Agreger par mois avec details des services
+  type MonthData = { ca: number; rdvCount: number; topServices: { name: string; count: number; revenue: number }[] }
+  const monthlyData: MonthData[] = Array.from({ length: 12 }, () => ({ ca: 0, rdvCount: 0, topServices: [] }))
+  const monthServiceMap: Record<number, Record<string, { count: number; revenue: number }>> = {}
+
+  ;(yearResasDetailed || []).forEach(r => {
     const month = new Date(r.date_rdv).getMonth()
-    caByMonth[month] += r.service_prix || 0
+    monthlyData[month].ca += r.service_prix || 0
+    monthlyData[month].rdvCount++
+    if (!monthServiceMap[month]) monthServiceMap[month] = {}
+    const name = r.service_nom || 'Inconnu'
+    if (!monthServiceMap[month][name]) monthServiceMap[month][name] = { count: 0, revenue: 0 }
+    monthServiceMap[month][name].count++
+    monthServiceMap[month][name].revenue += r.service_prix || 0
   })
-  const maxCaMonth = Math.max(...caByMonth, 1)
 
-  // 8. Donnees camembert prestations (mois en cours)
-  const allServices = Object.entries(serviceCount)
-    .sort(([, a], [, b]) => b.count - a.count)
-  const totalServicesCount = allServices.reduce((s, [, d]) => s + d.count, 0)
+  for (let m = 0; m < 12; m++) {
+    if (monthServiceMap[m]) {
+      monthlyData[m].topServices = Object.entries(monthServiceMap[m])
+        .sort(([, a], [, b]) => b.count - a.count)
+        .slice(0, 5)
+        .map(([name, data]) => ({ name, ...data }))
+    }
+  }
 
-  // Calculer les arcs du camembert
-  const pieSlices: { name: string; count: number; pct: number; color: string; startAngle: number; endAngle: number }[] = []
-  let currentAngle = 0
-  allServices.forEach(([name, data], i) => {
-    const pct = totalServicesCount > 0 ? (data.count / totalServicesCount) * 100 : 0
-    const angle = (pct / 100) * 360
-    pieSlices.push({
-      name,
-      count: data.count,
-      pct: Math.round(pct),
-      color: PIE_COLORS[i % PIE_COLORS.length],
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle,
-    })
-    currentAngle += angle
-  })
+  const totalCaYear = monthlyData.reduce((s, m) => s + m.ca, 0)
+
+  // 8. Donnees camembert (mois en cours)
+  const allServicesSorted = Object.entries(serviceCount).sort(([, a], [, b]) => b.count - a.count)
+  const totalServicesCount = allServicesSorted.reduce((s, [, d]) => s + d.count, 0)
+
+  const servicesData = allServicesSorted.map(([name, data]) => ({
+    name,
+    count: data.count,
+    revenue: data.revenue,
+    pct: totalServicesCount > 0 ? Math.round((data.count / totalServicesCount) * 100) : 0,
+  }))
 
   // 9. Stats avis
   const { data: avis } = await supabase
@@ -250,12 +258,8 @@ export default async function ProDashboardPage() {
                         {i + 1}
                       </span>
                       <span style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        color: NOIR,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
+                        fontSize: 13, fontWeight: 600, color: NOIR,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                       }}>
                         {name}
                       </span>
@@ -305,137 +309,15 @@ export default async function ProDashboardPage() {
           </div>
         </div>
 
-        {/* GRAPHIQUE CA ANNUEL + CAMEMBERT PRESTATIONS */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
-          gap: 16,
-          marginBottom: 24
-        }}>
-
-          {/* CA ANNUEL EN BARRES */}
-          <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 4, marginTop: 0 }}>
-              Chiffre d{"'"}affaires {now.getFullYear()}
-            </h3>
-            <p style={{ fontSize: 12, color: '#888', marginTop: 0, marginBottom: 20 }}>
-              Total : <strong style={{ color: NOIR }}>{caByMonth.reduce((a, b) => a + b, 0).toLocaleString()} DA</strong>
-            </p>
-
-            {caByMonth.every(v => v === 0) ? (
-              <p style={{ color: '#aaa', fontSize: 14, textAlign: 'center', padding: '30px 0' }}>Aucune donnee pour cette annee.</p>
-            ) : (
-              <div>
-                {/* Barres */}
-                <svg viewBox="0 0 480 200" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
-                  {caByMonth.map((ca, i) => {
-                    const barWidth = 28
-                    const gap = (480 - 12 * barWidth) / 13
-                    const x = gap + i * (barWidth + gap)
-                    const maxH = 150
-                    const h = maxCaMonth > 0 ? (ca / maxCaMonth) * maxH : 0
-                    const y = 10 + maxH - h
-                    const isCurrentMonth = i === now.getMonth()
-
-                    return (
-                      <g key={i}>
-                        {/* Barre de fond */}
-                        <rect x={x} y={10} width={barWidth} height={maxH} rx={4} fill="#f5f5f5" />
-                        {/* Barre de valeur */}
-                        {h > 0 && (
-                          <rect x={x} y={y} width={barWidth} height={h} rx={4}
-                            fill={isCurrentMonth ? OR : NOIR}
-                            opacity={isCurrentMonth ? 1 : 0.7}
-                          />
-                        )}
-                        {/* Valeur au-dessus */}
-                        {ca > 0 && (
-                          <text x={x + barWidth / 2} y={y - 4} textAnchor="middle"
-                            fontSize="7" fontWeight="700" fill={isCurrentMonth ? OR : '#888'}
-                          >
-                            {ca >= 1000 ? `${Math.round(ca / 1000)}k` : ca}
-                          </text>
-                        )}
-                        {/* Label mois */}
-                        <text x={x + barWidth / 2} y={175} textAnchor="middle"
-                          fontSize="8" fontWeight={isCurrentMonth ? '800' : '600'}
-                          fill={isCurrentMonth ? OR : '#888'}
-                        >
-                          {MOIS_LABELS[i]}
-                        </text>
-                        {/* Point sous le mois courant */}
-                        {isCurrentMonth && (
-                          <circle cx={x + barWidth / 2} cy={182} r={2} fill={OR} />
-                        )}
-                      </g>
-                    )
-                  })}
-                </svg>
-              </div>
-            )}
-          </div>
-
-          {/* CAMEMBERT PRESTATIONS */}
-          <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 4, marginTop: 0 }}>Repartition des prestations</h3>
-            <p style={{ fontSize: 12, color: '#888', marginTop: 0, marginBottom: 20 }}>
-              {totalServicesCount} prestation{totalServicesCount > 1 ? 's' : ''} ce mois
-            </p>
-
-            {pieSlices.length === 0 ? (
-              <p style={{ color: '#aaa', fontSize: 14, textAlign: 'center', padding: '30px 0' }}>Aucune prestation ce mois-ci.</p>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
-                {/* SVG Camembert */}
-                <svg viewBox="0 0 200 200" style={{ width: 160, height: 160, flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
-                  {pieSlices.length === 1 ? (
-                    <circle cx={100} cy={100} r={90} fill={pieSlices[0].color} />
-                  ) : (
-                    pieSlices.map((slice, i) => {
-                      const path = describeArc(100, 100, 90, slice.startAngle, slice.endAngle)
-                      return <path key={i} d={path} fill={slice.color} stroke="#fff" strokeWidth={2} />
-                    })
-                  )}
-                  {/* Centre blanc pour effet donut */}
-                  <circle cx={100} cy={100} r={50} fill="#fff" />
-                  <text x={100} y={96} textAnchor="middle" fontSize="18" fontWeight="900" fill={NOIR}>
-                    {totalServicesCount}
-                  </text>
-                  <text x={100} y={112} textAnchor="middle" fontSize="9" fontWeight="600" fill="#888">
-                    RDV
-                  </text>
-                </svg>
-
-                {/* Legende */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 140px', minWidth: 0 }}>
-                  {pieSlices.slice(0, 6).map((slice, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{
-                        width: 10, height: 10, borderRadius: 2, flexShrink: 0,
-                        background: slice.color,
-                      }} />
-                      <span style={{
-                        fontSize: 12, color: NOIR, fontWeight: 600,
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        flex: 1,
-                      }}>
-                        {slice.name}
-                      </span>
-                      <span style={{ fontSize: 11, color: '#888', fontWeight: 700, flexShrink: 0 }}>
-                        {slice.pct}%
-                      </span>
-                    </div>
-                  ))}
-                  {pieSlices.length > 6 && (
-                    <span style={{ fontSize: 11, color: '#aaa', fontStyle: 'italic' }}>
-                      +{pieSlices.length - 6} autre{pieSlices.length - 6 > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* GRAPHIQUES INTERACTIFS : CA ANNUEL + CAMEMBERT */}
+        <DashboardCharts
+          monthlyData={monthlyData}
+          servicesData={servicesData}
+          currentMonth={now.getMonth()}
+          currentYear={now.getFullYear()}
+          totalCaYear={totalCaYear}
+          totalServicesMonth={totalServicesCount}
+        />
 
       </main>
     </div>
@@ -444,105 +326,31 @@ export default async function ProDashboardPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// Fonction SVG pour dessiner un arc de camembert
-// ═══════════════════════════════════════════════════════════════════
-
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
-}
-
-function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
-  // Eviter un arc complet (360) qui ne se dessine pas
-  if (endAngle - startAngle >= 359.99) {
-    endAngle = startAngle + 359.99
-  }
-  const start = polarToCartesian(cx, cy, r, endAngle)
-  const end = polarToCartesian(cx, cy, r, startAngle)
-  const largeArc = endAngle - startAngle > 180 ? 1 : 0
-  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`
-}
-
-// ═══════════════════════════════════════════════════════════════════
 // Composants locaux
 // ═══════════════════════════════════════════════════════════════════
 
 function Header({ pro, activePage }: { pro: any; activePage: string }) {
   return (
-    <header style={{
-      background: NOIR,
-      color: '#fff',
-      padding: '12px 16px'
-    }}>
+    <header style={{ background: NOIR, color: '#fff', padding: '12px 16px' }}>
       <style dangerouslySetInnerHTML={{__html: `
-        .pro-header-container {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-        .pro-header-nav {
-          display: flex;
-          gap: 20px;
-          align-items: center;
-        }
+        .pro-header-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; }
+        .pro-header-nav { display: flex; gap: 20px; align-items: center; }
         @media (max-width: 768px) {
-          .pro-header-container {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 12px;
-          }
-          .pro-header-nav {
-            width: 100%;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            gap: 24px;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-          .pro-header-nav::-webkit-scrollbar {
-            display: none;
-          }
+          .pro-header-container { flex-direction: column; align-items: flex-start; gap: 12px; }
+          .pro-header-nav { width: 100%; overflow-x: auto; padding-bottom: 4px; gap: 24px; -ms-overflow-style: none; scrollbar-width: none; }
+          .pro-header-nav::-webkit-scrollbar { display: none; }
         }
       `}} />
-      
       <div className="pro-header-container">
         <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: 900, flexShrink: 0 }}>
           Bookme<span style={{ color: OR }}>dz</span>
           <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
         </div>
         <nav className="pro-header-nav">
-          <Link href="/pro/dashboard" style={{
-            color: activePage === 'dashboard' ? OR : '#aaa',
-            fontSize: 'clamp(12px, 2vw, 14px)',
-            textDecoration: 'none',
-            fontWeight: activePage === 'dashboard' ? 700 : 600,
-            whiteSpace: 'nowrap'
-          }}>
-            Dashboard
-          </Link>
-          <Link href="/pro/agenda" style={{
-            color: activePage === 'agenda' ? OR : '#aaa',
-            fontSize: 'clamp(12px, 2vw, 14px)',
-            textDecoration: 'none',
-            fontWeight: activePage === 'agenda' ? 700 : 600,
-            whiteSpace: 'nowrap'
-          }}>
-            Agenda
-          </Link>
-          <Link href="/pro/settings" style={{
-            color: activePage === 'settings' ? OR : '#aaa',
-            fontSize: 'clamp(12px, 2vw, 14px)',
-            textDecoration: 'none',
-            fontWeight: activePage === 'settings' ? 700 : 600,
-            whiteSpace: 'nowrap'
-          }}>
-            Parametres
-          </Link>
-          <div style={{ whiteSpace: 'nowrap' }}>
-            <LogoutButton />
-          </div>
+          <Link href="/pro/dashboard" style={{ color: activePage === 'dashboard' ? OR : '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: activePage === 'dashboard' ? 700 : 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
+          <Link href="/pro/agenda" style={{ color: activePage === 'agenda' ? OR : '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: activePage === 'agenda' ? 700 : 600, whiteSpace: 'nowrap' }}>Agenda</Link>
+          <Link href="/pro/settings" style={{ color: activePage === 'settings' ? OR : '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: activePage === 'settings' ? 700 : 600, whiteSpace: 'nowrap' }}>Parametres</Link>
+          <div style={{ whiteSpace: 'nowrap' }}><LogoutButton /></div>
         </nav>
       </div>
     </header>
