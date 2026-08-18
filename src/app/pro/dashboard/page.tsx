@@ -8,7 +8,7 @@ import { jwtVerify } from 'jose'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
-import CancelRdvButton from '@/app/pro/components/CancelRdvButton'
+import ProchainRdvSection from './ProchainRdvSection'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
@@ -74,7 +74,7 @@ export default async function ProDashboardPage() {
   // 4. Fetch toutes les reservations du mois
   const { data: allResas } = await supabase
     .from('reservations')
-    .select('*')
+    .select('id, salon_id, user_id, service_id, employe_id, service_nom, service_prix, client_nom, client_prenom, client_email, client_telephone, date_rdv, statut')
     .eq('salon_id', salon.id)
     .gte('date_rdv', monthStart)
     .lte('date_rdv', monthEnd)
@@ -113,15 +113,15 @@ export default async function ProDashboardPage() {
   })
   const maxCaDow = Math.max(...caByDow, 1)
 
-  // 7. Prochains RDV
+  // 7. Prochains RDV (10 au lieu de 8, avec colonnes explicites)
   const { data: upcoming } = await supabase
     .from('reservations')
-    .select('*, employes(nom)')
+    .select('id, service_nom, service_prix, client_nom, client_prenom, client_email, client_telephone, date_rdv, statut, employes(nom)')
     .eq('salon_id', salon.id)
     .eq('statut', 'confirme')
     .gte('date_rdv', now.toISOString())
     .order('date_rdv', { ascending: true })
-    .limit(8)
+    .limit(10)
 
   // 8. Stats avis
   const { data: avis } = await supabase
@@ -165,7 +165,7 @@ export default async function ProDashboardPage() {
             whiteSpace: 'nowrap',
             flexShrink: 0
           }}>
-            Voir l'agenda {'→'}
+            Voir l{"'"}agenda {'→'}
           </Link>
         </div>
 
@@ -274,83 +274,14 @@ export default async function ProDashboardPage() {
           </div>
         </div>
 
-        {/* PROCHAINS RDV */}
+        {/* PROCHAINS RDV avec fiche client */}
         <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, margin: 0 }}>Prochains rendez-vous</h3>
             <Link href="/pro/agenda" style={{ fontSize: 13, color: OR, fontWeight: 700, textDecoration: 'none' }}>Voir tout {'→'}</Link>
           </div>
 
-          {(!upcoming || upcoming.length === 0) ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: '#999', fontSize: 14 }}>
-              Aucun rendez-vous a venir.
-            </div>
-          ) : (
-            <div>
-              {upcoming.map((rdv: any, i: number) => {
-                const rdvDate = new Date(rdv.date_rdv)
-                const isToday = rdvDate.toDateString() === now.toDateString()
-                return (
-                  <div key={rdv.id} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '12px 0',
-                    borderBottom: i < upcoming.length - 1 ? '1px solid #f5f5f5' : 'none',
-                    gap: 10,
-                    flexWrap: 'wrap'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
-                      {/* Heure */}
-                      <div style={{
-                        width: 44, height: 44, borderRadius: 8,
-                        background: isToday ? OR : '#f5f5f5',
-                        color: isToday ? '#fff' : NOIR,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0
-                      }}>
-                        <div style={{ fontSize: 14, fontWeight: 900, lineHeight: 1 }}>
-                          {String(rdvDate.getHours()).padStart(2, '0')}h{String(rdvDate.getMinutes()).padStart(2, '0')}
-                        </div>
-                      </div>
-                      {/* Infos */}
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{
-                          fontWeight: 700,
-                          fontSize: 13,
-                          color: NOIR,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {rdv.client_nom}
-                        </div>
-                        <div style={{
-                          fontSize: 12,
-                          color: '#888',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {rdv.service_nom}
-                          {rdv.employes?.nom && <span style={{ color: '#bbb' }}> — {rdv.employes.nom}</span>}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: OR }}>{rdv.service_prix?.toLocaleString()} DA</div>
-                        <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>
-                          {isToday ? "Aujourd'hui" : rdvDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                        </div>
-                      </div>
-                      <CancelRdvButton id={rdv.id} />
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <ProchainRdvSection upcoming={upcoming || []} salonName={salon.nom} />
         </div>
 
 </main>
@@ -395,11 +326,11 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
             overflow-x: auto;
             padding-bottom: 4px;
             gap: 24px;
-            -ms-overflow-style: none;  /* Cache la scrollbar sur IE/Edge */
-            scrollbar-width: none;  /* Cache la scrollbar sur Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
           }
           .pro-header-nav::-webkit-scrollbar {
-            display: none; /* Cache la scrollbar sur Chrome/Safari */
+            display: none;
           }
         }
       `}} />
