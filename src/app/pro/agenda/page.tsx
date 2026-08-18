@@ -199,7 +199,7 @@ export default async function ProAgendaPage({
             )}
             <Link href="/pro/agenda" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Agenda</Link>
             {role !== 'employe' && (
-              <Link href="/pro/settings" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Param.</Link>
+              <Link href="/pro/settings" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Parametres</Link>
             )}
             <div style={{ whiteSpace: 'nowrap' }}>
               <LogoutButton />
