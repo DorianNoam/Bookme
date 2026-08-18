@@ -70,16 +70,9 @@ export default function HomePage() {
 
           {/* Actions desktop */}
           <div className="hide-mobile" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <LanguageSwitcher />
-            {isLoggedIn ? (
-              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>{t.nav.monEspace}</Link>
-            ) : (
-              <>
-                <Link href="/login" style={{ color: '#444', fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>{t.nav.connexion}</Link>
-                <Link href="/register" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>{t.nav.inscription}</Link>
-              </>
-            )}
-            <Link href="/pro" style={{ border: '1px solid ' + OR, color: OR, padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>{t.nav.espacePro}</Link>
+                       <LanguageSwitcher />
+            <Link href={isLoggedIn ? '/dashboard' : '/login'} style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Espace Client</Link>
+            <Link href="/pro" style={{ border: '1px solid ' + OR, color: OR, padding: '8px 16px', borderRadius: 4, fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>Espace Pro</Link>
           </div>
 
           {/* Burger mobile */}
