@@ -267,19 +267,10 @@ function SearchContent() {
             </button>
           </form>
 
-          <div className="hide-mobile" style={{ display: 'flex', gap: 8, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
+              <div className="hide-mobile" style={{ display: 'flex', gap: 8, whiteSpace: 'nowrap', alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
             <LanguageSwitcher />
-            {isLoggedIn ? (
-              <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>{t.nav.monEspace}</Link>
-            ) : (
-              <>
-                <Link href="/login" style={{ color: '#555', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>{t.nav.connexion}</Link>
-                <Link href="/login" style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>{t.nav.monEspace}</Link>
-              </>
-            )}
-            <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none', border: `1.5px solid ${OR}` }}>
-              {t.nav.espacePro}
-            </Link>
+            <Link href={isLoggedIn ? '/dashboard' : '/login'} style={{ background: NOIR, color: '#fff', padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Espace Client</Link>
+            <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: '8px 16px', borderRadius: 4, fontSize: 13, fontWeight: 700, textDecoration: 'none', border: `1.5px solid ${OR}` }}>Espace Pro</Link>
           </div>
 
           <div className="hide-desktop" style={{ marginLeft: 'auto' }}>
