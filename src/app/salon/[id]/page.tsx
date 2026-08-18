@@ -132,9 +132,8 @@ export default async function SalonPage({
         <Link href="/search" style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: 900, color: NOIR, textDecoration: 'none', flexShrink: 0 }}>
           Bookme<span style={{ color: OR }}>dz</span>
         </Link>
-        <Link href="/search" className="hide-mobile" style={{ color: '#888', fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>&larr; Retour aux salons</Link>
-        <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Mon espace</Link>
+              <div className="hide-mobile" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <Link href="/dashboard" style={{ background: NOIR, color: '#fff', padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Espace Client</Link>
           <Link href="/pro/login" style={{ background: '#fff', color: NOIR, padding: '8px 20px', borderRadius: 6, fontWeight: 700, fontSize: 14, textDecoration: 'none', border: `1.5px solid ${OR}` }}>Espace Pro</Link>
         </div>
         <div className="hide-desktop" style={{ marginLeft: 'auto' }}><MobileMenu /></div>
