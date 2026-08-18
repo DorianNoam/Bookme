@@ -8,11 +8,14 @@ import { jwtVerify } from 'jose'
 import { createClient } from '@supabase/supabase-js'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
-import ProchainRdvSection from './ProchainRdvSection'
 
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
+
+const MOIS_LABELS = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aout', 'Sep', 'Oct', 'Nov', 'Dec']
+const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+const PIE_COLORS = ['#B8922A', '#0A0A0A', '#d4a83a', '#888', '#E0D8CE', '#555', '#c4a35a', '#aaa', '#666', '#ddd']
 
 export default async function ProDashboardPage() {
   // 1. Auth
@@ -71,7 +74,7 @@ export default async function ProDashboardPage() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
 
-  // 4. Fetch toutes les reservations du mois
+  // 4. Fetch reservations du mois (pour KPIs, top services, CA par jour)
   const { data: allResas } = await supabase
     .from('reservations')
     .select('id, salon_id, user_id, service_id, employe_id, service_nom, service_prix, client_nom, client_prenom, client_email, client_telephone, date_rdv, statut')
@@ -81,7 +84,6 @@ export default async function ProDashboardPage() {
     .order('date_rdv', { ascending: true })
 
   const resas = allResas || []
-
   const active = resas.filter(r => r.statut !== 'annule')
   const annules = resas.filter(r => r.statut === 'annule')
 
@@ -92,7 +94,7 @@ export default async function ProDashboardPage() {
   const caWeek = weekResas.reduce((s, r) => s + (r.service_prix || 0), 0)
   const caMonth = active.reduce((s, r) => s + (r.service_prix || 0), 0)
 
-  // 5. Top services
+  // 5. Top services du mois
   const serviceCount: Record<string, { count: number; revenue: number }> = {}
   active.forEach(r => {
     const name = r.service_nom || 'Inconnu'
@@ -104,7 +106,7 @@ export default async function ProDashboardPage() {
     .sort(([, a], [, b]) => b.count - a.count)
     .slice(0, 5)
 
-  // 6. CA par jour de la semaine
+  // 6. CA par jour de la semaine (mois en cours)
   const caByDow: number[] = [0, 0, 0, 0, 0, 0, 0]
   active.forEach(r => {
     const d = new Date(r.date_rdv).getDay()
@@ -113,17 +115,48 @@ export default async function ProDashboardPage() {
   })
   const maxCaDow = Math.max(...caByDow, 1)
 
-  // 7. Prochains RDV (10 au lieu de 8, avec colonnes explicites)
-  const { data: upcoming } = await supabase
-    .from('reservations')
-    .select('id, service_nom, service_prix, client_nom, client_prenom, client_email, client_telephone, date_rdv, statut, employes(nom)')
-    .eq('salon_id', salon.id)
-    .eq('statut', 'confirme')
-    .gte('date_rdv', now.toISOString())
-    .order('date_rdv', { ascending: true })
-    .limit(10)
+  // 7. CA annuel par mois (pour le graphique en barres)
+  const yearStart = new Date(now.getFullYear(), 0, 1).toISOString()
+  const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59).toISOString()
 
-  // 8. Stats avis
+  const { data: yearResas } = await supabase
+    .from('reservations')
+    .select('service_prix, date_rdv, statut')
+    .eq('salon_id', salon.id)
+    .gte('date_rdv', yearStart)
+    .lte('date_rdv', yearEnd)
+    .neq('statut', 'annule')
+
+  const caByMonth: number[] = Array(12).fill(0)
+  ;(yearResas || []).forEach(r => {
+    const month = new Date(r.date_rdv).getMonth()
+    caByMonth[month] += r.service_prix || 0
+  })
+  const maxCaMonth = Math.max(...caByMonth, 1)
+
+  // 8. Donnees camembert prestations (mois en cours)
+  const allServices = Object.entries(serviceCount)
+    .sort(([, a], [, b]) => b.count - a.count)
+  const totalServicesCount = allServices.reduce((s, [, d]) => s + d.count, 0)
+
+  // Calculer les arcs du camembert
+  const pieSlices: { name: string; count: number; pct: number; color: string; startAngle: number; endAngle: number }[] = []
+  let currentAngle = 0
+  allServices.forEach(([name, data], i) => {
+    const pct = totalServicesCount > 0 ? (data.count / totalServicesCount) * 100 : 0
+    const angle = (pct / 100) * 360
+    pieSlices.push({
+      name,
+      count: data.count,
+      pct: Math.round(pct),
+      color: PIE_COLORS[i % PIE_COLORS.length],
+      startAngle: currentAngle,
+      endAngle: currentAngle + angle,
+    })
+    currentAngle += angle
+  })
+
+  // 9. Stats avis
   const { data: avis } = await supabase
     .from('avis')
     .select('note')
@@ -132,9 +165,7 @@ export default async function ProDashboardPage() {
   const nbAvis = avis?.length || 0
   const moyNote = nbAvis > 0 ? (avis!.reduce((s, a) => s + a.note, 0) / nbAvis).toFixed(1) : '-'
 
-  const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
-
- return (
+  return (
     <AbonnementGuard>
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh' }}>
       <Header pro={pro} activePage="dashboard" />
@@ -274,20 +305,162 @@ export default async function ProDashboardPage() {
           </div>
         </div>
 
-        {/* PROCHAINS RDV avec fiche client */}
-        <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, margin: 0 }}>Prochains rendez-vous</h3>
-            <Link href="/pro/agenda" style={{ fontSize: 13, color: OR, fontWeight: 700, textDecoration: 'none' }}>Voir tout {'→'}</Link>
+        {/* GRAPHIQUE CA ANNUEL + CAMEMBERT PRESTATIONS */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+          gap: 16,
+          marginBottom: 24
+        }}>
+
+          {/* CA ANNUEL EN BARRES */}
+          <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 4, marginTop: 0 }}>
+              Chiffre d{"'"}affaires {now.getFullYear()}
+            </h3>
+            <p style={{ fontSize: 12, color: '#888', marginTop: 0, marginBottom: 20 }}>
+              Total : <strong style={{ color: NOIR }}>{caByMonth.reduce((a, b) => a + b, 0).toLocaleString()} DA</strong>
+            </p>
+
+            {caByMonth.every(v => v === 0) ? (
+              <p style={{ color: '#aaa', fontSize: 14, textAlign: 'center', padding: '30px 0' }}>Aucune donnee pour cette annee.</p>
+            ) : (
+              <div>
+                {/* Barres */}
+                <svg viewBox="0 0 480 200" style={{ width: '100%', height: 'auto' }} xmlns="http://www.w3.org/2000/svg">
+                  {caByMonth.map((ca, i) => {
+                    const barWidth = 28
+                    const gap = (480 - 12 * barWidth) / 13
+                    const x = gap + i * (barWidth + gap)
+                    const maxH = 150
+                    const h = maxCaMonth > 0 ? (ca / maxCaMonth) * maxH : 0
+                    const y = 10 + maxH - h
+                    const isCurrentMonth = i === now.getMonth()
+
+                    return (
+                      <g key={i}>
+                        {/* Barre de fond */}
+                        <rect x={x} y={10} width={barWidth} height={maxH} rx={4} fill="#f5f5f5" />
+                        {/* Barre de valeur */}
+                        {h > 0 && (
+                          <rect x={x} y={y} width={barWidth} height={h} rx={4}
+                            fill={isCurrentMonth ? OR : NOIR}
+                            opacity={isCurrentMonth ? 1 : 0.7}
+                          />
+                        )}
+                        {/* Valeur au-dessus */}
+                        {ca > 0 && (
+                          <text x={x + barWidth / 2} y={y - 4} textAnchor="middle"
+                            fontSize="7" fontWeight="700" fill={isCurrentMonth ? OR : '#888'}
+                          >
+                            {ca >= 1000 ? `${Math.round(ca / 1000)}k` : ca}
+                          </text>
+                        )}
+                        {/* Label mois */}
+                        <text x={x + barWidth / 2} y={175} textAnchor="middle"
+                          fontSize="8" fontWeight={isCurrentMonth ? '800' : '600'}
+                          fill={isCurrentMonth ? OR : '#888'}
+                        >
+                          {MOIS_LABELS[i]}
+                        </text>
+                        {/* Point sous le mois courant */}
+                        {isCurrentMonth && (
+                          <circle cx={x + barWidth / 2} cy={182} r={2} fill={OR} />
+                        )}
+                      </g>
+                    )
+                  })}
+                </svg>
+              </div>
+            )}
           </div>
 
-          <ProchainRdvSection upcoming={upcoming || []} salonName={salon.nom} />
+          {/* CAMEMBERT PRESTATIONS */}
+          <div style={{ background: '#fff', borderRadius: 8, padding: 'clamp(16px, 3vw, 25px)', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+            <h3 style={{ fontSize: 15, fontWeight: 800, color: NOIR, marginBottom: 4, marginTop: 0 }}>Repartition des prestations</h3>
+            <p style={{ fontSize: 12, color: '#888', marginTop: 0, marginBottom: 20 }}>
+              {totalServicesCount} prestation{totalServicesCount > 1 ? 's' : ''} ce mois
+            </p>
+
+            {pieSlices.length === 0 ? (
+              <p style={{ color: '#aaa', fontSize: 14, textAlign: 'center', padding: '30px 0' }}>Aucune prestation ce mois-ci.</p>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
+                {/* SVG Camembert */}
+                <svg viewBox="0 0 200 200" style={{ width: 160, height: 160, flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+                  {pieSlices.length === 1 ? (
+                    <circle cx={100} cy={100} r={90} fill={pieSlices[0].color} />
+                  ) : (
+                    pieSlices.map((slice, i) => {
+                      const path = describeArc(100, 100, 90, slice.startAngle, slice.endAngle)
+                      return <path key={i} d={path} fill={slice.color} stroke="#fff" strokeWidth={2} />
+                    })
+                  )}
+                  {/* Centre blanc pour effet donut */}
+                  <circle cx={100} cy={100} r={50} fill="#fff" />
+                  <text x={100} y={96} textAnchor="middle" fontSize="18" fontWeight="900" fill={NOIR}>
+                    {totalServicesCount}
+                  </text>
+                  <text x={100} y={112} textAnchor="middle" fontSize="9" fontWeight="600" fill="#888">
+                    RDV
+                  </text>
+                </svg>
+
+                {/* Legende */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 140px', minWidth: 0 }}>
+                  {pieSlices.slice(0, 6).map((slice, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{
+                        width: 10, height: 10, borderRadius: 2, flexShrink: 0,
+                        background: slice.color,
+                      }} />
+                      <span style={{
+                        fontSize: 12, color: NOIR, fontWeight: 600,
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        flex: 1,
+                      }}>
+                        {slice.name}
+                      </span>
+                      <span style={{ fontSize: 11, color: '#888', fontWeight: 700, flexShrink: 0 }}>
+                        {slice.pct}%
+                      </span>
+                    </div>
+                  ))}
+                  {pieSlices.length > 6 && (
+                    <span style={{ fontSize: 11, color: '#aaa', fontStyle: 'italic' }}>
+                      +{pieSlices.length - 6} autre{pieSlices.length - 6 > 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-</main>
+      </main>
     </div>
     </AbonnementGuard>
   )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Fonction SVG pour dessiner un arc de camembert
+// ═══════════════════════════════════════════════════════════════════
+
+function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
+  const rad = ((angleDeg - 90) * Math.PI) / 180
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }
+}
+
+function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number): string {
+  // Eviter un arc complet (360) qui ne se dessine pas
+  if (endAngle - startAngle >= 359.99) {
+    endAngle = startAngle + 359.99
+  }
+  const start = polarToCartesian(cx, cy, r, endAngle)
+  const end = polarToCartesian(cx, cy, r, startAngle)
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y} Z`
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -314,7 +487,6 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
           gap: 20px;
           align-items: center;
         }
-        /* Mode Mobile */
         @media (max-width: 768px) {
           .pro-header-container {
             flex-direction: column;
@@ -366,7 +538,6 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
             fontWeight: activePage === 'settings' ? 700 : 600,
             whiteSpace: 'nowrap'
           }}>
-            
             Parametres
           </Link>
           <div style={{ whiteSpace: 'nowrap' }}>
