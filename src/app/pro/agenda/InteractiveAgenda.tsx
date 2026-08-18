@@ -26,20 +26,29 @@ function formatDateForUrl(d: Date) {
   return d.toISOString().split('T')[0]
 }
 
+function formatPhoneForWhatsApp(phone: string): string {
+  let cleaned = phone.replace(/[\s\-\.\(\)]/g, '')
+  if (cleaned.startsWith('+')) cleaned = cleaned.slice(1)
+  if (cleaned.startsWith('0')) cleaned = '213' + cleaned.slice(1)
+  return cleaned
+}
+
 type Props = {
   employes: any[];
   services: any[];
   reservations: any[];
   view: 'day' | 'week' | 'month';
   targetDateStr: string;
+  salonName: string;
 }
 
-export default function InteractiveAgenda({ employes, services, reservations, view, targetDateStr }: Props) {
+export default function InteractiveAgenda({ employes, services, reservations, view, targetDateStr, salonName }: Props) {
   const router = useRouter()
   const targetDate = new Date(targetDateStr)
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isFicheModalOpen, setIsFicheModalOpen] = useState(false)
+  const [ficheMode, setFicheMode] = useState<'fiche' | 'edit'>('fiche')
   const [isLoading, setIsLoading] = useState(false)
   
   const [selectedEmploye, setSelectedEmploye] = useState(employes[0]?.id || '')
@@ -76,7 +85,8 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     const dateObj = new Date(rdv.date_rdv)
     setSelectedDate(dateObj.toISOString().split('T')[0])
     setSelectedTime(dateObj.toTimeString().substring(0, 5))
-    setIsEditModalOpen(true)
+    setFicheMode('fiche')
+    setIsFicheModalOpen(true)
   }
 
   const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -125,9 +135,19 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
       body: JSON.stringify({ employe_id: selectedEmploye, new_date_rdv: dateRdv })
     })
     
-    setIsEditModalOpen(false)
+    setIsFicheModalOpen(false)
+    setFicheMode('fiche')
     setIsLoading(false)
     router.refresh()
+  }
+
+  function buildWhatsAppMessage(rdv: any): string {
+    const dateObj = new Date(rdv.date_rdv)
+    const dateStr = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+    const timeStr = String(dateObj.getHours()).padStart(2, '0') + 'h' + String(dateObj.getMinutes()).padStart(2, '0')
+    const clientFirstName = rdv.client_prenom || rdv.client_nom
+    const msg = `Bonjour ${clientFirstName}, je vous confirme votre RDV du ${dateStr} à ${timeStr} chez ${salonName} pour ${rdv.service_nom}. À bientôt !`
+    return encodeURIComponent(msg)
   }
 
   const renderDayView = () => {
@@ -308,7 +328,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               </div>
               <input type="text" placeholder="Nom du client (ou motif)" value={clientName} onChange={e => setClientName(e.target.value)} required style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               
-              {/* EMAIL + TELEPHONE pour les notifications de relance */}
               <div style={{ display: 'flex', gap: 12 }}>
                 <input type="email" placeholder="Email du client (optionnel)" value={clientEmail} onChange={e => setClientEmail(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
                 <input type="tel" placeholder="Tel (optionnel)" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
@@ -339,26 +358,162 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
         </div>
       )}
 
-      {/* MODALE : MODIFIER UN RDV */}
-      {isEditModalOpen && activeRdv && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', padding: 32, borderRadius: 12, width: '100%', maxWidth: 450 }}>
-            <h2 style={{ marginBottom: 8, color: NOIR, fontWeight: 900 }}>Modifier le rendez-vous</h2>
-            <p style={{ color: '#666', marginBottom: 24, fontSize: 14 }}>Client : <strong style={{ color: NOIR }}>{activeRdv.client_nom}</strong></p>
-            <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Deplacer le creneau</label>
-              <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%' }}>
-                {employes.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
-              </select>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
-                <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+      {/* MODALE : FICHE CLIENT + MODIFIER */}
+      {isFicheModalOpen && activeRdv && (
+        <div
+          onClick={() => { setIsFicheModalOpen(false); setFicheMode('fiche') }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: 16 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ background: '#fff', borderRadius: 12, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
+          >
+            {/* Header */}
+            <div style={{
+              background: NOIR, color: '#fff', padding: '20px 24px', borderRadius: '12px 12px 0 0',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 900 }}>
+                  {activeRdv.client_prenom ? `${activeRdv.client_prenom} ${activeRdv.client_nom}` : activeRdv.client_nom}
+                </div>
+                <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+                  {ficheMode === 'fiche' ? 'Fiche client' : 'Modifier le creneau'}
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                <button type="button" onClick={() => setIsEditModalOpen(false)} disabled={isLoading} style={{ flex: 1, padding: 14, background: '#f5f5f5', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', color: '#666' }}>Annuler</button>
-                <button type="submit" disabled={isLoading} style={{ flex: 1, padding: 14, background: OR, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>{isLoading ? '...' : 'Confirmer'}</button>
+              <button
+                onClick={() => { setIsFicheModalOpen(false); setFicheMode('fiche') }}
+                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Contenu : Mode FICHE */}
+            {ficheMode === 'fiche' && (
+              <div style={{ padding: 24 }}>
+
+                {/* Contact */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Contact</div>
+
+                  {activeRdv.client_telephone ? (
+                    <a href={`tel:${activeRdv.client_telephone}`} style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+                      background: '#f8f8f8', borderRadius: 8, textDecoration: 'none', color: NOIR, marginBottom: 8
+                    }}>
+                      <span style={{ fontSize: 18 }}>📞</span>
+                      <span style={{ fontSize: 14, fontWeight: 600 }}>{activeRdv.client_telephone}</span>
+                    </a>
+                  ) : (
+                    <div style={{ padding: '10px 14px', background: '#f8f8f8', borderRadius: 8, color: '#bbb', fontSize: 13, marginBottom: 8 }}>
+                      Pas de telephone renseigne
+                    </div>
+                  )}
+
+                  {activeRdv.client_email ? (
+                    <a href={`mailto:${activeRdv.client_email}`} style={{
+                      display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
+                      background: '#f8f8f8', borderRadius: 8, textDecoration: 'none', color: NOIR, marginBottom: 8
+                    }}>
+                      <span style={{ fontSize: 18 }}>✉️</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeRdv.client_email}</span>
+                    </a>
+                  ) : (
+                    <div style={{ padding: '10px 14px', background: '#f8f8f8', borderRadius: 8, color: '#bbb', fontSize: 13, marginBottom: 8 }}>
+                      {"Pas d'email renseigne"}
+                    </div>
+                  )}
+                </div>
+
+                {/* Prestation */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Prestation</div>
+                  <div style={{ padding: 14, background: '#faf8f4', borderRadius: 8, borderLeft: `3px solid ${OR}` }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: NOIR, marginBottom: 4 }}>{activeRdv.service_nom}</div>
+                    <div style={{ fontSize: 20, fontWeight: 900, color: OR }}>{activeRdv.service_prix?.toLocaleString()} DA</div>
+                  </div>
+                </div>
+
+                {/* Date & Heure */}
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Date et heure</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: NOIR }}>
+                    {(() => {
+                      const d = new Date(activeRdv.date_rdv)
+                      const dateStr = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                      const timeStr = String(d.getHours()).padStart(2, '0') + 'h' + String(d.getMinutes()).padStart(2, '0')
+                      return `${dateStr} à ${timeStr}`
+                    })()}
+                  </div>
+                </div>
+
+                {/* Bouton WhatsApp */}
+                {activeRdv.client_telephone && (
+                  <a
+                    href={`https://wa.me/${formatPhoneForWhatsApp(activeRdv.client_telephone)}?text=${buildWhatsAppMessage(activeRdv)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                      width: '100%', padding: 14, background: '#25D366', color: '#fff', border: 'none',
+                      borderRadius: 8, fontSize: 15, fontWeight: 700, textDecoration: 'none', cursor: 'pointer', marginBottom: 10
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    Contacter sur WhatsApp
+                  </a>
+                )}
+
+                {/* Bouton Appeler */}
+                {activeRdv.client_telephone && (
+                  <a
+                    href={`tel:${activeRdv.client_telephone}`}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      width: '100%', padding: 12, background: '#fff', color: NOIR,
+                      border: `2px solid ${NOIR}`, borderRadius: 8, fontSize: 14, fontWeight: 700,
+                      textDecoration: 'none', cursor: 'pointer', marginBottom: 10
+                    }}
+                  >
+                    📞 Appeler
+                  </a>
+                )}
+
+                {/* Bouton Modifier */}
+                <button
+                  onClick={() => setFicheMode('edit')}
+                  style={{
+                    width: '100%', padding: 12, background: '#f5f5f5', color: '#666',
+                    border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  ✏️ Modifier le creneau
+                </button>
               </div>
-            </form>
+            )}
+
+            {/* Contenu : Mode EDIT */}
+            {ficheMode === 'edit' && (
+              <div style={{ padding: 24 }}>
+                <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Deplacer le creneau</label>
+                  <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%' }}>
+                    {employes.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
+                  </select>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                    <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                    <button type="button" onClick={() => setFicheMode('fiche')} disabled={isLoading} style={{ flex: 1, padding: 14, background: '#f5f5f5', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', color: '#666' }}>← Retour</button>
+                    <button type="submit" disabled={isLoading} style={{ flex: 1, padding: 14, background: OR, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>{isLoading ? '...' : 'Confirmer'}</button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       )}
