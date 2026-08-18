@@ -107,9 +107,9 @@ export default function ProSettingsPage() {
   }
 
   const tabs = [
-    { key: 'services' as const, label: 'Prestations', count: services.length },
+    { key: 'services' as const, label: 'Mes Prestations', count: services.length },
+     { key: 'employes' as const, label: 'Equipe', count: employes.length },
     { key: 'vip' as const, label: 'Ventes Privees', count: ventesPrivees.length },
-    { key: 'employes' as const, label: 'Equipe', count: employes.length },
     { key: 'salon' as const, label: 'Mon salon', count: null },
   ]
 
