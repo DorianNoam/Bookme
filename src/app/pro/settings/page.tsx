@@ -164,7 +164,7 @@ export default function ProSettingsPage() {
               <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
             </div>
             <nav className="pro-header-nav custom-scroll" style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-              <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
+              <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Tableau de bord</Link>
               <Link href="/pro/agenda" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Agenda</Link>
               <Link href="/pro/settings" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Parametres</Link>
               <div style={{ whiteSpace: 'nowrap' }}><LogoutButton /></div>
