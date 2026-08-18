@@ -1,5 +1,5 @@
 'use client'
-
+import ClientsTab from './ClientsTab'
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
