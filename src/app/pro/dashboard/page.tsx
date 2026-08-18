@@ -366,7 +366,8 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
             fontWeight: activePage === 'settings' ? 700 : 600,
             whiteSpace: 'nowrap'
           }}>
-            Param.
+            
+            Parametres
           </Link>
           <div style={{ whiteSpace: 'nowrap' }}>
             <LogoutButton />
