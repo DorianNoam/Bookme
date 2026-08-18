@@ -39,7 +39,7 @@ const CATEGORIES_SERVICES = [
   'Onglerie Main & pieds',
   'Beaute du regard',
   'Soin visage & corps',
-  'Make up',
+  'Make-up',
   'Epilation',
   'Piercing et tatouage',
   'Barbier',
