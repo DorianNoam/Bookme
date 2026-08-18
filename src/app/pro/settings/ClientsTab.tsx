@@ -325,7 +325,8 @@ function ClientDetailView({ clientKey, onBack }: { clientKey: string; onBack: ()
         setFormNom(data.client.client_nom || '')
         setFormPrenom(data.client.client_prenom || '')
         setFormEmail(data.client.client_email || '')
-        setFormTelephone(data.client.client_telephone || '')
+       const tel = data.client.client_telephone || ''
+setFormTelephone(/\d/.test(tel) ? tel : '')
         setFormDateNaissance(data.client.date_naissance || '')
         setFormNotes(data.client.notes || '')
       }
