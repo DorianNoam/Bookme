@@ -119,4 +119,66 @@
     "mesRdv": "Mes rendez-vous"
   },
   "auth": {
-    "bonRetour": "Bon
+    "bonRetour": "Bon retour !",
+    "connectezVous": "Connectez-vous pour gérer vos réservations.",
+    "email": "Email",
+    "motDePasse": "Mot de passe",
+    "seConnecter": "Se connecter",
+    "mdpOublie": "Mot de passe oublié ?",
+    "pasDeCompte": "Pas encore de compte ?",
+    "inscrivezVous": "Inscrivez-vous",
+    "creerCompte": "Créer un compte client",
+    "rejoignez": "Rejoignez Bookmedz pour réserver vos prestations beauté et bien-être.",
+    "prenom": "Prénom",
+    "nom": "Nom",
+    "telephone": "Téléphone",
+    "inscrire": "M'inscrire",
+    "creation": "Création en cours...",
+    "dejaCompte": "Vous avez déjà un compte ?",
+    "connectezVousLink": "Connectez-vous"
+  },
+  "common": {
+    "chargement": "Chargement...",
+    "da": "DA",
+    "min": "min",
+    "jours": ["", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+  },
+  "features": {
+    "title1": "24h/24, 7j/7",
+    "desc1": "Réservez à n'importe quel moment, où que vous soyez en Algérie.",
+    "title2": "Confirmation immédiate",
+    "desc2": "Votre créneau est bloqué instantanément, sans appel téléphonique.",
+    "title3": "Avis vérifiés",
+    "desc3": "Seuls les clients ayant eu un rendez-vous effectif peuvent noter."
+  },
+  "carousel": {
+    "subtitle": "Sélectionné pour vous",
+    "title": "Découvrez nos Univers",
+    "voirEtablissements": "Voir les établissements",
+    "slide1Cat": "Coiffure & soin cheveux",
+    "slide1Title": "L'art de la coupe",
+    "slide1Desc": "Coupe, couleur, balayage, lissage ou soin profond. Nos coiffeurs maîtrisent toutes les techniques pour sublimer vos cheveux.",
+    "slide2Cat": "Onglerie Main & pieds",
+    "slide2Title": "Des mains parfaites",
+    "slide2Desc": "Manucure, pédicure, pose de gel ou nail art. Trouvez la spécialiste idéale pour des ongles impeccables.",
+    "slide3Cat": "Soin visage & corps",
+    "slide3Title": "Une peau éclatante",
+    "slide3Desc": "Soins du visage, gommages et rituels corps. Offrez à votre peau l'attention qu'elle mérite.",
+    "slide4Cat": "Barbier",
+    "slide4Title": "L'élégance au masculin",
+    "slide4Desc": "Coupe, taille de barbe et rasage traditionnel. Les meilleurs barbiers pour un style soigné.",
+    "slide5Cat": "Massage",
+    "slide5Title": "Détente absolue",
+    "slide5Desc": "Massage relaxant, sportif ou traditionnel. Une vraie parenthèse pour relâcher les tensions.",
+    "slide6Cat": "SPA",
+    "slide6Title": "L'expérience bien-être",
+    "slide6Desc": "Hammam, sauna et soins traditionnels. Un moment de sérénité dans les meilleurs spas du pays."
+  },
+  "cta": {
+    "subtitle": "Espace Partenaire",
+    "title": "Vous êtes un professionnel de la beauté ?",
+    "desc": "Rejoignez Bookmedz Pro pour digitaliser votre agenda, éliminer les no-shows et développer votre clientèle à travers toute l'Algérie.",
+    "button": "Découvrir notre offre Pro"
+  },
+  "footer": "Bookmedz.com — La beauté à portée de clic en Algérie"
+}
