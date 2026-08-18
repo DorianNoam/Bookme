@@ -52,7 +52,6 @@ export default async function ProAgendaPage({
     role = (payload.role as string) || 'pro'
     
     if (role === 'employe') {
-      // Employé : utiliser le salon_id du token directement
       salonIdFromToken = payload.salon_id as number
       if (!salonIdFromToken) redirect('/pro/login')
     } else {
@@ -112,7 +111,7 @@ export default async function ProAgendaPage({
 
   const { data: reservations } = await supabase
     .from('reservations')
-    .select('*')
+    .select('id, salon_id, user_id, service_id, employe_id, service_nom, service_prix, client_nom, client_prenom, client_email, client_telephone, date_rdv, statut')
     .eq('salon_id', salon.id)
     .gte('date_rdv', rangeStart.toISOString())
     .lte('date_rdv', rangeEnd.toISOString())
@@ -165,7 +164,6 @@ export default async function ProAgendaPage({
             gap: 20px;
             align-items: center;
           }
-          /* Masquer la scrollbar proprement */
           .hide-scrollbar {
             -ms-overflow-style: none;
             scrollbar-width: none;
@@ -243,13 +241,13 @@ export default async function ProAgendaPage({
           <Link href={`/pro/agenda?view=${view}&date=${formatDateForUrl(nextDate)}`} style={{ padding: 'clamp(6px, 1.5vw, 8px) clamp(10px, 2vw, 16px)', background: NOIR, color: '#fff', borderRadius: 4, textDecoration: 'none', fontWeight: 600 }}>{'\u2192'}</Link>
         </div>
 
-        {/* Transmission des services au composant interactif */}
         <InteractiveAgenda 
           employes={employes || []} 
           services={services || []}
           reservations={allReservations} 
           view={view as 'day' | 'week' | 'month'} 
-          targetDateStr={targetDate.toISOString()} 
+          targetDateStr={targetDate.toISOString()}
+          salonName={salon.nom}
         />
 
       </main>
