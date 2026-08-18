@@ -16,7 +16,7 @@ interface Rdv {
   service_prix: number
   date_rdv: string
   statut: string
-  employes?: { nom: string } | null
+  employes?: { nom: string } | { nom: string }[] | null
 }
 
 function formatPhoneForWhatsApp(phone: string): string {
@@ -27,6 +27,13 @@ function formatPhoneForWhatsApp(phone: string): string {
   // 0 → 213 (Algerie)
   if (cleaned.startsWith('0')) cleaned = '213' + cleaned.slice(1)
   return cleaned
+}
+
+
+function getEmployeNom(emp: any): string | null {
+  if (!emp) return null
+  if (Array.isArray(emp)) return emp[0]?.nom || null
+  return emp.nom || null
 }
 
 export default function ProchainRdvSection({ upcoming, salonName }: { upcoming: Rdv[]; salonName: string }) {
@@ -105,7 +112,7 @@ export default function ProchainRdvSection({ upcoming, salonName }: { upcoming: 
                       whiteSpace: 'nowrap'
                     }}>
                       {rdv.service_nom}
-                      {rdv.employes?.nom && <span style={{ color: '#bbb' }}> — {rdv.employes.nom}</span>}
+                      {getEmployeNom(rdv.employes) && <span style={{ color: '#bbb' }}> — {getEmployeNom(rdv.employes)}</span>}
                     </div>
                   </div>
                 </div>
@@ -259,9 +266,9 @@ export default function ProchainRdvSection({ upcoming, salonName }: { upcoming: 
                   <div style={{ fontSize: 20, fontWeight: 900, color: OR }}>
                     {selectedRdv.service_prix?.toLocaleString()} DA
                   </div>
-                  {selectedRdv.employes?.nom && (
+                  {getEmployeNom(selectedRdv.employes) && (
                     <div style={{ fontSize: 12, color: '#888', marginTop: 6 }}>
-                      Avec : {selectedRdv.employes.nom}
+                      Avec : {getEmployeNom(selectedRdv.employes)}
                     </div>
                   )}
                 </div>
