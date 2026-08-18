@@ -122,6 +122,12 @@ export default function ProSettingsPage() {
           .responsive-row { display: flex; justify-content: space-between; align-items: center; }
           .responsive-info { display: flex; align-items: center; gap: 20px; }
           .responsive-actions { display: flex; align-items: center; gap: 8px; }
+
+          /* Ligne prestation : nom (extensible) | prix (colonne fixe alignee) | actions */
+          .svc-row { display: flex; align-items: center; gap: 16px; }
+          .svc-name { flex: 1; min-width: 0; }
+          .svc-price { flex: 0 0 150px; text-align: right; }
+          .svc-actions { flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
           
           .custom-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: #E0D8CE transparent; }
           .custom-scroll::-webkit-scrollbar { height: 6px; }
@@ -151,6 +157,13 @@ export default function ProSettingsPage() {
             .responsive-row { flex-direction: column; align-items: stretch !important; gap: 12px; }
             .responsive-info { width: 100%; justify-content: space-between; align-items: flex-start; }
             .responsive-actions { width: 100%; justify-content: flex-end; border-top: 1px dashed #eee; padding-top: 12px; flex-wrap: wrap; }
+
+            /* Sur mobile : nom + prix sur une ligne, actions dessous en pleine largeur */
+            .svc-row { flex-wrap: wrap; align-items: flex-start; column-gap: 12px; row-gap: 8px; }
+            .svc-name { flex: 1 1 60%; }
+            .svc-price { flex: 0 0 auto; }
+            .svc-actions { flex: 1 1 100%; justify-content: flex-end; border-top: 1px dashed #eee; padding-top: 12px; margin-top: 2px; flex-wrap: wrap; }
+
             .responsive-edit-grid { grid-template-columns: 1fr !important; }
             .pro-header-container { flex-direction: column; align-items: flex-start; gap: 12px; }
             .pro-header-nav { width: 100%; overflow-x: auto; gap: 24px; padding-bottom: 8px; }
@@ -915,29 +928,27 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
                     </div>
                   ) : (
                     <div>
-                      <div className="responsive-row">
-                        <div className="responsive-info">
-                          <div>
-                            <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block', marginBottom: 2 }}>{s.nom}</span>
-                            {s.description && <span style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>{s.description}</span>}
-                            <span style={{ color: '#aaa', fontSize: 12 }}>{s.duree} min</span>
-                          </div>
-                          <div style={{ textAlign: 'right', minWidth: '80px' }}>
-                            {s.promo_active && s.promo_pourcentage ? (
-                              <div>
-                                <span style={{ fontSize: 12, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
-                                <div style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}><span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block' }}>-{s.promo_pourcentage}%</span></div>
-                                {s.promo_nom && <div style={{ fontSize: 11, fontWeight: 800, color: OR, marginTop: 2 }}>&#10024; {s.promo_nom}</div>}
-                                {s.promo_debut && s.promo_fin && (<div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>{new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>)}
-                              </div>
-                            ) : (<span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>)}
-                          </div>
+                      <div className="svc-row">
+                        <div className="svc-name">
+                          <span style={{ fontWeight: 700, color: NOIR, fontSize: 15, display: 'block', marginBottom: 2 }}>{s.nom}</span>
+                          {s.description && <span style={{ color: '#888', fontSize: 12, display: 'block', marginBottom: 4 }}>{s.description}</span>}
+                          <span style={{ color: '#aaa', fontSize: 12 }}>{s.duree} min</span>
                         </div>
-                        <div className="responsive-actions">
-                          <button onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); setPromoNom(s.promo_nom || ''); setPromoDebut(s.promo_debut || ''); setPromoFin(s.promo_fin || '') }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600 }}>{s.promo_active ? '% Promo' : '+ Promo'}</button>
-                          <button onClick={() => startEdit(s)} style={{ background: 'transparent', border: '1px solid #ddd', color: '#444', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Modifier</button>
-                          <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer' }}>Supprimer</button>
+                        <div className="svc-price">
+                          {s.promo_active && s.promo_pourcentage ? (
+                            <div>
+                              <span style={{ fontSize: 12, color: '#999', textDecoration: 'line-through' }}>{s.prix} DA</span>
+                              <div style={{ fontWeight: 800, color: '#d32f2f', fontSize: 15 }}>{Math.round(s.prix - (s.prix * s.promo_pourcentage / 100))} DA</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end', marginTop: 2 }}><span style={{ background: '#d32f2f', color: '#fff', fontSize: 10, fontWeight: 800, padding: '2px 4px', borderRadius: 3, display: 'inline-block' }}>-{s.promo_pourcentage}%</span></div>
+                              {s.promo_nom && <div style={{ fontSize: 11, fontWeight: 800, color: OR, marginTop: 2 }}>&#10024; {s.promo_nom}</div>}
+                              {s.promo_debut && s.promo_fin && (<div style={{ fontSize: 10, color: '#999', marginTop: 2 }}>{new Date(s.promo_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - {new Date(s.promo_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>)}
+                            </div>
+                          ) : (<span style={{ fontWeight: 800, color: OR, fontSize: 15 }}>{s.prix} DA</span>)}
+                        </div>
+                        <div className="svc-actions">
+                          <button onClick={() => { setPromoId(s.id); setPromoPct(s.promo_pourcentage ? String(s.promo_pourcentage) : ''); setPromoNom(s.promo_nom || ''); setPromoDebut(s.promo_debut || ''); setPromoFin(s.promo_fin || '') }} style={{ background: s.promo_active ? '#fff0f0' : 'transparent', border: `1px solid ${s.promo_active ? '#ffcccb' : '#ddd'}`, color: s.promo_active ? '#d32f2f' : '#666', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}>{s.promo_active ? '% Promo' : '+ Promo'}</button>
+                          <button onClick={() => startEdit(s)} style={{ background: 'transparent', border: '1px solid #ddd', color: '#444', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>Modifier</button>
+                          <button onClick={() => handleDelete(s.id)} style={{ background: 'transparent', border: '1px solid #fee2e2', color: '#dc2626', padding: '6px 12px', borderRadius: 4, fontSize: 12, cursor: 'pointer', whiteSpace: 'nowrap' }}>Supprimer</button>
                         </div>
                       </div>
                       
