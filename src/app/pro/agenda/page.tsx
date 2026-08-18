@@ -195,7 +195,7 @@ export default async function ProAgendaPage({
           </div>
           <nav className="pro-header-nav hide-scrollbar">
             {role !== 'employe' && (
-              <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
+              <Link href="/pro/dashboard" style={{ color: '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}>Tableau de bord</Link>
             )}
             <Link href="/pro/agenda" style={{ color: OR, fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}>Agenda</Link>
             {role !== 'employe' && (
