@@ -347,7 +347,7 @@ function Header({ pro, activePage }: { pro: any; activePage: string }) {
           <span style={{ fontWeight: 400, fontSize: 'clamp(11px, 2vw, 14px)', color: '#888', marginLeft: 6 }}>Pro</span>
         </div>
         <nav className="pro-header-nav">
-          <Link href="/pro/dashboard" style={{ color: activePage === 'dashboard' ? OR : '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: activePage === 'dashboard' ? 700 : 600, whiteSpace: 'nowrap' }}>Dashboard</Link>
+          <Link href="/pro/dashboard" style={{ color: activePage === 'dashboard' ? OR : '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: activePage === 'dashboard' ? 700 : 600, whiteSpace: 'nowrap' }}>Tableau de bord</Link>
           <Link href="/pro/agenda" style={{ color: activePage === 'agenda' ? OR : '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: activePage === 'agenda' ? 700 : 600, whiteSpace: 'nowrap' }}>Agenda</Link>
           <Link href="/pro/settings" style={{ color: activePage === 'settings' ? OR : '#aaa', fontSize: 'clamp(12px, 2vw, 14px)', textDecoration: 'none', fontWeight: activePage === 'settings' ? 700 : 600, whiteSpace: 'nowrap' }}>Parametres</Link>
           <div style={{ whiteSpace: 'nowrap' }}><LogoutButton /></div>
