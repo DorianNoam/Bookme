@@ -10,13 +10,27 @@ export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 const DEFAULT_IMAGES: Record<string, string> = {
-  'Coiffure': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+  'Coiffure & soin cheveux': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
+  'Onglerie Main & pieds': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
+  'Beaute du regard': 'https://images.unsplash.com/photo-1636023730877-233b9237d4ec?w=800',
+  'Soin visage & corps': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
+  'Make up': 'https://images.unsplash.com/photo-1636023730877-233b9237d4ec?w=800',
+  'Epilation': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
+  'Piercing et tatouage': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
   'Barbier': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800',
-  'Beaute des ongles': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
-  'Massage et bien-etre': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
-  'Hammam & Spa': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
-  'Chirurgie esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
-  'Institut': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
+  'Esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
+  'Massage': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+  'SPA': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+  'Yoga & Pilates': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
+  'Fitness & Musculation': 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800',
+  'Danse & Cardio': 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?w=800',
+}
+
+// Un salon peut avoir plusieurs types separes par des virgules.
+// On prend le premier type de la liste pour choisir l'image par defaut.
+function getDefaultImage(typeSalon: string): string {
+  const first = (typeSalon || '').split(',')[0].trim()
+  return DEFAULT_IMAGES[first] || DEFAULT_IMAGES['Coiffure & soin cheveux']
 }
 
 const supabase = createClient(
@@ -79,7 +93,7 @@ export default async function SalonPage({
   const safeServices = servicesRes.data || []
   const safeAvis = avisRes.data || []
   const safeGallery = galleryRes.data || []
-  const heroImage = salon.image || DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure']
+  const heroImage = salon.image || getDefaultImage(salon.type_salon)
   const allImages = [salon.image, ...safeGallery.map((g: any) => g.image_path)].filter(Boolean)
 
   const grouped: Record<string, any[]> = safeServices.reduce((acc: Record<string, any[]>, s: any) => {
