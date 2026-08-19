@@ -85,13 +85,14 @@ export default function HomePage() {
       </header>
 
       {/* ══════ HERO SECTION ══════ */}
+      {/* ══════ HERO SECTION ══════ */}
       <section style={{ position: 'relative', minHeight: 'clamp(420px, 60vw, 520px)', background: NOIR, display: 'flex', alignItems: 'center', overflow: 'hidden' }}>
         <img
-          src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1600"
+          src="/hero.jpg"
           alt=""
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35 }}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 1 }}
         />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(10,10,10,0.92) 30%, rgba(10,10,10,0.6) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(10,10,10,0.85) 0%, rgba(10,10,10,0.55) 45%, rgba(10,10,10,0.15) 100%)' }} />
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto', padding: 'clamp(40px, 8vw, 60px) 16px', width: '100%', boxSizing: 'border-box' }}>
           <div style={{ width: 40, height: 2, background: OR, marginBottom: 16 }} />
