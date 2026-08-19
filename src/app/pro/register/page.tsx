@@ -28,7 +28,7 @@ function ProRegisterContent() {
   const [password, setPassword] = useState('')
 
   const [salonNom, setSalonNom] = useState('')
-  const [typeSalon, setTypeSalon] = useState('Coiffure')
+  const [typesSalon, setTypesSalon] = useState<string[]>([])
   const [ville, setVille] = useState('')
   const [adresse, setAdresse] = useState('')
   const [instagram, setInstagram] = useState('')
@@ -42,7 +42,10 @@ function ProRegisterContent() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Charger Google Maps script
+  function toggleType(t: string) {
+    setTypesSalon(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
+  }
+
   useEffect(() => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
     if (!apiKey || window.google) {
@@ -65,12 +68,10 @@ function ProRegisterContent() {
     }
   }, [])
 
-  // Initialiser l'autocomplete quand Google est charge et qu'on est a l'etape 2
   useEffect(() => {
     if (!googleLoaded || step !== 2 || !inputRef.current) return
     if (autocompleteRef.current) return
 
-    // Petit delai pour s'assurer que l'input est monte
     const timer = setTimeout(() => {
       if (!inputRef.current || !window.google) return
 
@@ -84,7 +85,6 @@ function ProRegisterContent() {
         const place = autocomplete.getPlace()
         if (!place.geometry) return
 
-        // Extraire l'adresse sans la ville ni le pays (deja dans le select)
         const components = place.address_components || []
         const streetNumber = components.find((c: any) => c.types.includes('street_number'))?.long_name || ''
         const route = components.find((c: any) => c.types.includes('route'))?.long_name || ''
@@ -101,7 +101,6 @@ function ProRegisterContent() {
         } else if (neighborhood) {
           shortAddress = neighborhood
         } else {
-          // Prendre le formatted_address et retirer ville + pays
           const formatted = place.formatted_address || ''
           const parts = formatted.split(',')
           shortAddress = parts.slice(0, Math.max(1, parts.length - 2)).join(',').trim()
@@ -118,7 +117,6 @@ function ProRegisterContent() {
     return () => clearTimeout(timer)
   }, [googleLoaded, step])
 
-  // Reset autocomplete quand on change d'etape
   useEffect(() => {
     if (step !== 2) {
       autocompleteRef.current = null
@@ -137,7 +135,6 @@ function ProRegisterContent() {
         setLatitude(lat)
         setLongitude(lng)
 
-        // Reverse geocoding avec Google
         if (window.google) {
           const geocoder = new window.google.maps.Geocoder()
           geocoder.geocode({ location: { lat, lng } }, (results: any[], status: string) => {
@@ -183,6 +180,10 @@ function ProRegisterContent() {
       setError("Le nom du salon, la ville et l'adresse sont obligatoires.")
       return
     }
+    if (typesSalon.length === 0) {
+      setError("Veuillez selectionner au moins un type d'etablissement.")
+      return
+    }
     setLoading(true)
 
     try {
@@ -192,7 +193,7 @@ function ProRegisterContent() {
         body: JSON.stringify({
           prenom, nom, email, password, telephone,
           salon_nom: salonNom,
-          type_salon: typeSalon,
+          type_salon: typesSalon.join(', '),
           ville,
           adresse,
           instagram: instagram.replace('@', '').trim(),
@@ -236,7 +237,6 @@ function ProRegisterContent() {
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: NOIR, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
-      {/* Style pour le dropdown Google Places Autocomplete */}
       <style dangerouslySetInnerHTML={{ __html: `
         .pac-container {
           background: #1a1a1a !important;
@@ -255,39 +255,15 @@ function ProRegisterContent() {
           cursor: pointer !important;
           line-height: 1.5 !important;
         }
-        .pac-item:first-child {
-          border-top: none !important;
-        }
-        .pac-item:hover, .pac-item-selected {
-          background: #222 !important;
-        }
-        .pac-item-query {
-          color: #fff !important;
-          font-weight: 700 !important;
-          font-size: 14px !important;
-        }
-        .pac-matched {
-          color: ${OR} !important;
-          font-weight: 700 !important;
-        }
-        .pac-item .pac-item-query + span {
-          color: #888 !important;
-          font-weight: 400 !important;
-        }
-        .pac-icon {
-          display: none !important;
-        }
-        .pac-item::before {
-          content: "📍";
-          margin-right: 10px;
-          font-size: 14px;
-        }
-        .pac-logo::after {
-          display: none !important;
-        }
-        .hdpi.pac-logo::after {
-          display: none !important;
-        }
+        .pac-item:first-child { border-top: none !important; }
+        .pac-item:hover, .pac-item-selected { background: #222 !important; }
+        .pac-item-query { color: #fff !important; font-weight: 700 !important; font-size: 14px !important; }
+        .pac-matched { color: ${OR} !important; font-weight: 700 !important; }
+        .pac-item .pac-item-query + span { color: #888 !important; font-weight: 400 !important; }
+        .pac-icon { display: none !important; }
+        .pac-item::before { content: "📍"; margin-right: 10px; font-size: 14px; }
+        .pac-logo::after { display: none !important; }
+        .hdpi.pac-logo::after { display: none !important; }
       `}} />
 
       <header style={{ padding: '15px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
@@ -397,10 +373,40 @@ function ProRegisterContent() {
               </div>
 
               <div>
-                <label style={labelStyle}>Type d&apos;etablissement *</label>
-                <select value={typeSalon} onChange={e => setTypeSalon(e.target.value)} style={{ ...inputStyle, cursor: 'pointer' }}>
-                  {TYPES_SALON.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <label style={labelStyle}>Type d&apos;etablissement * <span style={{ color: '#666', fontWeight: 400 }}>(plusieurs choix possibles)</span></label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                  {TYPES_SALON.map(t => {
+                    const selected = typesSalon.includes(t)
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => toggleType(t)}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: 20,
+                          fontSize: 13,
+                          fontWeight: selected ? 700 : 500,
+                          fontFamily: 'Inter, sans-serif',
+                          cursor: 'pointer',
+                          border: selected ? `2px solid ${OR}` : '1px solid #444',
+                          background: selected ? `${OR}22` : 'transparent',
+                          color: selected ? OR : '#aaa',
+                          transition: 'all 0.2s',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {selected && <span style={{ marginRight: 4 }}>&#10003;</span>}
+                        {t}
+                      </button>
+                    )
+                  })}
+                </div>
+                {typesSalon.length > 0 && (
+                  <div style={{ fontSize: 11, color: OR, marginTop: 8, fontWeight: 600 }}>
+                    {typesSalon.length} type{typesSalon.length > 1 ? 's' : ''} selectionne{typesSalon.length > 1 ? 's' : ''}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -455,7 +461,7 @@ function ProRegisterContent() {
                 )}
               </div>
 
-             <div>
+              <div>
                 <label style={labelStyle}>Instagram (optionnel)</label>
                 <div style={{ position: 'relative' }}>
                   <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#666', fontSize: 14 }}>@</span>
