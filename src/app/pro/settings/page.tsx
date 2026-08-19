@@ -953,7 +953,30 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
       <div style={{ background: '#fff', padding: 30, borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
         <div className="responsive-edit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
           <div><label style={labelStyle}>Nom du salon</label><input name="nom" value={form.nom} onChange={handleChange} style={inputStyle} /></div>
-          <div><label style={labelStyle}>Type</label><select name="type_salon" value={form.type_salon} onChange={handleChange} style={inputStyle}>{TYPES_SALON.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+          <div style={{ gridColumn: '1 / -1' }}>
+  <label style={labelStyle}>Type d&apos;etablissement (plusieurs choix possibles)</label>
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+    {TYPES_SALON.map(t => {
+      const types = (form.type_salon || '').split(',').map(s => s.trim()).filter(Boolean)
+      const selected = types.includes(t)
+      return (
+        <button key={t} type="button" onClick={() => {
+          const current = (form.type_salon || '').split(',').map(s => s.trim()).filter(Boolean)
+          const updated = selected ? current.filter(x => x !== t) : [...current, t]
+          setForm({ ...form, type_salon: updated.join(', ') })
+        }} style={{
+          padding: '8px 16px', borderRadius: 20, fontSize: 13,
+          fontWeight: selected ? 700 : 500, fontFamily: 'Inter, sans-serif',
+          cursor: 'pointer', border: selected ? '2px solid ' + OR : '1px solid #ddd',
+          background: selected ? OR + '15' : '#fafafa',
+          color: selected ? OR : '#888', transition: 'all 0.2s', whiteSpace: 'nowrap',
+        }}>
+          {selected && <span style={{ marginRight: 4 }}>&#10003;</span>}{t}
+        </button>
+      )
+    })}
+  </div>
+</div>
           <div><label style={labelStyle}>Ville</label><input name="ville" value={form.ville} onChange={handleChange} style={inputStyle} /></div>
           <div>
             <label style={labelStyle}>Adresse</label>
