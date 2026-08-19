@@ -32,7 +32,7 @@ const DEFAULT_IMAGES: Record<string, string> = {
 }
 
 const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut']
+const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut', 'Sport et forme']
 
 const CATEGORIES_SERVICES = [
   'Coiffure & soin cheveux',
@@ -46,6 +46,9 @@ const CATEGORIES_SERVICES = [
   'Esthetique',
   'Massage',
   'SPA',
+  'Yoga & Pilates',
+'Fitness & Musculation',
+'Danse & Cardio',
 ]
 
 type Service = { id: number; nom: string; prix: number; duree: number; categorie_service: string; description?: string; promo_pourcentage: number | null; promo_active: boolean; promo_nom: string | null; promo_debut: string | null; promo_fin: string | null }
