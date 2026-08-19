@@ -367,7 +367,7 @@ function SearchContent() {
                         <img
                          src={salon.image || getDefaultImage(salon.type_salon)}
                           alt={salon.nom}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }}
                           onError={e => { const img = e.target as HTMLImageElement; const fb = DEFAULT_IMAGES['Coiffure & soin cheveux']; if (img.src !== fb) { img.src = fb; } }}
                         />
                         <div style={{ position: 'absolute', top: 12, right: 12 }}>
