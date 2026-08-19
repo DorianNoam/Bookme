@@ -362,8 +362,8 @@ function SearchContent() {
                       flexDirection: 'column'
                     }}
                   >
-                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                      <div style={{ width: '260px', height: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch' }}>
+                      <div style={{ width: '260px', alignSelf: 'stretch', minHeight: '260px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
                         <img
                          src={salon.image || getDefaultImage(salon.type_salon)}
                           alt={salon.nom}
@@ -471,7 +471,7 @@ function SearchContent() {
           .map-col.show-on-mobile { opacity: 1; pointer-events: auto; z-index: 10; }
           
           .salon-result-card > div { flex-direction: column; }
-          .salon-image-container { width: 100% !important; height: 220px; min-height: auto !important; }
+          .salon-image-container { width: 100% !important; height: 240px; min-height: auto !important; }
         }
       `}} />
     </div>
