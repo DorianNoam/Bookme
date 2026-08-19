@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 
+const CATEGORY_TO_TYPES: Record<string, string[]> = {
+  'Coiffure & soin cheveux': ['Coiffure'],
+  'Onglerie Main & pieds': ['Beaute des ongles', 'Institut'],
+  'Beaute du regard': ['Institut', 'Beaute des ongles'],
+  'Soin visage & corps': ['Institut', 'Massage et bien-etre', 'Hammam & Spa'],
+  'Make up': ['Institut'],
+  'Epilation': ['Institut'],
+  'Piercing et tatouage': ['Institut'],
+  'Barbier': ['Barbier'],
+  'Esthetique': ['Institut', 'Chirurgie esthetique'],
+  'Massage': ['Massage et bien-etre', 'Hammam & Spa'],
+  'SPA': ['Hammam & Spa'],
+  'Yoga & Pilates': ['Sport et forme'],
+  'Fitness & Musculation': ['Sport et forme'],
+  'Danse & Cardio': ['Sport et forme'],
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
@@ -20,16 +37,21 @@ export async function GET(req: NextRequest) {
 
       const fromServices = (matchingServices || []).map((s: any) => s.salon_id)
 
-      // 2. Salons dont le type_salon correspond (nouveaux inscrits sans prestations)
-      const { data: matchingType } = await supabase
-        .from('salons')
-        .select('id')
-        .eq('visible', true)
-        .ilike('type_salon', '%' + q + '%')
+      // 2. Salons dont le type_salon correspond via le mapping
+      const matchingTypes = CATEGORY_TO_TYPES[q] || [q]
+      let fromType: number[] = []
 
-      const fromType = (matchingType || []).map((s: any) => s.id)
+      for (const typeName of matchingTypes) {
+        const { data: matchingSalons } = await supabase
+          .from('salons')
+          .select('id')
+          .eq('visible', true)
+          .ilike('type_salon', '%' + typeName + '%')
 
-      // 3. Combiner les deux sans doublons
+        fromType = [...fromType, ...(matchingSalons || []).map((s: any) => s.id)]
+      }
+
+      // 3. Combiner sans doublons
       salonIdsFilter = Array.from(new Set([...fromServices, ...fromType]))
     }
 
