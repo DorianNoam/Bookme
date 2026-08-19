@@ -17,13 +17,29 @@ export async function POST(req: NextRequest) {
     const { payload } = await jwtVerify(token, secret)
     const proId = payload.id as number
 
-    // 2. Récupérer les données du formulaire
+    // 2. GARDE-FOU ANTI-DOUBLON : un pro = un seul salon
+    // Si ce pro a deja un salon, on refuse au lieu d'en creer un nouveau.
+    const { data: existingSalon } = await supabase
+      .from('salons')
+      .select('id')
+      .eq('pro_id', proId)
+      .maybeSingle()
+
+    if (existingSalon) {
+      return NextResponse.json({
+        success: false,
+        error: 'Vous avez deja un etablissement.',
+        salonId: existingSalon.id
+      }, { status: 409 })
+    }
+
+    // 3. Récupérer les données du formulaire
     const { nom, adresse, ville, telephone, type_salon, description } = await req.json()
     if (!nom || !ville || !type_salon) {
       return NextResponse.json({ success: false, error: 'Veuillez remplir les champs obligatoires.' }, { status: 400 })
     }
 
-    // 3. Insérer le salon dans la base de données
+    // 4. Insérer le salon dans la base de données
     // On met des horaires par défaut pour simplifier, le pro pourra les modifier plus tard
     const { data: salon, error } = await supabase
       .from('salons')
