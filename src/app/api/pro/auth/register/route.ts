@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
           headers: { 'User-Agent': 'Bookmedz/1.0' }
         })
         let geoData = await geoRes.json()
-        
+
         // 2ème essai : Si la carte ne trouve pas l'adresse exacte, on cherche juste la ville
         if (!geoData || geoData.length === 0) {
           const fallbackQuery = `${ville}, Algérie`
@@ -108,14 +108,22 @@ export async function POST(req: NextRequest) {
       .from('salons')
       .insert([salonData])
 
+    // --- ROLLBACK MANUEL : pas de pro orphelin ---
+    // Si la creation du salon echoue, on supprime le pro qu'on vient de creer
+    // et on renvoie une vraie erreur, au lieu de laisser un compte sans salon.
     if (salonError) {
       console.error('Erreur creation salon:', salonError.message)
+      await supabase.from('pros').delete().eq('id', newPro.id)
+      return NextResponse.json({
+        success: false,
+        error: "Erreur lors de la creation de votre etablissement. Veuillez reessayer."
+      }, { status: 500 })
     }
 
     if (process.env.RESEND_API_KEY) {
       const finDate = new Date()
       finDate.setFullYear(finDate.getFullYear() + 1)
-      
+
       sendProWelcome({
         proEmail: email,
         proName: prenom || nom,
