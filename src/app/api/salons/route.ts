@@ -6,14 +6,46 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const q   = searchParams.get('q')   || ''
     const loc = searchParams.get('loc') || ''
+
     const supabase = createAdminClient()
+
+    let salonIdsFilter: number[] | null = null
+
+    if (q) {
+      // 1. Salons qui ont des services dans cette categorie
+      const { data: matchingServices } = await supabase
+        .from('services')
+        .select('salon_id')
+        .ilike('categorie_service', '%' + q + '%')
+
+      const fromServices = (matchingServices || []).map((s: any) => s.salon_id)
+
+      // 2. Salons dont le type_salon correspond (nouveaux inscrits sans prestations)
+      const { data: matchingType } = await supabase
+        .from('salons')
+        .select('id')
+        .eq('visible', true)
+        .ilike('type_salon', '%' + q + '%')
+
+      const fromType = (matchingType || []).map((s: any) => s.id)
+
+      // 3. Combiner les deux sans doublons
+      salonIdsFilter = Array.from(new Set([...fromServices, ...fromType]))
+    }
 
     let query = supabase
       .from('salons')
       .select('id, nom, adresse, image, type_salon, telephone, description, ville, ouverture, fermeture, jour_off, latitude, longitude, avis(note)')
       .eq('visible', true)
 
-    if (q) query = query.ilike('type_salon', '%' + q + '%')
+    if (salonIdsFilter !== null) {
+      if (salonIdsFilter.length > 0) {
+        query = query.in('id', salonIdsFilter)
+      } else {
+        return NextResponse.json({ salons: [] })
+      }
+    }
+
     if (loc) query = query.ilike('ville', '%' + loc + '%')
 
     const { data, error } = await query.order('id', { ascending: true })
