@@ -32,7 +32,7 @@ const DEFAULT_IMAGES: Record<string, string> = {
 }
 
 const JOURS_SEMAINE = ['', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
-const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut', 'Sport et forme']
+const TYPES_SALON = ['Coiffure & soin cheveux', 'Onglerie Main & pieds', 'Beaute du regard', 'Soin visage & corps', 'Make-up', 'Epilation', 'Piercing et tatouage', 'Barbier', 'Esthetique', 'Massage', 'SPA', 'Yoga & Pilates', 'Fitness & Musculation', 'Danse & Cardio']
 
 const CATEGORIES_SERVICES = [
   'Coiffure & soin cheveux',
