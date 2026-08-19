@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 const CATEGORY_TO_TYPES: Record<string, string[]> = {
   'Coiffure & soin cheveux': ['Coiffure'],
   'Onglerie Main & pieds': ['Beaute des ongles', 'Institut'],
-  'Beaute du regard': ['Institut', 'Beaute des ongles'],
+  'Beaute du regard': ['Institut'],
   'Soin visage & corps': ['Institut', 'Massage et bien-etre', 'Hammam & Spa'],
   'Make up': ['Institut'],
   'Epilation': ['Institut'],
@@ -35,23 +35,37 @@ export async function GET(req: NextRequest) {
         .select('salon_id')
         .ilike('categorie_service', '%' + q + '%')
 
-      const fromServices = (matchingServices || []).map((s: any) => s.salon_id)
+      const fromServices = Array.from(new Set((matchingServices || []).map((s: any) => s.salon_id)))
 
-      // 2. Salons dont le type_salon correspond via le mapping
-      const matchingTypes = CATEGORY_TO_TYPES[q] || [q]
+      // 2. Trouver les salons qui n ont AUCUN service (nouveaux inscrits)
+      const { data: allServices } = await supabase
+        .from('services')
+        .select('salon_id')
+
+      const salonsWithServices = new Set((allServices || []).map((s: any) => s.salon_id))
+
+      // 3. Parmi les salons SANS services, chercher ceux dont le type_salon correspond
+      const matchingTypes = CATEGORY_TO_TYPES[q] || []
       let fromType: number[] = []
 
-      for (const typeName of matchingTypes) {
-        const { data: matchingSalons } = await supabase
-          .from('salons')
-          .select('id')
-          .eq('visible', true)
-          .ilike('type_salon', '%' + typeName + '%')
+      if (matchingTypes.length > 0) {
+        for (const typeName of matchingTypes) {
+          const { data: matchingSalons } = await supabase
+            .from('salons')
+            .select('id')
+            .eq('visible', true)
+            .ilike('type_salon', '%' + typeName + '%')
 
-        fromType = [...fromType, ...(matchingSalons || []).map((s: any) => s.id)]
+          // Ne garder que ceux qui n ont pas encore de services
+          const newSalons = (matchingSalons || [])
+            .map((s: any) => s.id)
+            .filter((id: number) => !salonsWithServices.has(id))
+
+          fromType = [...fromType, ...newSalons]
+        }
       }
 
-      // 3. Combiner sans doublons
+      // 4. Combiner : salons avec services matchants + nouveaux salons par type
       salonIdsFilter = Array.from(new Set([...fromServices, ...fromType]))
     }
 
