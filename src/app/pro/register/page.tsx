@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 
-const TYPES_SALON = ['Coiffure', 'Barbier', 'Beaute des ongles', 'Massage et bien-etre', 'Hammam & Spa', 'Chirurgie esthetique', 'Institut', 'Sport et forme']
+const TYPES_SALON = ['Coiffure & soin cheveux', 'Onglerie Main & pieds', 'Beaute du regard', 'Soin visage & corps', 'Make-up', 'Epilation', 'Piercing et tatouage', 'Barbier', 'Esthetique', 'Massage', 'SPA', 'Yoga & Pilates', 'Fitness & Musculation', 'Danse & Cardio']
 const VILLES = ['Alger', 'Oran', 'Constantine', 'Annaba', 'Setif', 'Blida', 'Tlemcen', 'Batna', 'Bejaia', 'Tizi Ouzou', 'Djelfa', 'Biskra', 'Sidi Bel Abbes', 'Mostaganem', 'Skikda', 'Chlef', 'Bordj Bou Arreridj', 'Medea', 'El Oued', 'Bouira', 'Boumerdes', 'Tipaza', 'Ghardaia', 'Ouargla', 'Autre']
 
 declare global {
