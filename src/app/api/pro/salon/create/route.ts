@@ -10,18 +10,15 @@ export async function POST(req: NextRequest) {
     // 1. Récupérer et vérifier le token du Pro
     const cookieStore = cookies()
     const token = cookieStore.get('bookme_pro_token')?.value
-
     if (!token) {
       return NextResponse.json({ success: false, error: 'Non autorisé.' }, { status: 401 })
     }
-
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!)
     const { payload } = await jwtVerify(token, secret)
     const proId = payload.id as number
 
     // 2. Récupérer les données du formulaire
     const { nom, adresse, ville, telephone, type_salon, description } = await req.json()
-
     if (!nom || !ville || !type_salon) {
       return NextResponse.json({ success: false, error: 'Veuillez remplir les champs obligatoires.' }, { status: 400 })
     }
@@ -33,11 +30,13 @@ export async function POST(req: NextRequest) {
       .insert([{
         pro_id: proId,
         nom,
-        adresse,
+        adresse: adresse || '',
         ville, // Champ texte libre pour couvrir toute l'Algérie
-        telephone,
+        telephone: telephone || '',
         type_salon,
-        description,
+        description: description || '',
+        image: '',        // <-- champ obligatoire cote base : jamais null
+        instagram: '',
         ouverture: '09:00',
         fermeture: '19:00',
         jour_off: 5 // Vendredi par défaut
