@@ -363,7 +363,7 @@ function SearchContent() {
                     }}
                   >
                     <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                      <div style={{ width: '260px', minHeight: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
+                      <div style={{ width: '260px', height: '200px', flexShrink: 0, overflow: 'hidden', background: '#1a1a1a', position: 'relative' }} className="salon-image-container">
                         <img
                          src={salon.image || getDefaultImage(salon.type_salon)}
                           alt={salon.nom}
