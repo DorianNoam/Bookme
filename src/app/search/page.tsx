@@ -16,7 +16,7 @@ const DEFAULT_IMAGES: Record<string, string> = {
   'Barbier': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800',
   'Beaute des ongles': 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800',
   'Massage et bien-etre': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
-  'Hammam & Spa': 'https://images.unsplash.com/photo-1540555700478-4be289fbec6d?w=800',
+  'Hammam & Spa': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800',
   'Chirurgie esthetique': 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800',
   'Institut': 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800',
 }
@@ -354,7 +354,7 @@ function SearchContent() {
                          src={salon.image || DEFAULT_IMAGES[salon.type_salon] || DEFAULT_IMAGES['Coiffure']}
                           alt={salon.nom}
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          onError={e => { const img = e.target as HTMLImageElement; if (img.src !== DEFAULT_IMAGES['Coiffure']) { img.src = DEFAULT_IMAGES['Coiffure']; } }}
                         />
                         <div style={{ position: 'absolute', top: 12, right: 12 }}>
   <FavoriteButton salonId={String(salon.id)} />
