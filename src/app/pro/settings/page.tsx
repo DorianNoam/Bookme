@@ -21,6 +21,42 @@ const supabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
+// ═══════════════════════════════════════════════════════════════════
+// HELPER CENTRAL : aucun appel API ne peut plus echouer en silence.
+// - 401 : session expiree -> message + redirection vers le login
+// - erreur serveur : affiche data.error
+// - erreur reseau : message clair
+// Retourne { ok, data }. Les handlers ne font plus que : if (ok) { ... }
+// ═══════════════════════════════════════════════════════════════════
+async function apiRequest(
+  url: string,
+  options: RequestInit,
+  onError: (msg: string) => void
+): Promise<{ ok: boolean; data: any }> {
+  try {
+    const res = await fetch(url, options)
+
+    if (res.status === 401) {
+      onError('Session expiree. Redirection vers la page de connexion...')
+      setTimeout(() => { window.location.href = '/pro/login' }, 1500)
+      return { ok: false, data: null }
+    }
+
+    let data: any = null
+    try { data = await res.json() } catch { data = null }
+
+    if (!res.ok || !data || data.success !== true) {
+      onError((data && data.error) || 'Une erreur est survenue. Veuillez reessayer.')
+      return { ok: false, data }
+    }
+
+    return { ok: true, data }
+  } catch (e) {
+    onError('Erreur reseau. Verifiez votre connexion et reessayez.')
+    return { ok: false, data: null }
+  }
+}
+
 const DEFAULT_IMAGES: Record<string, string> = {
   'Coiffure': 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800',
   'Barbier': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800',
@@ -78,12 +114,20 @@ export default function ProSettingsPage() {
   const [gallery, setGallery] = useState<GalleryImage[]>([])
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
   const [proEmail, setProEmail] = useState('')
 
   useEffect(() => {
     fetch('/api/pro/settings?t=' + new Date().getTime())
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401) {
+          window.location.href = '/pro/login'
+          return null
+        }
+        return r.json()
+      })
       .then(data => {
+        if (!data) return
         setSalon(data.salon)
         setProEmail(data.pro_email || '')
         setServices(data.services || [])
@@ -93,12 +137,17 @@ export default function ProSettingsPage() {
         setGallery(data.gallery || [])
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => { setErrorMsg('Impossible de charger vos donnees. Rechargez la page.'); setLoading(false) })
   }, [])
 
   function showMessage(msg: string) {
     setMessage(msg)
     setTimeout(() => setMessage(''), 3000)
+  }
+
+  function showError(msg: string) {
+    setErrorMsg(msg)
+    setTimeout(() => setErrorMsg(''), 6000)
   }
 
   if (loading) {
@@ -196,6 +245,12 @@ export default function ProSettingsPage() {
             </div>
           )}
 
+          {errorMsg && (
+            <div style={{ background: '#fef2f2', color: '#b91c1c', padding: '12px 20px', borderRadius: 6, marginBottom: 20, fontSize: 14, fontWeight: 600, border: '1px solid #fecaca' }}>
+              {errorMsg}
+            </div>
+          )}
+
           <div className="custom-scroll" style={{ display: 'flex', gap: 0, marginBottom: 30, overflowX: 'auto', paddingBottom: 8 }}>
             {tabs.map((t, i) => (
               <button key={t.key} onClick={() => setTab(t.key)} style={{
@@ -211,11 +266,11 @@ export default function ProSettingsPage() {
             ))}
           </div>
 
-          {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} gallery={gallery} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} onAddGalleryImage={(img) => setGallery([...gallery, img])} onDeleteGalleryImage={(id) => setGallery(gallery.filter(g => g.id !== id))} />}
-          {tab === 'services' && <ServicesTab services={services} onAdd={(s) => { setServices(prev => [...prev, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
-          {tab === 'employes' && <EmployesTab employes={employes} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
+          {tab === 'salon' && salon && <SalonTab salon={salon} proEmail={proEmail} gallery={gallery} onError={showError} onUpdate={(s, email) => { setSalon(s); if (email !== undefined) setProEmail(email); showMessage('Salon mis a jour') }} onAddGalleryImage={(img) => setGallery([...gallery, img])} onDeleteGalleryImage={(id) => setGallery(gallery.filter(g => g.id !== id))} />}
+          {tab === 'services' && <ServicesTab services={services} onError={showError} onAdd={(s) => { setServices(prev => [...prev, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
+          {tab === 'employes' && <EmployesTab employes={employes} onError={showError} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
           {tab === 'clients' && <ClientsTab />}
-          {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
+          {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onError={showError} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
         </main>
       </div>
     </AbonnementGuard>
@@ -224,16 +279,10 @@ export default function ProSettingsPage() {
 
 
 // ═══════════════════════════════════════════════════════════════════
-// COMPOSANT : Fiche Clients
-// ═══════════════════════════════════════════════════════════════════
-
-
-
-// ═══════════════════════════════════════════════════════════════════
 // COMPOSANT : Ventes Privees
 // ═══════════════════════════════════════════════════════════════════
 
-function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventesPrivees: VentePrivee[]; onAdd: (v: VentePrivee) => void; onUpdate: (v: VentePrivee) => void; onDelete: (id: number) => void }) {
+function VentesPriveesTab({ ventesPrivees, onError, onAdd, onUpdate, onDelete }: { ventesPrivees: VentePrivee[]; onError: (msg: string) => void; onAdd: (v: VentePrivee) => void; onUpdate: (v: VentePrivee) => void; onDelete: (id: number) => void }) {
   const [showForm, setShowForm] = useState(false)
   const [nom, setNom] = useState('')
   const [prix, setPrix] = useState('')
@@ -253,32 +302,23 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
   async function handleAdd() {
     if (!nom || !prix || !duree) return
     setSubmitting(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_vente_privee', nom, prix, duree, description }) })
-      const data = await res.json()
-      if (data.success) { onAdd(data.vente_privee); setNom(''); setPrix(''); setDuree('30'); setDescription(''); setShowForm(false) }
-    } catch (e) {}
+    const { ok, data } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_vente_privee', nom, prix, duree, description }) }, onError)
+    if (ok) { onAdd(data.vente_privee); setNom(''); setPrix(''); setDuree('30'); setDescription(''); setShowForm(false) }
     setSubmitting(false)
   }
 
   async function handleSaveEdit(v: VentePrivee) {
     if (!editNom || !editPrix || !editDuree) return
     setSavingEdit(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_vente_privee', id: v.id, nom: editNom, prix: editPrix, duree: editDuree, description: editDescription }) })
-      const data = await res.json()
-      if (data.success) { onUpdate(data.vente_privee); setEditingId(null) }
-    } catch (e) {}
+    const { ok, data } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_vente_privee', id: v.id, nom: editNom, prix: editPrix, duree: editDuree, description: editDescription }) }, onError)
+    if (ok) { onUpdate(data.vente_privee); setEditingId(null) }
     setSavingEdit(false)
   }
 
   async function handleDelete(id: number) {
     if (!confirm('Supprimer cette offre VIP ?')) return
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_vente_privee', id }) })
-      const data = await res.json()
-      if (data.success) onDelete(id)
-    } catch (e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_vente_privee', id }) }, onError)
+    if (ok) onDelete(id)
   }
 
   return (
@@ -353,7 +393,7 @@ function VentesPriveesTab({ ventesPrivees, onAdd, onUpdate, onDelete }: { ventes
 // COMPOSANT : Services
 // ═══════════════════════════════════════════════════════════════════
 
-function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Service[]; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
+function ServicesTab({ services, onError, onAdd, onUpdate, onDelete }: { services: Service[]; onError: (msg: string) => void; onAdd: (s: Service) => void; onUpdate: (s: Service) => void; onDelete: (id: number) => void }) {
   const [showForm, setShowForm] = useState(false)
   const [nom, setNom] = useState('')
   const [descriptionService, setDescriptionService] = useState('')
@@ -412,89 +452,67 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
     setScanning(true)
     const formData = new FormData()
     formData.append('file', file)
-    try {
-      const res = await fetch('/api/pro/scan-menu', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (data.success && data.prestations) {
-        setAiPrestations(data.prestations)
-        setShowAiModal(true)
-      } else {
-        alert(data.error || "Erreur lors de l'analyse.")
-      }
-    } catch (err) {
-      alert("Erreur reseau lors de l'envoi du fichier.")
+    const { ok, data } = await apiRequest('/api/pro/scan-menu', { method: 'POST', body: formData }, (m) => onError("Analyse impossible : " + m))
+    if (ok && data.prestations) {
+      setAiPrestations(data.prestations)
+      setShowAiModal(true)
     }
     setScanning(false)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   async function handleConfirmAiImport() {
+    let echecs = 0
     for (const p of aiPrestations) {
-      try {
-        const res = await fetch('/api/pro/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'add_service', nom: p.nom, description: p.description || '', prix: p.prix, duree: p.duree || 30, categorie_service: p.categorie_service || CATEGORIES_SERVICES[0] })
-        })
-        const data = await res.json()
-        if (data.success) onAdd(data.service)
-      } catch (e) {}
+      const { ok, data } = await apiRequest('/api/pro/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add_service', nom: p.nom, description: p.description || '', prix: p.prix, duree: p.duree || 30, categorie_service: p.categorie_service || CATEGORIES_SERVICES[0] })
+      }, onError)
+      if (ok) onAdd(data.service)
+      else echecs++
     }
     setShowAiModal(false)
     setAiPrestations([])
+    if (echecs > 0) onError(`${echecs} prestation(s) n'ont pas pu etre importees.`)
   }
 
   async function handlePromoSave(s: Service) {
     const pct = parseInt(promoPct)
     if (isNaN(pct) || pct < 1 || pct > 99) return
     setSavingPromo(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true, promo_nom: promoNom || null, promo_debut: promoDebut || null, promo_fin: promoFin || null }) })
-      const data = await res.json()
-      if (data.success) { onUpdate({ ...s, promo_pourcentage: pct, promo_active: true, promo_nom: promoNom || null, promo_debut: promoDebut || null, promo_fin: promoFin || null }); setPromoId(null) }
-    } catch (e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: pct, promo_active: true, promo_nom: promoNom || null, promo_debut: promoDebut || null, promo_fin: promoFin || null }) }, onError)
+    if (ok) { onUpdate({ ...s, promo_pourcentage: pct, promo_active: true, promo_nom: promoNom || null, promo_debut: promoDebut || null, promo_fin: promoFin || null }); setPromoId(null) }
     setSavingPromo(false)
   }
 
   async function handlePromoRemove(s: Service) {
     setSavingPromo(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: null, promo_active: false, promo_nom: null, promo_debut: null, promo_fin: null }) })
-      const data = await res.json()
-      if (data.success) { onUpdate({ ...s, promo_pourcentage: null, promo_active: false, promo_nom: null, promo_debut: null, promo_fin: null }); setPromoId(null) }
-    } catch (e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set_promo', id: s.id, promo_pourcentage: null, promo_active: false, promo_nom: null, promo_debut: null, promo_fin: null }) }, onError)
+    if (ok) { onUpdate({ ...s, promo_pourcentage: null, promo_active: false, promo_nom: null, promo_debut: null, promo_fin: null }); setPromoId(null) }
     setSavingPromo(false)
   }
 
   async function handleSaveEdit(s: Service) {
     if (!editNom || !editPrix || !editDuree) return
     setSavingEdit(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_service', id: s.id, nom: editNom, description: editDescription, prix: editPrix, duree: editDuree, categorie_service: editCategorie || s.categorie_service }) })
-      const data = await res.json()
-      if (data.success) { onUpdate(data.service); setEditingId(null) }
-    } catch (e) {}
+    const { ok, data } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'update_service', id: s.id, nom: editNom, description: editDescription, prix: editPrix, duree: editDuree, categorie_service: editCategorie || s.categorie_service }) }, onError)
+    if (ok) { onUpdate(data.service); setEditingId(null) }
     setSavingEdit(false)
   }
 
   async function handleAdd() {
     if (!nom || !prix || !duree || !categorie) return
     setSubmitting(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_service', nom, description: descriptionService, prix, duree, categorie_service: categorie }) })
-      const data = await res.json()
-      if (data.success) { onAdd(data.service); setNom(''); setDescriptionService(''); setPrix(''); setDuree('30'); setCategorie(CATEGORIES_SERVICES[0]); setShowForm(false) }
-    } catch (e) {}
+    const { ok, data } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_service', nom, description: descriptionService, prix, duree, categorie_service: categorie }) }, onError)
+    if (ok) { onAdd(data.service); setNom(''); setDescriptionService(''); setPrix(''); setDuree('30'); setCategorie(CATEGORIES_SERVICES[0]); setShowForm(false) }
     setSubmitting(false)
   }
 
   async function handleDelete(id: number) {
     if (!confirm('Supprimer cette prestation ?')) return
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_service', id }) })
-      const data = await res.json()
-      if (data.success) onDelete(id)
-    } catch (e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_service', id }) }, onError)
+    if (ok) onDelete(id)
   }
 
   return (
@@ -659,7 +677,7 @@ function ServicesTab({ services, onAdd, onUpdate, onDelete }: { services: Servic
 // COMPOSANT : Employes
 // ═══════════════════════════════════════════════════════════════════
 
-function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd: (e: Employe) => void; onDelete: (id: number) => void }) {
+function EmployesTab({ employes, onError, onAdd, onDelete }: { employes: Employe[]; onError: (msg: string) => void; onAdd: (e: Employe) => void; onDelete: (id: number) => void }) {
   const [nom, setNom] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [accessFormId, setAccessFormId] = useState<number | null>(null)
@@ -675,21 +693,15 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
   async function handleAdd() {
     if (!nom.trim()) return
     setSubmitting(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_employe', nom: nom.trim() }) })
-      const data = await res.json()
-      if (data.success) { onAdd(data.employe); setNom('') }
-    } catch (e) {}
+    const { ok, data } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_employe', nom: nom.trim() }) }, onError)
+    if (ok) { onAdd(data.employe); setNom('') }
     setSubmitting(false)
   }
 
   async function handleDelete(id: number) {
     if (!confirm('Supprimer cet employe ?')) return
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_employe', id }) })
-      const data = await res.json()
-      if (data.success) onDelete(id)
-    } catch (e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_employe', id }) }, onError)
+    if (ok) onDelete(id)
   }
 
   function openAccessForm(emp: Employe) { setAccessFormId(emp.id); setAccessEmail(emp.email || ''); setAccessPassword(''); setAccessError(''); setAccessSuccess('') }
@@ -698,26 +710,20 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
     if (!accessEmail || !accessPassword) { setAccessError('Email et mot de passe requis.'); return }
     if (accessPassword.length < 6) { setAccessError('Mot de passe : 6 caracteres minimum.'); return }
     setAccessSaving(true); setAccessError('')
-    try {
-      const res = await fetch('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'enable_access', employe_id: empId, email: accessEmail, password: accessPassword }) })
-      const data = await res.json()
-      if (data.success) {
-        setLocalEmployes(prev => prev.map(e => e.id === empId ? { ...e, email: accessEmail, acces_agenda: true } : e))
-        setAccessSuccess('Acces active ! Le collaborateur peut maintenant se connecter.')
-        setTimeout(() => { setAccessFormId(null); setAccessSuccess('') }, 2000)
-      } else { setAccessError(data.error || 'Erreur.') }
-    } catch { setAccessError('Erreur reseau.') }
+    const { ok } = await apiRequest('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'enable_access', employe_id: empId, email: accessEmail, password: accessPassword }) }, setAccessError)
+    if (ok) {
+      setLocalEmployes(prev => prev.map(e => e.id === empId ? { ...e, email: accessEmail, acces_agenda: true } : e))
+      setAccessSuccess('Acces active ! Le collaborateur peut maintenant se connecter.')
+      setTimeout(() => { setAccessFormId(null); setAccessSuccess('') }, 2000)
+    }
     setAccessSaving(false)
   }
 
   async function handleDisableAccess(empId: number) {
     if (!confirm("Retirer l'acces agenda de ce collaborateur ?")) return
     setAccessSaving(true)
-    try {
-      const res = await fetch('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'disable_access', employe_id: empId }) })
-      const data = await res.json()
-      if (data.success) { setLocalEmployes(prev => prev.map(e => e.id === empId ? { ...e, email: null, acces_agenda: false } : e)) }
-    } catch {}
+    const { ok } = await apiRequest('/api/pro/employe-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'disable_access', employe_id: empId }) }, onError)
+    if (ok) { setLocalEmployes(prev => prev.map(e => e.id === empId ? { ...e, email: null, acces_agenda: false } : e)) }
     setAccessSaving(false)
   }
 
@@ -781,7 +787,7 @@ function EmployesTab({ employes, onAdd, onDelete }: { employes: Employe[]; onAdd
 // COMPOSANT : Infos salon (+ GALERIE + GOOGLE PLACES)
 // ═══════════════════════════════════════════════════════════════════
 
-function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDeleteGalleryImage }: { salon: Salon; proEmail: string; gallery: GalleryImage[]; onUpdate: (s: Salon, email?: string) => void; onAddGalleryImage: (img: GalleryImage) => void; onDeleteGalleryImage: (id: number) => void }) {
+function SalonTab({ salon, proEmail, gallery, onError, onUpdate, onAddGalleryImage, onDeleteGalleryImage }: { salon: Salon; proEmail: string; gallery: GalleryImage[]; onError: (msg: string) => void; onUpdate: (s: Salon, email?: string) => void; onAddGalleryImage: (img: GalleryImage) => void; onDeleteGalleryImage: (id: number) => void }) {
   const [form, setForm] = useState({ 
     ...salon,
     pause_active: salon.pause_active || false,
@@ -879,12 +885,9 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
       }
       const { data: urlData } = supabaseClient.storage.from('salon-images').getPublicUrl(fileName)
       const publicUrl = urlData.publicUrl
-      const res = await fetch('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, image: publicUrl }) })
-      const data = await res.json()
-      if (data.success) {
+      const { ok } = await apiRequest('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, image: publicUrl }) }, (m) => setUploadMsg('Erreur : ' + m))
+      if (ok) {
         setForm({ ...form, image: publicUrl }); onUpdate({ ...form, image: publicUrl }); setUploadMsg('Photo mise a jour !')
-      } else {
-        setUploadMsg('Erreur enregistrement : ' + (data.error || 'echec inconnu du serveur'))
       }
     } catch (err: any) { setUploadMsg('Erreur : ' + (err.message || 'Upload echoue')) }
     setUploading(false)
@@ -894,8 +897,8 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
   async function handleUploadGallery(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) { alert('Fichier non valide.'); return }
-    if (file.size > 5 * 1024 * 1024) { alert('Image trop lourde (max 5 Mo)'); return }
+    if (!file.type.startsWith('image/')) { onError('Fichier non valide.'); return }
+    if (file.size > 5 * 1024 * 1024) { onError('Image trop lourde (max 5 Mo)'); return }
     setUploadingGallery(true)
     try {
       const ext = file.name.split('.').pop() || 'jpg'
@@ -904,39 +907,30 @@ function SalonTab({ salon, proEmail, gallery, onUpdate, onAddGalleryImage, onDel
       if (uploadError) throw uploadError
       const { data: urlData } = supabaseClient.storage.from('salon-images').getPublicUrl(fileName)
       const publicUrl = urlData.publicUrl
-      const res = await fetch('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_gallery_image', image_path: publicUrl }) })
-      const data = await res.json()
-      if (data.success) onAddGalleryImage(data.image)
-    } catch (err) { alert("Erreur lors de l'envoi de l'image de la galerie.") }
+      const { ok, data } = await apiRequest('/api/pro/settings', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'add_gallery_image', image_path: publicUrl }) }, onError)
+      if (ok) onAddGalleryImage(data.image)
+    } catch (err) { onError("Erreur lors de l'envoi de l'image de la galerie.") }
     setUploadingGallery(false)
     if (galleryInputRef.current) galleryInputRef.current.value = ''
   }
 
   async function handleDeleteGallery(id: number) {
     if(!confirm("Supprimer cette photo de votre galerie ?")) return
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_gallery_image', id }) })
-      if (res.ok) onDeleteGalleryImage(id)
-    } catch(e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'delete_gallery_image', id }) }, onError)
+    if (ok) onDeleteGalleryImage(id)
   }
 
   async function handleRemoveImage() {
     setSaving(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, image: '' }) })
-      const data = await res.json()
-      if (data.success) { setForm({ ...form, image: '' }); onUpdate({ ...form, image: '' }); setUploadMsg('Photo supprimee.') }
-    } catch (e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, image: '' }) }, onError)
+    if (ok) { setForm({ ...form, image: '' }); onUpdate({ ...form, image: '' }); setUploadMsg('Photo supprimee.') }
     setSaving(false)
   }
 
   async function handleSave() {
     setSaving(true)
-    try {
-      const res = await fetch('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, pro_email: emailValue }) })
-      const data = await res.json()
-      if (data.success) onUpdate(form, emailValue)
-    } catch (e) {}
+    const { ok } = await apiRequest('/api/pro/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, pro_email: emailValue }) }, onError)
+    if (ok) onUpdate(form, emailValue)
     setSaving(false)
   }
 
