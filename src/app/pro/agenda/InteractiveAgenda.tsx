@@ -633,18 +633,18 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
           <div style={{ background: '#fff', padding: 32, borderRadius: 12, width: '100%', maxWidth: 450 }}>
             <h2 style={{ marginBottom: 24, color: NOIR, fontWeight: 900 }}>Bloquer un creneau</h2>
             <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%' }}>
+              <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%', boxSizing: 'border-box' }}>
                 {employes.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
               </select>
               <div style={{ display: 'flex', gap: 12 }}>
-                <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
-                <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} required style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               </div>
               <input type="text" placeholder="Nom du client (ou motif)" value={clientName} onChange={e => setClientName(e.target.value)} required style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
 
               <div style={{ display: 'flex', gap: 12 }}>
-                <input type="email" placeholder="Email du client (optionnel)" value={clientEmail} onChange={e => setClientEmail(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
-                <input type="tel" placeholder="Tel (optionnel)" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input type="email" placeholder="Email du client (optionnel)" value={clientEmail} onChange={e => setClientEmail(e.target.value)} style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input type="tel" placeholder="Tel (optionnel)" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               </div>
               <p style={{ fontSize: 11, color: '#999', margin: '-8px 0 0 0' }}>Si renseignes, le client recevra un rappel automatique avant son RDV.</p>
 
@@ -653,14 +653,14 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                   value={selectedServiceId}
                   onChange={handleServiceChange}
                   required
-                  style={{ flex: 2, padding: 12, border: '1px solid #ddd', borderRadius: 6 }}
+                  style={{ flex: 2, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }}
                 >
                   <option value="" disabled>Prestation</option>
                   {services.map(svc => (
                     <option key={svc.id} value={svc.id}>{svc.nom}</option>
                   ))}
                 </select>
-                <input type="number" placeholder="Prix DA" value={servicePrice} onChange={e => setServicePrice(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                <input type="number" placeholder="Prix DA" value={servicePrice} onChange={e => setServicePrice(e.target.value)} style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               </div>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
@@ -804,12 +804,12 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               <div style={{ padding: 24 }}>
                 <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <label style={{ fontSize: 12, fontWeight: 700, color: '#666', textTransform: 'uppercase' }}>Deplacer le creneau</label>
-                  <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%' }}>
+                  <select value={selectedEmploye} onChange={e => setSelectedEmploye(Number(e.target.value))} style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6, width: '100%', boxSizing: 'border-box' }}>
                     {employes.map(emp => <option key={emp.id} value={emp.id}>{emp.nom}</option>)}
                   </select>
                   <div style={{ display: 'flex', gap: 12 }}>
-                    <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
-                    <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                    <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} required style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
+                    <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, minWidth: 0, boxSizing: 'border-box', padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
                   </div>
                   <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                     <button type="button" onClick={() => setFicheMode('fiche')} disabled={isLoading} style={{ flex: 1, padding: 14, background: '#f5f5f5', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer', color: '#666' }}>← Retour</button>
