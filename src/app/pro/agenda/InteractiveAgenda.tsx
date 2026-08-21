@@ -9,7 +9,6 @@ const OR = '#B8922A'
 const BG = '#F8F5F0'
 const JOURS_COURTS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
-// Plage horaire affichee dans l'agenda (9:00 -> 20:00)
 const DAY_START_H = 9
 const DAY_END_H = 20
 
@@ -32,27 +31,18 @@ function formatDateForUrl(d: Date) {
 
 function formatPhoneForWhatsApp(phone: string): string {
   let cleaned = phone.replace(/[\s\-\.\(\)]/g, '')
-  // Deja au format international avec + → on enleve juste le +
   if (cleaned.startsWith('+')) return cleaned.slice(1)
-  // Format 00XXX → on enleve les 00
   if (cleaned.startsWith('00')) return cleaned.slice(2)
-  // Numeros locaux commencant par 0 → detection du pays par pattern
   if (cleaned.startsWith('0') && cleaned.length >= 9) {
     const afterZero = cleaned.slice(1)
-    // Algerie : 05/06/07 + 8 chiffres = 10 chiffres total
     if (/^[567]\d{8}$/.test(afterZero)) return '213' + afterZero
-    // France : 06/07/01/02/03/04/05/09 + 8 chiffres = 10 chiffres total
     if (/^[1-9]\d{8}$/.test(afterZero) && cleaned.length === 10) return '33' + afterZero
-    // Tunisie : 0 + 8 chiffres = 9 chiffres total
     if (cleaned.length === 9) return '216' + afterZero
-    // Maroc : 06/07/05 + 8 chiffres = 10 chiffres total
     return '212' + afterZero
   }
-  // Deja un format international sans + ni 00
   return cleaned
 }
 
-// AAAA-MM-JJ en local (sans decalage de fuseau)
 function toYMD(d: Date) {
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -60,14 +50,11 @@ function toYMD(d: Date) {
   return `${y}-${m}-${day}`
 }
 
-// JJ/MM/AAAA a partir d'une chaine AAAA-MM-JJ
 function formatFr(ymd: string) {
   const [y, m, d] = ymd.split('-')
   return `${d}/${m}/${y}`
 }
 
-// Attribution de colonnes pour les RDV qui se chevauchent (meme employe / meme jour).
-// Chaque event recoit .col (index de colonne) et .cols (nb total de colonnes de son groupe).
 function assignColumns<T extends { _start: number; _end: number }>(events: T[]): (T & { col: number; cols: number })[] {
   const sorted = [...events].sort((a, b) => a._start - b._start || a._end - b._end) as (T & { col?: number; cols?: number })[]
   const result: (T & { col: number; cols: number })[] = []
@@ -76,7 +63,7 @@ function assignColumns<T extends { _start: number; _end: number }>(events: T[]):
 
   const flush = () => {
     if (cluster.length === 0) return
-    const colEnds: number[] = [] // derniere fin de chaque colonne
+    const colEnds: number[] = []
     for (const ev of cluster) {
       let placed = false
       for (let c = 0; c < colEnds.length; c++) {
@@ -115,27 +102,26 @@ type Props = {
 export default function InteractiveAgenda({ employes, services, reservations, view, targetDateStr, salonName, salonId, dateOuverture, fermetures, isOwner }: Props) {
   const router = useRouter()
   const targetDate = new Date(targetDateStr)
-  
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isFicheModalOpen, setIsFicheModalOpen] = useState(false)
   const [ficheMode, setFicheMode] = useState<'fiche' | 'edit'>('fiche')
   const [isLoading, setIsLoading] = useState(false)
-  
+
   const [selectedEmploye, setSelectedEmploye] = useState(employes[0]?.id || '')
   const [selectedTime, setSelectedTime] = useState('09:00')
   const [selectedDate, setSelectedDate] = useState(targetDateStr.split('T')[0])
-  
+
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
   const [clientTelephone, setClientTelephone] = useState('')
-  
+
   const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id || '')
   const [serviceName, setServiceName] = useState(services[0]?.nom || '')
   const [servicePrice, setServicePrice] = useState(services[0]?.prix?.toString() || '0')
-  
+
   const [activeRdv, setActiveRdv] = useState<any>(null)
 
-  // --- Statut du salon (date d'ouverture + fermetures) ---
   const [showStatut, setShowStatut] = useState(false)
   const [statutLoading, setStatutLoading] = useState(false)
   const [ouvertureInput, setOuvertureInput] = useState(dateOuverture || '')
@@ -143,7 +129,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
   const [fFin, setFFin] = useState('')
   const [fMotif, setFMotif] = useState('')
 
-  // Duree d'un RDV en minutes. Cherche plusieurs champs possibles, sinon 30 min par defaut.
   const getDuree = (rdv: any): number => {
     const direct = Number(rdv.duree ?? rdv.duree_min ?? rdv.duration ?? rdv.service_duree ?? 0)
     if (direct > 0) return direct
@@ -153,7 +138,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     return 30
   }
 
-  // Un jour est-il ferme ? (avant ouverture OU dans une plage de fermeture)
   const getClosure = (d: Date): { closed: boolean; reason: string } => {
     const ymd = toYMD(d)
     if (dateOuverture && ymd < dateOuverture) return { closed: true, reason: 'Avant ouverture' }
@@ -238,22 +222,22 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     e.preventDefault()
     setIsLoading(true)
     const dateRdv = `${selectedDate}T${selectedTime}:00`
-    
+
     await fetch('/api/pro/reservations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        employe_id: selectedEmploye, 
-        client_nom: clientName, 
+      body: JSON.stringify({
+        employe_id: selectedEmploye,
+        client_nom: clientName,
         client_email: clientEmail || null,
         client_telephone: clientTelephone || null,
-        service_id: selectedServiceId || null, 
-        service_nom: serviceName, 
-        service_prix: servicePrice, 
-        date_rdv: dateRdv 
+        service_id: selectedServiceId || null,
+        service_nom: serviceName,
+        service_prix: servicePrice,
+        date_rdv: dateRdv
       })
     })
-    
+
     setIsAddModalOpen(false)
     setIsLoading(false)
     router.refresh()
@@ -269,7 +253,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ employe_id: selectedEmploye, new_date_rdv: dateRdv })
     })
-    
+
     setIsFicheModalOpen(false)
     setFicheMode('fiche')
     setIsLoading(false)
@@ -285,20 +269,16 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     return encodeURIComponent(msg)
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // VUE JOUR — positionnement proportionnel (heure + duree)
-  // ═══════════════════════════════════════════════════════════
   const renderDayView = () => {
     const startH = DAY_START_H
     const hoursCount = DAY_END_H - startH
     const HOUR_H = 64
     const bodyHeight = hoursCount * HOUR_H
-    const nbSlots = hoursCount * 2 // creneaux de 30 min
+    const nbSlots = hoursCount * 2
 
     return (
       <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 500 }}>
-          {/* Header employes */}
           <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
             <div style={{ width: 56, flexShrink: 0, borderRight: '1px solid #eee' }} />
             {employes.map((emp: any) => (
@@ -306,9 +286,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
             ))}
           </div>
 
-          {/* Corps */}
           <div style={{ display: 'flex' }}>
-            {/* Gouttiere des heures */}
             <div style={{ width: 56, flexShrink: 0, position: 'relative', height: bodyHeight, borderRight: '1px solid #eee', background: '#fafafa' }}>
               {Array.from({ length: hoursCount }).map((_, i) => (
                 <div key={i} style={{ position: 'absolute', top: i * HOUR_H, left: 0, right: 0, padding: '2px 6px 0 0', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#999' }}>
@@ -317,7 +295,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               ))}
             </div>
 
-            {/* Colonnes employes */}
             {employes.map((emp: any) => {
               const empRes = reservations
                 .filter((r: any) => r.employe_id === emp.id)
@@ -330,7 +307,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
 
               return (
                 <div key={emp.id} style={{ flex: 1, position: 'relative', height: bodyHeight, borderRight: '1px solid #f5f5f5' }}>
-                  {/* Creneaux cliquables (fond) + lignes de repere */}
                   {Array.from({ length: nbSlots }).map((_, i) => {
                     const h = startH + Math.floor(i / 2)
                     const m = i % 2 === 0 ? 0 : 30
@@ -341,7 +317,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                     )
                   })}
 
-                  {/* Rendez-vous positionnes */}
                   {laid.map((rdv: any, idx: number) => {
                     let top = ((rdv._start - startH * 60) / 60) * HOUR_H
                     let h = ((rdv._end - rdv._start) / 60) * HOUR_H
@@ -375,7 +350,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
           </div>
         </div>
 
-        {/* Footer */}
         <div style={{ padding: '12px 16px', borderTop: '2px solid #eee', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>{reservations.length} rendez-vous</span>
           <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>{reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA</span>
@@ -384,9 +358,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     )
   }
 
-  // ═══════════════════════════════════════════════════════════
-  // VUE SEMAINE — positionnement proportionnel par jour
-  // ═══════════════════════════════════════════════════════════
   const renderWeekView = () => {
     const startH = DAY_START_H
     const hoursCount = DAY_END_H - startH
@@ -404,7 +375,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     return (
       <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 640 }}>
-          {/* Header jours */}
           <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
             <div style={{ width: 44, flexShrink: 0, borderRight: '1px solid #eee' }} />
             {days.map((day, i) => {
@@ -420,16 +390,13 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
             })}
           </div>
 
-          {/* Corps */}
           <div style={{ display: 'flex' }}>
-            {/* Gouttiere des heures */}
             <div style={{ width: 44, flexShrink: 0, position: 'relative', height: bodyHeight, borderRight: '1px solid #eee', background: '#fafafa' }}>
               {Array.from({ length: hoursCount }).map((_, i) => (
                 <div key={i} style={{ position: 'absolute', top: i * HOUR_H, left: 0, right: 0, padding: '2px 4px 0 0', textAlign: 'right', fontSize: 10, fontWeight: 600, color: '#bbb' }}>{`${startH + i}h`}</div>
               ))}
             </div>
 
-            {/* Colonnes jours */}
             {days.map((day, di) => {
               const isToday = isSameDay(day, today)
               const clo = getClosure(day)
@@ -444,7 +411,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
 
               return (
                 <div key={di} style={{ flex: 1, position: 'relative', height: bodyHeight, borderRight: '1px solid #f8f8f8', background: clo.closed ? 'rgba(192,57,43,0.04)' : isToday ? 'rgba(184,146,42,0.03)' : 'transparent' }}>
-                  {/* Creneaux cliquables + lignes de repere */}
                   {Array.from({ length: nbSlots }).map((_, i) => {
                     const h = startH + Math.floor(i / 2)
                     const m = i % 2 === 0 ? 0 : 30
@@ -455,7 +421,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                     )
                   })}
 
-                  {/* Rendez-vous positionnes */}
                   {laid.map((rdv: any, idx: number) => {
                     let top = ((rdv._start - startH * 60) / 60) * HOUR_H
                     let hh = ((rdv._end - rdv._start) / 60) * HOUR_H
@@ -484,7 +449,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
           </div>
         </div>
 
-        {/* Footer */}
         <div style={{ padding: '12px 16px', borderTop: '2px solid #eee', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>{reservations.length} RDV cette semaine</span>
           <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>{reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA</span>
@@ -558,7 +522,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     )
   }
 
-  // Statut du jour (pour la pastille de l'encart)
   const nowClosure = getClosure(new Date())
   const notYetOpen = dateOuverture ? toYMD(new Date()) < dateOuverture : false
   let statusLabel = 'Ouvert'
@@ -571,14 +534,12 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     statusColor = '#d32f2f'
   }
 
-  // Bandeau de fermeture pour la vue Jour
   const dayClosure = view === 'day' ? getClosure(targetDate) : { closed: false, reason: '' }
 
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `.agenda-slot:hover { background: #fdfdfd !important; }`}} />
 
-      {/* ═══ ENCART : STATUT DU SALON (patron uniquement) ═══ */}
       {isOwner && (
         <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', marginBottom: 16, overflow: 'hidden' }}>
           <button
@@ -598,7 +559,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
           {showStatut && (
             <div style={{ padding: 'clamp(14px, 3vw, 20px)', borderTop: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-              {/* Date d'ouverture */}
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{"Date d'ouverture"}</div>
                 <p style={{ fontSize: 12, color: '#888', margin: '0 0 10px 0', lineHeight: 1.5 }}>
@@ -613,7 +573,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                 </div>
               </div>
 
-              {/* Fermetures exceptionnelles */}
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Fermetures exceptionnelles</div>
 
@@ -635,7 +594,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                   </div>
                 )}
 
-                {/* Formulaire d'ajout */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: '#fafafa', padding: 12, borderRadius: 8 }}>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <div style={{ flex: 1, minWidth: 130 }}>
@@ -657,7 +615,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
         </div>
       )}
 
-      {/* Bandeau : jour ferme (vue Jour) */}
       {dayClosure.closed && (
         <div style={{ background: '#fff4f4', border: '1px solid #f3c0c0', borderRadius: 8, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 18 }}>🔒</span>
@@ -671,7 +628,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
       {view === 'week' && renderWeekView()}
       {view === 'month' && renderMonthView()}
 
-      {/* MODALE : AJOUTER UN RDV */}
       {isAddModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
           <div style={{ background: '#fff', padding: 32, borderRadius: 12, width: '100%', maxWidth: 450 }}>
@@ -685,7 +641,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                 <input type="time" value={selectedTime} onChange={e => setSelectedTime(e.target.value)} required style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
               </div>
               <input type="text" placeholder="Nom du client (ou motif)" value={clientName} onChange={e => setClientName(e.target.value)} required style={{ padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
-              
+
               <div style={{ display: 'flex', gap: 12 }}>
                 <input type="email" placeholder="Email du client (optionnel)" value={clientEmail} onChange={e => setClientEmail(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
                 <input type="tel" placeholder="Tel (optionnel)" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} style={{ flex: 1, padding: 12, border: '1px solid #ddd', borderRadius: 6 }} />
@@ -693,10 +649,10 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               <p style={{ fontSize: 11, color: '#999', margin: '-8px 0 0 0' }}>Si renseignes, le client recevra un rappel automatique avant son RDV.</p>
 
               <div style={{ display: 'flex', gap: 12 }}>
-                <select 
-                  value={selectedServiceId} 
-                  onChange={handleServiceChange} 
-                  required 
+                <select
+                  value={selectedServiceId}
+                  onChange={handleServiceChange}
+                  required
                   style={{ flex: 2, padding: 12, border: '1px solid #ddd', borderRadius: 6 }}
                 >
                   <option value="" disabled>Prestation</option>
@@ -716,7 +672,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
         </div>
       )}
 
-      {/* MODALE : FICHE CLIENT + MODIFIER */}
       {isFicheModalOpen && activeRdv && (
         <div
           onClick={() => { setIsFicheModalOpen(false); setFicheMode('fiche') }}
@@ -726,7 +681,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
             onClick={(e) => e.stopPropagation()}
             style={{ background: '#fff', borderRadius: 12, width: '100%', maxWidth: 420, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}
           >
-            {/* Header */}
             <div style={{
               background: NOIR, color: '#fff', padding: '20px 24px', borderRadius: '12px 12px 0 0',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center'
@@ -747,11 +701,9 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               </button>
             </div>
 
-            {/* Contenu : Mode FICHE */}
             {ficheMode === 'fiche' && (
               <div style={{ padding: 24 }}>
 
-                {/* Contact */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Contact</div>
 
@@ -784,7 +736,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                   )}
                 </div>
 
-                {/* Prestation */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Prestation</div>
                   <div style={{ padding: 14, background: '#faf8f4', borderRadius: 8, borderLeft: `3px solid ${OR}` }}>
@@ -793,7 +744,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                   </div>
                 </div>
 
-                {/* Date & Heure */}
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Date et heure</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: NOIR }}>
@@ -806,9 +756,8 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                   </div>
                 </div>
 
-                {/* Bouton WhatsApp */}
                 {activeRdv.client_telephone && (
-                  
+                  <a
                     href={`https://wa.me/${formatPhoneForWhatsApp(activeRdv.client_telephone)}?text=${buildWhatsAppMessage(activeRdv)}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -825,9 +774,8 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                   </a>
                 )}
 
-                {/* Bouton Appeler */}
                 {activeRdv.client_telephone && (
-                  
+                  <a
                     href={`tel:${activeRdv.client_telephone}`}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -840,7 +788,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
                   </a>
                 )}
 
-                {/* Bouton Modifier */}
                 <button
                   onClick={() => setFicheMode('edit')}
                   style={{
@@ -853,7 +800,6 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               </div>
             )}
 
-            {/* Contenu : Mode EDIT */}
             {ficheMode === 'edit' && (
               <div style={{ padding: 24 }}>
                 <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
