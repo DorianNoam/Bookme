@@ -7,7 +7,7 @@ const NOIR = '#0A0A0A'
 const OR = '#B8922A'
 const BG = '#F8F5F0'
 
-type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number; ouverture?: string; fermeture?: string; pause_active?: boolean; pause_debut?: string; pause_fin?: string }
+type Salon = { id: number; nom: string; adresse: string; ville: string; image: string; jour_off?: number; ouverture?: string; fermeture?: string; pause_active?: boolean; pause_debut?: string; pause_fin?: string; date_ouverture?: string | null; fermetures?: { date_debut: string; date_fin: string }[] }
 type Service = { 
   id: number; nom: string; prix: number; duree: number;
   promo_active?: boolean; promo_pourcentage?: number | null; promo_nom?: string | null;
@@ -72,7 +72,9 @@ function BookingContent() {
     fetch('/api/salons/' + salonId)
       .then(r => r.json())
       .then(data => {
-        setSalon(data.salon)
+        // On accepte les fermetures qu'elles soient nichees dans salon ou au niveau racine
+        const s = data.salon ? { ...data.salon, fermetures: data.salon.fermetures || data.fermetures || [] } : null
+        setSalon(s)
         setAllServices(data.services || [])
         if (serviceId) {
           const srv = (data.services || []).find((s: Service) => s.id === parseInt(serviceId))
@@ -312,8 +314,11 @@ function BookingContent() {
                       const isPast = dayDate < today
                       const jourSemaine = dayDate.getDay() || 7
                       const isOff = salon?.jour_off === jourSemaine
-                      const isDisabled = isPast || isOff
                       const formatted = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`
+                      // Ferme si avant l'ouverture du salon ou dans une periode de fermeture
+                      const isBeforeOpening = salon?.date_ouverture ? formatted < salon.date_ouverture : false
+                      const isInFermeture = (salon?.fermetures || []).some(f => formatted >= f.date_debut && formatted <= f.date_fin)
+                      const isDisabled = isPast || isOff || isBeforeOpening || isInFermeture
                       const isSelected = date === formatted
                       return (
                         <button key={dayNum} disabled={isDisabled} onClick={() => handleDateSelect(dayDate)}
@@ -332,7 +337,7 @@ function BookingContent() {
                   {date && loadingCreneaux && <p style={{ color: '#999', fontSize: 13 }}>Chargement...</p>}
                   {date && !loadingCreneaux && ferme && (
                     <div style={{ background: '#FFF5F5', padding: 16, borderRadius: 4, textAlign: 'center' }}>
-                      <p style={{ color: '#d32f2f', fontWeight: 600, fontSize: 13 }}>Ferme ce jour-la</p>
+                      <p style={{ color: '#d32f2f', fontWeight: 600, fontSize: 13 }}>Salon ferme ce jour-la</p>
                     </div>
                   )}
                   {date && !loadingCreneaux && !ferme && creneaux.length === 0 && <p style={{ color: '#999', fontSize: 13 }}>Aucun creneau disponible.</p>}
@@ -408,7 +413,7 @@ function BookingContent() {
                       </div>
                       <div>
                         <label style={labelSt}>Telephone</label>
-                        <input type="tel" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} placeholder="0555 12 34 56" style={inputStyle} />
+                        <input type="tel" value={clientTelephone} onChange={e => setClientTelephone(e.target.value)} style={inputStyle} />
                       </div>
                     </div>
                   </div>
