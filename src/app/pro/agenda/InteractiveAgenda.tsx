@@ -26,7 +26,7 @@ function getMonday(d: Date) {
 }
 
 function formatDateForUrl(d: Date) {
-  return d.toISOString().split('T')[0]
+  return toYMD(d)
 }
 
 function formatPhoneForWhatsApp(phone: string): string {
@@ -187,7 +187,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
   const handleSlotClick = (empId: number, heure: string, dateObj: Date) => {
     setSelectedEmploye(empId)
     setSelectedTime(heure.length === 4 ? `0${heure}` : heure)
-    setSelectedDate(dateObj.toISOString().split('T')[0])
+    setSelectedDate(toYMD(dateObj))
     setClientName('')
     setClientEmail('')
     setClientTelephone('')
@@ -202,7 +202,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     setActiveRdv(rdv)
     setSelectedEmploye(rdv.employe_id)
     const dateObj = new Date(rdv.date_rdv)
-    setSelectedDate(dateObj.toISOString().split('T')[0])
+    setSelectedDate(toYMD(dateObj))
     setSelectedTime(dateObj.toTimeString().substring(0, 5))
     setFicheMode('fiche')
     setIsFicheModalOpen(true)
