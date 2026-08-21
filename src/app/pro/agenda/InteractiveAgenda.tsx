@@ -9,6 +9,10 @@ const OR = '#B8922A'
 const BG = '#F8F5F0'
 const JOURS_COURTS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
 
+// Plage horaire affichee dans l'agenda (9:00 -> 20:00)
+const DAY_START_H = 9
+const DAY_END_H = 20
+
 function isSameDay(a: Date, b: Date) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
 }
@@ -62,6 +66,39 @@ function formatFr(ymd: string) {
   return `${d}/${m}/${y}`
 }
 
+// Attribution de colonnes pour les RDV qui se chevauchent (meme employe / meme jour).
+// Chaque event recoit .col (index de colonne) et .cols (nb total de colonnes de son groupe).
+function assignColumns<T extends { _start: number; _end: number }>(events: T[]): (T & { col: number; cols: number })[] {
+  const sorted = [...events].sort((a, b) => a._start - b._start || a._end - b._end) as (T & { col?: number; cols?: number })[]
+  const result: (T & { col: number; cols: number })[] = []
+  let cluster: (T & { col?: number; cols?: number })[] = []
+  let clusterEnd = -Infinity
+
+  const flush = () => {
+    if (cluster.length === 0) return
+    const colEnds: number[] = [] // derniere fin de chaque colonne
+    for (const ev of cluster) {
+      let placed = false
+      for (let c = 0; c < colEnds.length; c++) {
+        if (ev._start >= colEnds[c]) { ev.col = c; colEnds[c] = ev._end; placed = true; break }
+      }
+      if (!placed) { ev.col = colEnds.length; colEnds.push(ev._end) }
+    }
+    const total = colEnds.length
+    for (const ev of cluster) { ev.cols = total; result.push(ev as T & { col: number; cols: number }) }
+    cluster = []
+    clusterEnd = -Infinity
+  }
+
+  for (const ev of sorted) {
+    if (cluster.length && ev._start >= clusterEnd) flush()
+    cluster.push(ev)
+    clusterEnd = Math.max(clusterEnd, ev._end)
+  }
+  flush()
+  return result
+}
+
 type Props = {
   employes: any[];
   services: any[];
@@ -105,6 +142,16 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
   const [fDebut, setFDebut] = useState('')
   const [fFin, setFFin] = useState('')
   const [fMotif, setFMotif] = useState('')
+
+  // Duree d'un RDV en minutes. Cherche plusieurs champs possibles, sinon 30 min par defaut.
+  const getDuree = (rdv: any): number => {
+    const direct = Number(rdv.duree ?? rdv.duree_min ?? rdv.duration ?? rdv.service_duree ?? 0)
+    if (direct > 0) return direct
+    const svc = services.find((s: any) => s.id === rdv.service_id || s.nom === rdv.service_nom)
+    const sd = svc ? Number(svc.duree ?? svc.duree_min ?? svc.duration ?? 0) : 0
+    if (sd > 0) return sd
+    return 30
+  }
 
   // Un jour est-il ferme ? (avant ouverture OU dans une plage de fermeture)
   const getClosure = (d: Date): { closed: boolean; reason: string } => {
@@ -238,37 +285,97 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     return encodeURIComponent(msg)
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // VUE JOUR — positionnement proportionnel (heure + duree)
+  // ═══════════════════════════════════════════════════════════
   const renderDayView = () => {
-    const hours = Array.from({ length: 11 }, (_, i) => i + 9)
+    const startH = DAY_START_H
+    const hoursCount = DAY_END_H - startH
+    const HOUR_H = 64
+    const bodyHeight = hoursCount * HOUR_H
+    const nbSlots = hoursCount * 2 // creneaux de 30 min
+
     return (
       <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <div style={{ minWidth: 500 }}>
+          {/* Header employes */}
           <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
-            <div style={{ width: 56, flexShrink: 0, padding: 10, borderRight: '1px solid #eee' }}></div>
+            <div style={{ width: 56, flexShrink: 0, borderRight: '1px solid #eee' }} />
             {employes.map((emp: any) => (
               <div key={emp.id} style={{ flex: 1, padding: '10px 4px', textAlign: 'center', fontWeight: 800, fontSize: 'clamp(11px, 2vw, 14px)', color: NOIR, borderRight: '1px solid #eee' }}>{emp.nom}</div>
             ))}
           </div>
-          {hours.map(hour => (
-            <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #f0f0f0' }}>
-              <div style={{ width: 56, flexShrink: 0, padding: '12px 4px', textAlign: 'center', fontSize: 12, fontWeight: 600, color: '#999', borderRight: '1px solid #eee' }}>{`${hour}:00`}</div>
-              {employes.map((emp: any) => {
-                const rdv = reservations.find((r: any) => new Date(r.date_rdv).getHours() === hour && r.employe_id === emp.id)
-                return (
-                  <div key={emp.id} onClick={() => handleSlotClick(emp.id, `${hour}:00`, targetDate)} style={{ flex: 1, padding: 6, minHeight: 48, borderRight: '1px solid #f5f5f5', background: rdv ? '#FFF8EE' : 'transparent', cursor: 'pointer', transition: 'background 0.2s' }} className="agenda-slot">
-                    {rdv && (
-                      <div onClick={(e) => handleRdvClick(e, rdv)} style={{ borderLeft: `3px solid ${OR}`, paddingLeft: 6, cursor: 'grab' }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
-                        <div style={{ fontSize: 11, color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.service_nom}</div>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: OR }}>{rdv.service_prix} DA</div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+
+          {/* Corps */}
+          <div style={{ display: 'flex' }}>
+            {/* Gouttiere des heures */}
+            <div style={{ width: 56, flexShrink: 0, position: 'relative', height: bodyHeight, borderRight: '1px solid #eee', background: '#fafafa' }}>
+              {Array.from({ length: hoursCount }).map((_, i) => (
+                <div key={i} style={{ position: 'absolute', top: i * HOUR_H, left: 0, right: 0, padding: '2px 6px 0 0', textAlign: 'right', fontSize: 11, fontWeight: 600, color: '#999' }}>
+                  {`${startH + i}:00`}
+                </div>
+              ))}
             </div>
-          ))}
+
+            {/* Colonnes employes */}
+            {employes.map((emp: any) => {
+              const empRes = reservations
+                .filter((r: any) => r.employe_id === emp.id)
+                .map((r: any) => {
+                  const d = new Date(r.date_rdv)
+                  const start = d.getHours() * 60 + d.getMinutes()
+                  return { ...r, _start: start, _end: start + getDuree(r) }
+                })
+              const laid = assignColumns(empRes)
+
+              return (
+                <div key={emp.id} style={{ flex: 1, position: 'relative', height: bodyHeight, borderRight: '1px solid #f5f5f5' }}>
+                  {/* Creneaux cliquables (fond) + lignes de repere */}
+                  {Array.from({ length: nbSlots }).map((_, i) => {
+                    const h = startH + Math.floor(i / 2)
+                    const m = i % 2 === 0 ? 0 : 30
+                    const t = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+                    return (
+                      <div key={i} onClick={() => handleSlotClick(emp.id, t, targetDate)} className="agenda-slot"
+                        style={{ position: 'absolute', left: 0, right: 0, top: i * (HOUR_H / 2), height: HOUR_H / 2, borderTop: m === 0 ? '1px solid #eee' : '1px dashed #f2f2f2', cursor: 'pointer' }} />
+                    )
+                  })}
+
+                  {/* Rendez-vous positionnes */}
+                  {laid.map((rdv: any, idx: number) => {
+                    let top = ((rdv._start - startH * 60) / 60) * HOUR_H
+                    let h = ((rdv._end - rdv._start) / 60) * HOUR_H
+                    if (top < 0) { h += top; top = 0 }
+                    if (top >= bodyHeight) return null
+                    if (top + h > bodyHeight) h = bodyHeight - top
+                    h = Math.max(h, 22)
+
+                    const gap = 3
+                    const wPct = 100 / rdv.cols
+                    const left = `calc(${rdv.col * wPct}% + ${gap}px)`
+                    const width = `calc(${wPct}% - ${2 * gap}px)`
+
+                    const showService = h >= 42
+                    const showPrice = h >= 58
+                    const d = new Date(rdv.date_rdv)
+                    const timeLabel = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')
+
+                    return (
+                      <div key={idx} onClick={(e) => handleRdvClick(e, rdv)}
+                        style={{ position: 'absolute', top, height: h, left, width, background: '#FFF8EE', borderLeft: `3px solid ${OR}`, borderRadius: '0 4px 4px 0', padding: showService ? '4px 6px' : '2px 6px', overflow: 'hidden', cursor: 'grab', zIndex: 5, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>{rdv.client_nom}</div>
+                        {showService && <div style={{ fontSize: 11, color: '#666', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>{rdv.service_nom}</div>}
+                        {showPrice && <div style={{ fontSize: 11, fontWeight: 700, color: OR, lineHeight: 1.3 }}>{timeLabel} · {rdv.service_prix} DA</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
         </div>
+
+        {/* Footer */}
         <div style={{ padding: '12px 16px', borderTop: '2px solid #eee', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>{reservations.length} rendez-vous</span>
           <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>{reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA</span>
@@ -277,8 +384,15 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     )
   }
 
+  // ═══════════════════════════════════════════════════════════
+  // VUE SEMAINE — positionnement proportionnel par jour
+  // ═══════════════════════════════════════════════════════════
   const renderWeekView = () => {
-    const hours = Array.from({ length: 11 }, (_, i) => i + 9)
+    const startH = DAY_START_H
+    const hoursCount = DAY_END_H - startH
+    const HOUR_H = 48
+    const bodyHeight = hoursCount * HOUR_H
+    const nbSlots = hoursCount * 2
     const monday = getMonday(targetDate)
     const days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(monday)
@@ -289,9 +403,10 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
 
     return (
       <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <div style={{ minWidth: 600 }}>
+        <div style={{ minWidth: 640 }}>
+          {/* Header jours */}
           <div style={{ display: 'flex', borderBottom: '2px solid #eee', background: '#fafafa' }}>
-            <div style={{ width: 48, flexShrink: 0, padding: 8, borderRight: '1px solid #eee' }}></div>
+            <div style={{ width: 44, flexShrink: 0, borderRight: '1px solid #eee' }} />
             {days.map((day, i) => {
               const isToday = isSameDay(day, today)
               const clo = getClosure(day)
@@ -304,27 +419,72 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               )
             })}
           </div>
-          {hours.map(hour => (
-            <div key={hour} style={{ display: 'flex', borderBottom: '1px solid #f5f5f5' }}>
-              <div style={{ width: 48, flexShrink: 0, padding: '8px 2px', textAlign: 'center', fontSize: 11, fontWeight: 600, color: '#bbb', borderRight: '1px solid #eee' }}>{`${hour}h`}</div>
-              {days.map((day, i) => {
-                const dayReservations = reservations.filter((r: any) => isSameDay(new Date(r.date_rdv), day) && new Date(r.date_rdv).getHours() === hour)
-                const isToday = isSameDay(day, today)
-                const clo = getClosure(day)
-                return (
-                  <div key={i} onClick={() => handleSlotClick(employes[0]?.id || 1, `${hour}:00`, day)} style={{ flex: 1, padding: 2, minHeight: 40, borderRight: '1px solid #f8f8f8', background: clo.closed ? 'rgba(192,57,43,0.04)' : isToday ? 'rgba(184,146,42,0.03)' : 'transparent', cursor: 'pointer' }} className="agenda-slot">
-                    {dayReservations.map((rdv: any, idx: number) => (
-                      <div key={idx} onClick={(e) => handleRdvClick(e, rdv)} style={{ background: '#FFF8EE', borderLeft: `2px solid ${OR}`, borderRadius: '0 3px 3px 0', padding: '3px 4px', marginBottom: 2, cursor: 'grab' }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
-                        <div style={{ fontSize: 9, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.service_nom}</div>
-                      </div>
-                    ))}
-                  </div>
-                )
-              })}
+
+          {/* Corps */}
+          <div style={{ display: 'flex' }}>
+            {/* Gouttiere des heures */}
+            <div style={{ width: 44, flexShrink: 0, position: 'relative', height: bodyHeight, borderRight: '1px solid #eee', background: '#fafafa' }}>
+              {Array.from({ length: hoursCount }).map((_, i) => (
+                <div key={i} style={{ position: 'absolute', top: i * HOUR_H, left: 0, right: 0, padding: '2px 4px 0 0', textAlign: 'right', fontSize: 10, fontWeight: 600, color: '#bbb' }}>{`${startH + i}h`}</div>
+              ))}
             </div>
-          ))}
+
+            {/* Colonnes jours */}
+            {days.map((day, di) => {
+              const isToday = isSameDay(day, today)
+              const clo = getClosure(day)
+              const dayRes = reservations
+                .filter((r: any) => isSameDay(new Date(r.date_rdv), day))
+                .map((r: any) => {
+                  const d = new Date(r.date_rdv)
+                  const start = d.getHours() * 60 + d.getMinutes()
+                  return { ...r, _start: start, _end: start + getDuree(r) }
+                })
+              const laid = assignColumns(dayRes)
+
+              return (
+                <div key={di} style={{ flex: 1, position: 'relative', height: bodyHeight, borderRight: '1px solid #f8f8f8', background: clo.closed ? 'rgba(192,57,43,0.04)' : isToday ? 'rgba(184,146,42,0.03)' : 'transparent' }}>
+                  {/* Creneaux cliquables + lignes de repere */}
+                  {Array.from({ length: nbSlots }).map((_, i) => {
+                    const h = startH + Math.floor(i / 2)
+                    const m = i % 2 === 0 ? 0 : 30
+                    const t = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+                    return (
+                      <div key={i} onClick={() => handleSlotClick(employes[0]?.id || 1, t, day)} className="agenda-slot"
+                        style={{ position: 'absolute', left: 0, right: 0, top: i * (HOUR_H / 2), height: HOUR_H / 2, borderTop: m === 0 ? '1px solid #f0f0f0' : '1px dashed #f6f6f6', cursor: 'pointer' }} />
+                    )
+                  })}
+
+                  {/* Rendez-vous positionnes */}
+                  {laid.map((rdv: any, idx: number) => {
+                    let top = ((rdv._start - startH * 60) / 60) * HOUR_H
+                    let hh = ((rdv._end - rdv._start) / 60) * HOUR_H
+                    if (top < 0) { hh += top; top = 0 }
+                    if (top >= bodyHeight) return null
+                    if (top + hh > bodyHeight) hh = bodyHeight - top
+                    hh = Math.max(hh, 18)
+
+                    const gap = 2
+                    const wPct = 100 / rdv.cols
+                    const left = `calc(${rdv.col * wPct}% + ${gap}px)`
+                    const width = `calc(${wPct}% - ${2 * gap}px)`
+                    const showService = hh >= 34
+
+                    return (
+                      <div key={idx} onClick={(e) => handleRdvClick(e, rdv)}
+                        style={{ position: 'absolute', top, height: hh, left, width, background: '#FFF8EE', borderLeft: `2px solid ${OR}`, borderRadius: '0 3px 3px 0', padding: '2px 4px', overflow: 'hidden', cursor: 'grab', zIndex: 5, boxShadow: '0 1px 2px rgba(0,0,0,0.06)' }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.15 }}>{rdv.client_nom}</div>
+                        {showService && <div style={{ fontSize: 9, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.15 }}>{rdv.service_nom}</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
         </div>
+
+        {/* Footer */}
         <div style={{ padding: '12px 16px', borderTop: '2px solid #eee', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>{reservations.length} RDV cette semaine</span>
           <span style={{ fontSize: 13, fontWeight: 800, color: OR }}>{reservations.reduce((sum: number, r: any) => sum + (r.service_prix || 0), 0)} DA</span>
@@ -648,7 +808,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
 
                 {/* Bouton WhatsApp */}
                 {activeRdv.client_telephone && (
-                  <a
+                  
                     href={`https://wa.me/${formatPhoneForWhatsApp(activeRdv.client_telephone)}?text=${buildWhatsAppMessage(activeRdv)}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -667,7 +827,7 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
 
                 {/* Bouton Appeler */}
                 {activeRdv.client_telephone && (
-                  <a
+                  
                     href={`tel:${activeRdv.client_telephone}`}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
