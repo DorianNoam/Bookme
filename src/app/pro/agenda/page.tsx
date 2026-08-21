@@ -67,19 +67,19 @@ export default async function ProAgendaPage({
   const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
   // 2. Récupération du salon selon le rôle
-  let salon: { id: number; nom: string } | null = null
+  let salon: { id: number; nom: string; date_ouverture: string | null } | null = null
 
   if (role === 'employe' && salonIdFromToken) {
     const { data } = await supabase
       .from('salons')
-      .select('id, nom')
+      .select('id, nom, date_ouverture')
       .eq('id', salonIdFromToken)
       .single()
     salon = data
   } else if (proId) {
     const { data } = await supabase
       .from('salons')
-      .select('id, nom')
+      .select('id, nom, date_ouverture')
       .eq('pro_id', proId)
       .single()
     salon = data
@@ -90,6 +90,13 @@ export default async function ProAgendaPage({
   // Récupération des employés ET des services du salon
   const { data: employes } = await supabase.from('employes').select('*').eq('salon_id', salon.id)
   const { data: services } = await supabase.from('services').select('*').eq('salon_id', salon.id).order('nom', { ascending: true })
+
+  // Fermetures exceptionnelles du salon
+  const { data: fermetures } = await supabase
+    .from('salon_fermetures')
+    .select('id, date_debut, date_fin, motif')
+    .eq('salon_id', salon.id)
+    .order('date_debut', { ascending: true })
 
   let rangeStart: Date
   let rangeEnd: Date
@@ -248,6 +255,10 @@ export default async function ProAgendaPage({
           view={view as 'day' | 'week' | 'month'} 
           targetDateStr={targetDate.toISOString()}
           salonName={salon.nom}
+          salonId={salon.id}
+          dateOuverture={salon.date_ouverture}
+          fermetures={fermetures || []}
+          isOwner={role !== 'employe'}
         />
 
       </main>
