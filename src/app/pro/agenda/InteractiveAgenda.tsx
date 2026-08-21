@@ -48,6 +48,20 @@ function formatPhoneForWhatsApp(phone: string): string {
   return cleaned
 }
 
+// AAAA-MM-JJ en local (sans decalage de fuseau)
+function toYMD(d: Date) {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+// JJ/MM/AAAA a partir d'une chaine AAAA-MM-JJ
+function formatFr(ymd: string) {
+  const [y, m, d] = ymd.split('-')
+  return `${d}/${m}/${y}`
+}
+
 type Props = {
   employes: any[];
   services: any[];
@@ -55,9 +69,13 @@ type Props = {
   view: 'day' | 'week' | 'month';
   targetDateStr: string;
   salonName: string;
+  salonId: number;
+  dateOuverture: string | null;
+  fermetures: any[];
+  isOwner: boolean;
 }
 
-export default function InteractiveAgenda({ employes, services, reservations, view, targetDateStr, salonName }: Props) {
+export default function InteractiveAgenda({ employes, services, reservations, view, targetDateStr, salonName, salonId, dateOuverture, fermetures, isOwner }: Props) {
   const router = useRouter()
   const targetDate = new Date(targetDateStr)
   
@@ -79,6 +97,61 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
   const [servicePrice, setServicePrice] = useState(services[0]?.prix?.toString() || '0')
   
   const [activeRdv, setActiveRdv] = useState<any>(null)
+
+  // --- Statut du salon (date d'ouverture + fermetures) ---
+  const [showStatut, setShowStatut] = useState(false)
+  const [statutLoading, setStatutLoading] = useState(false)
+  const [ouvertureInput, setOuvertureInput] = useState(dateOuverture || '')
+  const [fDebut, setFDebut] = useState('')
+  const [fFin, setFFin] = useState('')
+  const [fMotif, setFMotif] = useState('')
+
+  // Un jour est-il ferme ? (avant ouverture OU dans une plage de fermeture)
+  const getClosure = (d: Date): { closed: boolean; reason: string } => {
+    const ymd = toYMD(d)
+    if (dateOuverture && ymd < dateOuverture) return { closed: true, reason: 'Avant ouverture' }
+    for (const f of fermetures) {
+      if (ymd >= f.date_debut && ymd <= f.date_fin) return { closed: true, reason: f.motif || 'Ferme' }
+    }
+    return { closed: false, reason: '' }
+  }
+
+  const saveOuverture = async () => {
+    setStatutLoading(true)
+    await fetch('/api/pro/statut', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'ouverture', date: ouvertureInput || null })
+    })
+    setStatutLoading(false)
+    router.refresh()
+  }
+
+  const addFermeture = async () => {
+    if (!fDebut || !fFin) { alert('Choisis une date de debut et une date de fin.'); return }
+    if (fFin < fDebut) { alert('La date de fin doit etre apres la date de debut.'); return }
+    setStatutLoading(true)
+    await fetch('/api/pro/statut', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'add_fermeture', date_debut: fDebut, date_fin: fFin, motif: fMotif || null })
+    })
+    setFDebut(''); setFFin(''); setFMotif('')
+    setStatutLoading(false)
+    router.refresh()
+  }
+
+  const deleteFermeture = async (id: number) => {
+    if (!confirm('Supprimer cette periode de fermeture ?')) return
+    setStatutLoading(true)
+    await fetch('/api/pro/statut', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete_fermeture', id })
+    })
+    setStatutLoading(false)
+    router.refresh()
+  }
 
   const handleSlotClick = (empId: number, heure: string, dateObj: Date) => {
     setSelectedEmploye(empId)
@@ -221,10 +294,12 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
             <div style={{ width: 48, flexShrink: 0, padding: 8, borderRight: '1px solid #eee' }}></div>
             {days.map((day, i) => {
               const isToday = isSameDay(day, today)
+              const clo = getClosure(day)
               return (
-                <div key={i} style={{ flex: 1, padding: '8px 2px', textAlign: 'center', borderRight: '1px solid #eee', background: isToday ? '#FFF8EE' : 'transparent' }}>
+                <div key={i} style={{ flex: 1, padding: '8px 2px', textAlign: 'center', borderRight: '1px solid #eee', background: clo.closed ? '#fdf0f0' : isToday ? '#FFF8EE' : 'transparent' }}>
                   <div style={{ fontSize: 10, fontWeight: 600, color: '#999', textTransform: 'uppercase' }}>{JOURS_COURTS[i]}</div>
-                  <div style={{ fontSize: 'clamp(16px, 3vw, 20px)', fontWeight: 900, color: isToday ? OR : NOIR, marginTop: 2 }}>{day.getDate()}</div>
+                  <div style={{ fontSize: 'clamp(16px, 3vw, 20px)', fontWeight: 900, color: clo.closed ? '#c0392b' : isToday ? OR : NOIR, marginTop: 2 }}>{day.getDate()}</div>
+                  {clo.closed && <div style={{ fontSize: 8, fontWeight: 700, color: '#c0392b', textTransform: 'uppercase' }}>Ferme</div>}
                 </div>
               )
             })}
@@ -235,8 +310,9 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               {days.map((day, i) => {
                 const dayReservations = reservations.filter((r: any) => isSameDay(new Date(r.date_rdv), day) && new Date(r.date_rdv).getHours() === hour)
                 const isToday = isSameDay(day, today)
+                const clo = getClosure(day)
                 return (
-                  <div key={i} onClick={() => handleSlotClick(employes[0]?.id || 1, `${hour}:00`, day)} style={{ flex: 1, padding: 2, minHeight: 40, borderRight: '1px solid #f8f8f8', background: isToday ? 'rgba(184,146,42,0.03)' : 'transparent', cursor: 'pointer' }} className="agenda-slot">
+                  <div key={i} onClick={() => handleSlotClick(employes[0]?.id || 1, `${hour}:00`, day)} style={{ flex: 1, padding: 2, minHeight: 40, borderRight: '1px solid #f8f8f8', background: clo.closed ? 'rgba(192,57,43,0.04)' : isToday ? 'rgba(184,146,42,0.03)' : 'transparent', cursor: 'pointer' }} className="agenda-slot">
                     {dayReservations.map((rdv: any, idx: number) => (
                       <div key={idx} onClick={(e) => handleRdvClick(e, rdv)} style={{ background: '#FFF8EE', borderLeft: `2px solid ${OR}`, borderRadius: '0 3px 3px 0', padding: '3px 4px', marginBottom: 2, cursor: 'grab' }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: NOIR, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rdv.client_nom}</div>
@@ -301,10 +377,12 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
               const revenue = revenueByDay[dayNum] || 0
               const isToday = isSameDay(cell, today)
               const isPast = cell < today && !isToday
+              const clo = getClosure(cell)
 
               return (
-                <Link key={ci} href={`/pro/agenda?view=day&date=${formatDateForUrl(cell)}`} style={{ minHeight: 'clamp(60px, 12vw, 90px)', padding: 'clamp(4px, 1vw, 8px)', borderRight: '1px solid #f0f0f0', textDecoration: 'none', color: 'inherit', background: isToday ? '#FFF8EE' : 'transparent', opacity: isPast ? 0.5 : 1, display: 'flex', flexDirection: 'column', transition: 'background 0.15s' }}>
-                  <div style={{ fontSize: 'clamp(12px, 2.5vw, 16px)', fontWeight: isToday ? 900 : 600, color: isToday ? OR : NOIR, marginBottom: 4 }}>{dayNum}</div>
+                <Link key={ci} href={`/pro/agenda?view=day&date=${formatDateForUrl(cell)}`} style={{ minHeight: 'clamp(60px, 12vw, 90px)', padding: 'clamp(4px, 1vw, 8px)', borderRight: '1px solid #f0f0f0', textDecoration: 'none', color: 'inherit', background: clo.closed ? '#fdf0f0' : isToday ? '#FFF8EE' : 'transparent', opacity: isPast ? 0.5 : 1, display: 'flex', flexDirection: 'column', transition: 'background 0.15s' }}>
+                  <div style={{ fontSize: 'clamp(12px, 2.5vw, 16px)', fontWeight: isToday ? 900 : 600, color: clo.closed ? '#c0392b' : isToday ? OR : NOIR, marginBottom: 4 }}>{dayNum}</div>
+                  {clo.closed && <div style={{ background: '#fdecec', color: '#c0392b', borderRadius: 3, padding: '1px 4px', fontSize: 'clamp(8px, 1.6vw, 10px)', fontWeight: 700, textAlign: 'center', marginBottom: 2 }}>Ferme</div>}
                   {count > 0 && <div style={{ background: count >= 5 ? OR : '#f0ead6', color: count >= 5 ? '#fff' : NOIR, borderRadius: 3, padding: 'clamp(2px, 0.5vw, 4px) clamp(3px, 1vw, 6px)', fontSize: 'clamp(9px, 1.8vw, 11px)', fontWeight: 700, marginBottom: 2, textAlign: 'center' }}>{count} RDV</div>}
                   {revenue > 0 && <div style={{ fontSize: 'clamp(9px, 1.8vw, 11px)', fontWeight: 600, color: OR, textAlign: 'center' }}>{revenue} DA</div>}
                 </Link>
@@ -320,10 +398,115 @@ export default function InteractiveAgenda({ employes, services, reservations, vi
     )
   }
 
+  // Statut du jour (pour la pastille de l'encart)
+  const nowClosure = getClosure(new Date())
+  const notYetOpen = dateOuverture ? toYMD(new Date()) < dateOuverture : false
+  let statusLabel = 'Ouvert'
+  let statusColor = '#1baf7a'
+  if (notYetOpen) {
+    statusLabel = `Ouverture le ${formatFr(dateOuverture as string)}`
+    statusColor = '#eda100'
+  } else if (nowClosure.closed) {
+    statusLabel = `Ferme aujourd'hui${nowClosure.reason ? ' — ' + nowClosure.reason : ''}`
+    statusColor = '#d32f2f'
+  }
+
+  // Bandeau de fermeture pour la vue Jour
+  const dayClosure = view === 'day' ? getClosure(targetDate) : { closed: false, reason: '' }
+
   return (
     <>
       <style dangerouslySetInnerHTML={{__html: `.agenda-slot:hover { background: #fdfdfd !important; }`}} />
-      
+
+      {/* ═══ ENCART : STATUT DU SALON (patron uniquement) ═══ */}
+      {isOwner && (
+        <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.05)', marginBottom: 16, overflow: 'hidden' }}>
+          <button
+            onClick={() => setShowStatut(v => !v)}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 'clamp(12px, 3vw, 16px) clamp(14px, 3vw, 20px)', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <span style={{ width: 10, height: 10, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 'clamp(13px, 3vw, 15px)', fontWeight: 800, color: NOIR }}>Statut du salon</div>
+                <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{statusLabel}</div>
+              </div>
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: OR, flexShrink: 0 }}>{showStatut ? 'Fermer' : 'Gerer'}</span>
+          </button>
+
+          {showStatut && (
+            <div style={{ padding: 'clamp(14px, 3vw, 20px)', borderTop: '1px solid #f0f0f0', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+              {/* Date d'ouverture */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>{"Date d'ouverture"}</div>
+                <p style={{ fontSize: 12, color: '#888', margin: '0 0 10px 0', lineHeight: 1.5 }}>
+                  {"Tant que cette date n'est pas atteinte, aucun creneau n'est reservable par les clients. Laisse vide si le salon est deja ouvert."}
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <input type="date" value={ouvertureInput} onChange={e => setOuvertureInput(e.target.value)} style={{ flex: 1, minWidth: 150, padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
+                  <button onClick={saveOuverture} disabled={statutLoading} style={{ padding: '10px 18px', background: NOIR, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>Enregistrer</button>
+                  {ouvertureInput && (
+                    <button onClick={() => setOuvertureInput('')} disabled={statutLoading} style={{ padding: '10px 14px', background: '#f5f5f5', color: '#666', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>Effacer</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Fermetures exceptionnelles */}
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Fermetures exceptionnelles</div>
+
+                {fermetures.length === 0 ? (
+                  <p style={{ fontSize: 13, color: '#bbb', margin: '0 0 12px 0' }}>Aucune fermeture programmee.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                    {fermetures.map((f: any) => (
+                      <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 12px', background: '#faf8f4', borderRadius: 8, borderLeft: `3px solid ${OR}` }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: NOIR }}>
+                            {f.date_debut === f.date_fin ? formatFr(f.date_debut) : `${formatFr(f.date_debut)} au ${formatFr(f.date_fin)}`}
+                          </div>
+                          {f.motif && <div style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.motif}</div>}
+                        </div>
+                        <button onClick={() => deleteFermeture(f.id)} disabled={statutLoading} style={{ flexShrink: 0, padding: '6px 12px', background: '#fff', color: '#d32f2f', border: '1px solid #f0d0d0', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Supprimer</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Formulaire d'ajout */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, background: '#fafafa', padding: 12, borderRadius: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ flex: 1, minWidth: 130 }}>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Du</label>
+                      <input type="date" value={fDebut} onChange={e => { setFDebut(e.target.value); if (!fFin || fFin < e.target.value) setFFin(e.target.value) }} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 130 }}>
+                      <label style={{ fontSize: 11, color: '#888', display: 'block', marginBottom: 4 }}>Au</label>
+                      <input type="date" value={fFin} min={fDebut} onChange={e => setFFin(e.target.value)} style={{ width: '100%', padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
+                    </div>
+                  </div>
+                  <input type="text" placeholder="Motif (optionnel) : conges, travaux..." value={fMotif} onChange={e => setFMotif(e.target.value)} style={{ padding: 10, border: '1px solid #ddd', borderRadius: 6 }} />
+                  <button onClick={addFermeture} disabled={statutLoading} style={{ padding: 12, background: OR, color: '#fff', border: 'none', borderRadius: 6, fontWeight: 700, cursor: 'pointer' }}>{statutLoading ? '...' : '+ Ajouter la fermeture'}</button>
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bandeau : jour ferme (vue Jour) */}
+      {dayClosure.closed && (
+        <div style={{ background: '#fff4f4', border: '1px solid #f3c0c0', borderRadius: 8, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🔒</span>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#b3261e' }}>
+            {`Salon ferme ce jour${dayClosure.reason ? ' — ' + dayClosure.reason : ''}. Les clients ne peuvent pas reserver.`}
+          </div>
+        </div>
+      )}
+
       {view === 'day' && renderDayView()}
       {view === 'week' && renderWeekView()}
       {view === 'month' && renderMonthView()}
