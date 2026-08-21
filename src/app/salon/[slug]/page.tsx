@@ -1,5 +1,6 @@
 import FavoriteButton from '@/components/FavoriteButton'
 import MobileMenu from '@/components/MobileMenu'
+import ServiceDescription from '@/components/ServiceDescription'
 import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -256,7 +257,7 @@ export default async function SalonPage({
                         <div key={service.id} style={{ padding: 'clamp(14px, 3vw, 20px)', borderBottom: index < items.length - 1 ? '1px solid #F0EBE1' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <div style={{ fontSize: 15, fontWeight: 700, color: NOIR, marginBottom: 2 }}>{service.nom}</div>
-                            {service.description && <div style={{ color: '#888', fontSize: 12, marginBottom: 2 }}>{service.description}</div>}
+                            {service.description && <ServiceDescription text={service.description} />}
                             <div style={{ color: '#aaa', fontSize: 13 }}>{service.duree} min</div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
