@@ -11,11 +11,12 @@ export async function GET(req: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Recuperer le salon et le service
-    const [salonRes, serviceRes, employesRes] = await Promise.all([
-      supabase.from('salons').select('ouverture, fermeture, jour_off, pause_active, pause_debut, pause_fin').eq('id', salon_id).single(),
+    // Recuperer le salon, le service, les employes ET les fermetures
+    const [salonRes, serviceRes, employesRes, fermeturesRes] = await Promise.all([
+      supabase.from('salons').select('ouverture, fermeture, jour_off, pause_active, pause_debut, pause_fin, date_ouverture').eq('id', salon_id).single(),
       supabase.from('services').select('duree').eq('id', service_id).single(),
       supabase.from('employes').select('*').eq('salon_id', salon_id),
+      supabase.from('salon_fermetures').select('date_debut, date_fin').eq('salon_id', salon_id),
     ])
 
     if (!salonRes.data || !serviceRes.data) {
@@ -24,15 +25,26 @@ export async function GET(req: NextRequest) {
 
     const salon    = salonRes.data
     const duree    = serviceRes.data.duree
-    const employes = (employesRes.data && employesRes.data.length > 0) 
-      ? employesRes.data 
+    const employes = (employesRes.data && employesRes.data.length > 0)
+      ? employesRes.data
       : [{ id: 0, nom: 'Patron', salon_id: salon_id }]
 
-    // Verifier jour de fermeture
+    // Verifier jour de fermeture hebdomadaire
     const dateObj    = new Date(date + 'T00:00:00')
     const jourSemaine = dateObj.getDay() || 7 // 1=Lun ... 7=Dim
-
     if (salon.jour_off !== 0 && jourSemaine === salon.jour_off) {
+      return NextResponse.json({ creneaux: [], ferme: true })
+    }
+
+    // Avant la date d'ouverture du salon => aucun creneau reservable
+    if (salon.date_ouverture && date < salon.date_ouverture) {
+      return NextResponse.json({ creneaux: [], ferme: true })
+    }
+
+    // Dans une periode de fermeture exceptionnelle => aucun creneau reservable
+    const fermetures = fermeturesRes.data || []
+    const estFerme = fermetures.some((f: any) => date >= f.date_debut && date <= f.date_fin)
+    if (estFerme) {
       return NextResponse.json({ creneaux: [], ferme: true })
     }
 
@@ -62,7 +74,6 @@ export async function GET(req: NextRequest) {
     }
 
     const creneaux: { heure: string; emp_id: number }[] = []
-
     for (let t = startMin; t + duree <= endMin; t += 30) {
       const tsDebut = t
       const tsFin   = t + duree
@@ -73,7 +84,6 @@ export async function GET(req: NextRequest) {
       }
 
       const empsToCheck = emp_id === -1 ? employes : employes.filter(e => e.id === emp_id)
-
       let empLibreId: number | null = null
       for (const emp of empsToCheck) {
         const busy = (reservations || []).some((r: any) => {
