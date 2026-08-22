@@ -1,5 +1,6 @@
 'use client'
 import ClientsTab from './ClientsTab'
+import QRCodeSalon from './QRCodeSalon'
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
@@ -93,7 +94,7 @@ type VentePrivee = { id: number; nom: string; prix: number; duree: number; descr
 type Salon = {
   id: number; nom: string; adresse: string; ville: string; telephone: string;
   description: string; ouverture: string; fermeture: string; jour_off: number;
-  type_salon: string; image: string; seuil_fidelite: number;
+   type_salon: string; image: string; seuil_fidelite: number; slug?: string;
   pause_active?: boolean;
   pause_debut?: string;
   pause_fin?: string;
@@ -1046,9 +1047,15 @@ function SalonTab({ salon, proEmail, gallery, onError, onUpdate, onAddGalleryIma
           <div style={{ gridColumn: '1 / -1' }}><label style={labelStyle}>Description</label><textarea name="description" value={form.description || ''} onChange={handleChange} rows={4} style={{ ...inputStyle, resize: 'vertical' }} /></div>
         </div>
         <div style={{ marginTop: 25, display: 'flex', justifyContent: 'flex-end' }}>
-          <button onClick={handleSave} disabled={saving} style={{ background: OR, color: '#fff', border: 'none', padding: '14px 40px', borderRadius: 6, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.5 : 1 }}>{saving ? 'Enregistrement...' : 'Enregistrer les modifications'}</button>
+                <button onClick={handleSave} disabled={saving} style={{ background: OR, color: '#fff', border: 'none', padding: '14px 40px', borderRadius: 6, fontSize: 15, fontWeight: 800, cursor: 'pointer', fontFamily: 'Inter, sans-serif', opacity: saving ? 0.5 : 1 }}>{saving ? 'Enregistrement...' : 'Enregistrer les modifications'}</button>
         </div>
       </div>
+
+      {salon.slug && (
+        <div style={{ marginTop: 30 }}>
+          <QRCodeSalon salonNom={salon.nom} salonUrl={`https://bookmedz.com/salon/${salon.slug}`} />
+        </div>
+      )}
     </div>
   )
 }
