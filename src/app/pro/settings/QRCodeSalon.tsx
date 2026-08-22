@@ -101,7 +101,7 @@ export default function QRCodeSalon({ salonNom, salonUrl }: QRCodeSalonProps) {
 
       doc.setFontSize(9);
       doc.setTextColor(150, 150, 150);
-      doc.text('Propulse par Bookmedz - bookmedz.dz', pageW / 2, pageH - 15, {
+      doc.text('Propulse par Bookmedz - www.bookmedz.com', pageW / 2, pageH - 15, {
         align: 'center',
       });
 
