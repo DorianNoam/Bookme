@@ -34,20 +34,12 @@ const TUTORIELS: TutoCategorie[] = [
     ],
   },
   {
-  {
     categorie: 'Gerer vos prestations',
     videos: [
       {
         titre: 'Ajouter une prestation',
         description: 'Creer une nouvelle prestation avec prix et duree.',
         url: 'https://nnrozegyirqxjpkqghxi.supabase.co/storage/v1/object/public/tutoriels/Prestations.mp4',
-      },
-    ],
-  },
-      {
-        titre: 'Importer votre carte via une photo (IA)',
-        description: 'Scannez votre menu de prestations, l\'IA le remplit automatiquement.',
-        url: 'https://VOTRE-PROJET.supabase.co/storage/v1/object/public/tutoriels/import-ia.mp4',
       },
     ],
   },
