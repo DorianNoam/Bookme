@@ -1,6 +1,7 @@
 'use client'
 import ClientsTab from './ClientsTab'
 import QRCodeSalon from './QRCodeSalon'
+import TutoTab from './TutoTab'
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import LogoutButton from '@/app/pro/components/LogoutButton'
@@ -106,7 +107,7 @@ type CatalogueItem = { id: number; categorie: string; nom: string }
 type GalleryImage = { id: number; image_path: string }
 
 export default function ProSettingsPage() {
-  const [tab, setTab] = useState<'salon' | 'services' | 'employes' | 'clients' | 'vip'>('salon')
+const [tab, setTab] = useState<'salon' | 'services' | 'employes' | 'clients' | 'vip' | 'tuto'>('salon')
   const [salon, setSalon] = useState<Salon | null>(null)
   const [services, setServices] = useState<Service[]>([])
   const [ventesPrivees, setVentesPrivees] = useState<VentePrivee[]>([])
@@ -165,6 +166,7 @@ export default function ProSettingsPage() {
     { key: 'employes' as const, label: 'Mon equipe', count: employes.length },
     { key: 'clients' as const, label: 'Fiche Clients', count: null },
     { key: 'vip' as const, label: 'Ventes Privees', count: ventesPrivees.length },
+    { key: 'tuto' as const, label: 'Tutoriels', count: null },
   ]
 
   return (
@@ -271,7 +273,8 @@ export default function ProSettingsPage() {
           {tab === 'services' && <ServicesTab services={services} onError={showError} onAdd={(s) => { setServices(prev => [...prev, s]); showMessage('Prestation ajoutee') }} onUpdate={(s) => { setServices(services.map(x => x.id === s.id ? s : x)); showMessage('Prestation mise a jour') }} onDelete={(id) => { setServices(services.filter(s => s.id !== id)); showMessage('Prestation supprimee') }} />}
           {tab === 'employes' && <EmployesTab employes={employes} onError={showError} onAdd={(e) => { setEmployes([...employes, e]); showMessage('Employe ajoute') }} onDelete={(id) => { setEmployes(employes.filter(e => e.id !== id)); showMessage('Employe supprime') }} />}
           {tab === 'clients' && <ClientsTab />}
-          {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onError={showError} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
+                    {tab === 'vip' && <VentesPriveesTab ventesPrivees={ventesPrivees} onError={showError} onAdd={(v) => { setVentesPrivees([v, ...ventesPrivees]); showMessage('Offre VIP ajoutee') }} onUpdate={(v) => { setVentesPrivees(ventesPrivees.map(x => x.id === v.id ? v : x)); showMessage('Offre VIP mise a jour') }} onDelete={(id) => { setVentesPrivees(ventesPrivees.filter(v => v.id !== id)); showMessage('Offre VIP supprimee') }} />}
+          {tab === 'tuto' && <TutoTab />}
         </main>
       </div>
     </AbonnementGuard>
