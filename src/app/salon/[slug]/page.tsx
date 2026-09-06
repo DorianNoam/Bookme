@@ -1,6 +1,7 @@
 import FavoriteButton from '@/components/FavoriteButton'
 import MobileMenu from '@/components/MobileMenu'
 import ServiceDescription from '@/components/ServiceDescription'
+import TrackView from '@/components/TrackView'
 import React from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -62,6 +63,10 @@ export default async function SalonPage({
   const slugParam = params.slug
   const isGalleryOpen = searchParams.gallery === 'open'
 
+  // Source de la visite : ?src=ig (bio Instagram), ?src=qr (QR code du salon),
+  // ?src=search (recherche interne Bookmedz). Par defaut : direct.
+  const src = typeof searchParams.src === 'string' ? searchParams.src : 'direct'
+
   // Determiner si le parametre est un slug ou un ancien id numerique
   const isNumeric = /^\d+$/.test(slugParam)
 
@@ -71,7 +76,9 @@ export default async function SalonPage({
     // Ancienne URL /salon/26 : on cherche par id puis on redirige vers le slug
     const { data } = await supabase.from('salons').select('*').eq('id', slugParam).single()
     if (data && data.slug) {
-      redirect(`/salon/${data.slug}`)
+      // On conserve la source lors de la redirection vers le slug
+      const suffixe = src !== 'direct' ? `?src=${encodeURIComponent(src)}` : ''
+      redirect(`/salon/${data.slug}${suffixe}`)
     }
     salonData = data
   } else {
@@ -120,6 +127,9 @@ export default async function SalonPage({
 
   return (
     <div style={{ fontFamily: 'Inter, sans-serif', background: BG, minHeight: '100vh', paddingBottom: 80 }}>
+
+      {/* MESURE D'AUDIENCE : vue de page + clics vers /booking. N'affiche rien. */}
+      <TrackView salonId={salonId} source={src} />
 
       {/* GALERIE FULLSCREEN */}
       {isGalleryOpen && (
